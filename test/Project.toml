@@ -1,2 +1,3 @@
 [deps]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TimeStructures = "260f4295-b40d-47c0-843b-64f3de373d90"
