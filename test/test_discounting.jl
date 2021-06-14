@@ -36,7 +36,7 @@ end
 
     for n_periods ∈ (1, 10, 8760)
         for dur_y ∈ (1, 2, 10)
-            for ut ∈ (UniformTimes(1, 24 * 365 * dur_y, 1),UniformTimes(1, 1, 24 * 365 * dur_y))
+            for ut ∈ [UniformTimes(1, 24 * 365 * dur_y, 1)]
                 ts = UniformTwoLevel(1, 1, dur_y, ut)
                 sp = first(strategic_periods(ts))
                 op = first(collect(sp))
@@ -47,7 +47,7 @@ end
                     # Operational period discounting/weight:
                     ow = obj_weight(discount_rate, ts, sp, op)
                     period_scale = 365*24 * sum(duration_years(ts,p) for p in strategic_periods(ts))
-                
+                    
                     # should be between average yearly discount rate scaled at year start/end
                     @test ow <= avg_disc_yearly(discount_rate, startyear(ts, sp) - 1, dur_y) * period_scale
                     @test ow >= avg_disc_yearly(discount_rate, startyear(ts, sp)    , dur_y) * period_scale
