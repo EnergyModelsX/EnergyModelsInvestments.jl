@@ -1,6 +1,6 @@
 """
     discount_mult_avg(start_year, discount_rate, duration_years)
-Calculate average discount for the time period
+Return average discount for the time period
 This is a limit case n->infinity of dividing the time period into n pieces and discounting each separately
 
 ``1 / (t_1 - t_0) * \\int_{t=t_0}^{t_1} (1 + r)^{-t} dt``
@@ -17,17 +17,30 @@ function discount_mult_avg(discount_rate, start_year, duration_years)
     end
 end
 
-
+"""
+    obj_weight_inv(discount_rate, ts::TimeStructure, sp::StrategicPeriod)
+Return weight to use in operational period `op` in objective function based on duration and discounting
+assuming investment in *start* of strategic period `sp`
+"""
 function obj_weight_inv(discount_rate, ts::TimeStructure, sp::StrategicPeriod)
     disc_year = 1 / (1 + discount_rate)
     return disc_year^startyear(ts, sp)
 end
-
+"""
+    obj_weight_inv_end(discount_rate, ts::TimeStructure, sp::StrategicPeriod)
+Return weight to use in operational period `op` in objective function based on duration and discounting
+assuming investment in *end* of strategic period `sp`
+"""
 function obj_weight_inv_end(discount_rate, ts::TimeStructure, sp::StrategicPeriod)
     disc_year = 1 / (1 + discount_rate)
     return disc_year^endyear(ts, sp)
 end
 
+"""
+    obj_weight(discount_rate, ts::TimeStructure, sp::StrategicPeriod, op::OperationalPeriod)
+Return weight to use in operational period `op` in objective function based on duration and discounting 
+assuming cost *spread evenly* over strategic period `sp`   
+"""
 function obj_weight(discount_rate, ts::TimeStructure, sp::StrategicPeriod, op::OperationalPeriod)
     disc_avg = 1.0
     if discount_rate > 0
