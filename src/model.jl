@@ -1,3 +1,40 @@
+# TODO: 
+# * Add/remove/invest etc ala HyOpt
+# * Tests
+"""
+    objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)
+
+Create objective function overloading the default from EMB for InvestmentModel.
+
+Maximize Net Present Value from revenues, investments (CAPEX) and operations (OPEX) 
+
+## TODO: 
+# * consider passing expression around for updating
+# * consider reading objective and adding terms/coefficients (from model object `m`)
+
+"""
+function EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel, sense=Max)
+    
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
+    r = modeltype.r     # Discount rate
+
+    capexunit = 1 # TODO: Fix scaling if operational units are different form CAPEX
+
+    obj = JuMP.AffExpr()
+
+    is_defined(m, :revenue) && (obj += sum(obj_weight(r, 𝒯, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t ∈ 𝒯))
+    is_defined(m, :opex_var) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_var][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
+    is_defined(m, :opex_fixed) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_fixed][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
+    is_defined(m, :capex) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex][i,t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
+    
+    # TODO: Maintentance cost
+    # TODO: Residual value
+
+    @objective(m, sense, obj)
+end
+
+
 """
     create_capacity_variables(m, 𝒩, 𝒯, modeltype::DiscreteInvestmentModel)
 

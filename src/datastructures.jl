@@ -1,9 +1,13 @@
 abstract type InvestmentModel <: EnergyModel end
 struct DiscreteInvestmentModel <: InvestmentModel
     case
+    # Discount rate
+    r       
 end
 struct ContinuousInvestmentModel <: InvestmentModel
     case
+    # Discount rate
+    r       
 end
 
 # Investment type traits for nodes
