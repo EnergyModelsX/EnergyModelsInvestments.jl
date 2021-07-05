@@ -73,8 +73,10 @@ function constraints_capacity(m, 𝒩, 𝒯ᴵⁿᵛ)
         @constraint(m, cap_usage[n, t] <= n.capacity[t]) # sum add_cap/rem_cap
     end
 
-    # TO DO: Add constraints on capacity addition, removal etc.
-
+    # Add constraints on capacity addition, removal etc.
+    for n ∈ 𝒩, t ∈ 𝒯ᴵⁿᵛ
+        @constraint(m, m[:cap_max][n, t] == m[:cap_max][n, t-1] + m[:add_cap][n, t] - m[:rem_cap][n, t])
+    end
 end
 
 """

@@ -14,6 +14,6 @@ function has_capacity(i)
         has_property(i, :ExistingCapacity) ||
         has_property(i, :MaxAddCapacity) ||
         has_property(i, :MaxTotalCapacity) ||
-        has_property(i, :UnitCapacity   
+        has_property(i, :UnitCapacity)   
     )
 end

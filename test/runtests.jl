@@ -12,3 +12,4 @@ const IM = InvestmentModels
 # end
 
 include("test_discounting.jl")
+include("test_model.jl")
