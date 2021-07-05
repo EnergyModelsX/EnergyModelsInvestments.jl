@@ -4,10 +4,13 @@
     # Create simple model
     
     # Dummy data
+    data = IM.testdata()
+    r = 0.07
+    @test length(data) == 4
     
-    # Dummy for now
-    @test 1 == 1
-    
+    case = IM.StrategicCase(StrategicFixedProfile([450, 400, 350, 300]))    # 
+    model = IM.InvestmentModel(case, r)
+    m = EMB.create_model(data, model)
 
     # Check model
 

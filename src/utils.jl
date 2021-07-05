@@ -8,7 +8,7 @@ Check if node i should be used for capacity calculations, i.e.
     TODO: Move to EMB?
 """
 function has_capacity(i)
-    ~isa(i, Availability) && 
+    ~isa(i, EMB.Availability) && 
     (
         true || # TODO: Implement these properties (or similar)
         has_property(i, :ExistingCapacity) ||
@@ -16,4 +16,9 @@ function has_capacity(i)
         has_property(i, :MaxTotalCapacity) ||
         has_property(i, :UnitCapacity)   
     )
+end
+
+
+function testdata()
+    data = EMB.read_data("")
 end

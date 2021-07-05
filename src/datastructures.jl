@@ -1,14 +1,26 @@
-abstract type InvestmentModel <: EnergyModel end
-struct DiscreteInvestmentModel <: InvestmentModel
-    case
-    # Discount rate
-    r       
+
+struct StrategicCase <: EMB.Case
+    CO2_limit::TimeProfile
 end
-struct ContinuousInvestmentModel <: InvestmentModel
-    case
+
+abstract type AbstractInvestmentModel <: EMB.EnergyModel end
+
+struct InvestmentModel <: AbstractInvestmentModel
+    case::StrategicCase
     # Discount rate
-    r       
+    r
 end
+
+# struct DiscreteInvestmentModel <: AbstractInvestmentModel
+#     case
+#     # Discount rate
+#     r       
+# end
+# struct ContinuousInvestmentModel <: AbstractInvestmentModel
+#     case
+#     # Discount rate
+#     r       
+# end
 
 # Investment type traits for nodes
 abstract type Investment end 					# Kind of investment variables 

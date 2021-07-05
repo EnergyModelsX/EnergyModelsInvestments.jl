@@ -1,7 +1,9 @@
 using Test
 using InvestmentModels
 using TimeStructures
+using EnergyModelsBase
 const IM = InvestmentModels
+const EMB = EnergyModelsBase
 
 
 # @testset "Integration tests" begin
