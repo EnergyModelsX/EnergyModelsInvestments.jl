@@ -16,4 +16,9 @@
 
     # Check results
 
+    # With binary variables
+
+    # Check model/results
+
+
 end
