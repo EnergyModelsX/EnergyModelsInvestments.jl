@@ -1,7 +1,7 @@
 name = "InvestmentModels"
 uuid = "fca3f8eb-b383-437d-8e7b-aac76bb2004f"
 authors = ["Lars Hellemo <Lars.Hellemo@sintef.no> "]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 EnergyModelsBase = "5d7e687e-f956-46f3-9045-6f5a5fd49f50"
@@ -12,4 +12,4 @@ TimeStructures = "260f4295-b40d-47c0-843b-64f3de373d90"
 julia = "^1.6"
 EnergyModelsBase = "^0.2"
 JuMP = "^0.21"
-TimeStructures = "^0.1.6"
+TimeStructures = "^0.1.7"
