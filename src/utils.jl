@@ -7,18 +7,27 @@ Check if node i should be used for capacity calculations, i.e.
 
     TODO: Move to EMB?
 """
+function testdata()
+    data = EMB.read_data("")
+end
+
 function has_capacity(i)
     ~isa(i, EMB.Availability) && 
     (
-        true || # TODO: Implement these properties (or similar)
-        has_property(i, :ExistingCapacity) ||
-        has_property(i, :MaxAddCapacity) ||
-        has_property(i, :MaxTotalCapacity) ||
-        has_property(i, :UnitCapacity)   
+        hasproperty(i, :capacity) 
     )
 end
 
-
-function testdata()
-    data = EMB.read_data("")
+function has_investment(i)
+    ~isa(i, EMB.Availability) && 
+    (
+        hasproperty(i, :data) &&
+        (
+            hasproperty(i.data["InvestmentModels"], :max_inst_cap) ||
+            hasproperty(i.data["InvestmentModels"], :capex) ||
+            hasproperty(i.data["InvestmentModels"], :ExistingCapacity) ||
+            hasproperty(i.data["InvestmentModels"], :min_add) ||
+            hasproperty(i.data["InvestmentModels"], :min_add)
+        )
+    )
 end

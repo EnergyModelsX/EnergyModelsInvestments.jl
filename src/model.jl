@@ -20,7 +20,7 @@ function EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)#, sense=Max)
 
     obj = JuMP.AffExpr()
 
-    haskey(m, :revenue) && (obj += sum(obj_weight(r, 𝒯, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t ∈ 𝒯))
+    haskey(m, :revenue) && (obj += sum(obj_weight(r, 𝒯, t_inv, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
     haskey(m, :opex_var) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_var][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
     haskey(m, :opex_fixed) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_fixed][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
     haskey(m, :capex) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex][i,t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
@@ -41,6 +41,7 @@ time periods `t ∈ 𝒯`.
 """
 function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     @debug "Create investment variables"
+
 
     @variable(m, cap_usage[𝒩, 𝒯] >= 0) # Linking variables used in EMB
 
@@ -69,25 +70,51 @@ Set capacity-related constraints for nodes `𝒩` for investment time structure 
 """
 function constraints_capacity(m, 𝒩, 𝒯)
     
+
     𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
+    𝒩ᴵⁿᵛ = (i for i ∈ 𝒩 if has_investment(i))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    #constraints capex
+    for n ∈ 𝒩ᴵⁿᵛ, t ∈ 𝒯ᴵⁿᵛ
+        @constraint(m, m[:capex][n,t] == n.data["InvestmentModels"].capex[t])
+    end 
+
+    # TODO, constraint for setting the minimum investment capacity
+    # using binaries/semi continuous variables
+
     # Set investment properties based on investment mode of node n
-    for n ∈ 𝒩ᶜᵃᵖ, t ∈ 𝒯ᴵⁿᵛ
+    for n ∈ 𝒩ᴵⁿᵛ, t ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(n, m[:invest][n, t])
     end
 
     # Link capacity usage to installed capacity 
+    for n ∈ 𝒩ᶜᵃᵖ
+        if n ∈ 𝒩ᴵⁿᵛ
+            for t_inv in 𝒯ᴵⁿᵛ
+                for t in t_inv
+                    @constraint(m, m[:cap_max][n, t] == m[:capacity][n,t_inv])
+                end
+            end
+        else
+            for t in 𝒯
+                @constraint(m, m[:cap_max][n, t] == n.capacity[t])
+            end
+        end
+    end
+
     for n ∈ 𝒩ᶜᵃᵖ, t ∈ 𝒯
         @constraint(m, m[:cap_usage][n, t] <= m[:cap_max][n, t]) # sum add_cap/rem_cap
     end
+
     isfirst(sp::StrategicPeriod) = sp.sp == 1 # TODO: Replace with TimeStructures method when released
     # Capacity updating
-    for n ∈ 𝒩ᶜᵃᵖ
-    existing_cap = 0 #n.properties[:ExistingCapacity]
+    for n ∈ 𝒩ᴵⁿᵛ
+    existing_cap = n.data["InvestmentModels"].ExistingCapacity
         for t ∈ 𝒯ᴵⁿᵛ
-            @constraint(m, m[:capacity][n, t] == (isfirst(t) ? existing_cap : m[:capacity][n, previous(t)]) + m[:add_cap][n, t] - 
-                (isfirst(t) ? 0 : m[:rem_cap][n, previous(t)]))
+            @constraint(m, m[:capacity][n, t] <= n.data["InvestmentModels"].max_inst_cap[t])
+            @constraint(m, m[:capacity][n, t] == (isfirst(t) ? existing_cap : m[:capacity][n, previous(t,𝒯)]) + m[:add_cap][n, t] - 
+                (isfirst(t) ? 0 : m[:rem_cap][n, previous(t,𝒯)]))
         end
         set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
     end
@@ -101,20 +128,16 @@ Add constraints related to capacity installation depending on investment mode of
 """
 set_capacity_installation(m, n, 𝒯ᴵⁿᵛ) = set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode(n))
 function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode)
-    max_add = 100   # TODO: Read data
-    min_add = 0     # TODO: Read data
     for t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:add_cap][n, t] <= max_add)
-        @constraint(m, m[:add_cap][n, t] >= min_add)
+        @constraint(m, m[:add_cap][n, t] <= n.data["InvestmentModels"].max_add[t])
+        @constraint(m, m[:add_cap][n, t] >= n.data["InvestmentModels"].min_add[t])
     end
 end
 
 function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
-    max_add = 100   # TODO: Read data
-    min_add = 0     # TODO: Read data
     for t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:add_cap][n, t] ≤ max_add * invest[n, t])
-        @constraint(m, m[:add_cap][n, t] >= min_add * invest[n, t])
+        @constraint(m, m[:add_cap][n, t] ≤ n.data["InvestmentModels"].max_add[t] * invest[n, t])
+        @constraint(m, m[:add_cap][n, t] >= n.data["InvestmentModels"].min_add[t] * invest[n, t])
     end
 end
 
@@ -141,3 +164,8 @@ function set_investment_properties(n, var, ::IndividualInvestment)
     set_investment_properties(n, var, dispatch_mode)
 end
 set_investment_properties(n, var, ::FixedInvestment) = "fixed" # TO DO
+
+#Other possibility to define investment mode, talk with LArs
+#function investmentmode(n)
+#    return n.data["InvestmentModels"].inv_mode
+#end
