@@ -35,12 +35,12 @@ function run_model(fn, model, optimizer=nothing)
 
 
     nodes = [
-            EMB.Availability(1, 𝒫₀, 𝒫₀),
+            EMB.GenAvailability(1, 𝒫₀, 𝒫₀),
             EMB.RefSource(2, FixedProfile(0), FixedProfile(30), FixedProfile(100), Dict(NG => 1), 𝒫ᵉᵐ₀,Dict("InvestmentModels" => extra_inv_data(FixedProfile(200),FixedProfile(1e12),0,FixedProfile(0),FixedProfile(0),ContinuousInvestment()))),  
             EMB.RefSource(3, FixedProfile(0), FixedProfile(9), FixedProfile(100), Dict(Coal => 1), 𝒫ᵉᵐ₀,Dict("InvestmentModels" => extra_inv_data(FixedProfile(400),FixedProfile(1e12),0,FixedProfile(0),FixedProfile(0),ContinuousInvestment()))),  
             EMB.RefGeneration(4, FixedProfile(0), FixedProfile(5.5), FixedProfile(100), Dict(NG => 2), Dict(Power => 1, CO2 => 1), 𝒫ᵉᵐ₀, 0.9,Dict("InvestmentModels" => extra_inv_data(FixedProfile(600),FixedProfile(25),0,FixedProfile(0),FixedProfile(0),ContinuousInvestment()))),  
             EMB.RefGeneration(5, FixedProfile(0), FixedProfile(6), FixedProfile(100),  Dict(Coal => 2.5), Dict(Power => 1, CO2 => 1), 𝒫ᵉᵐ₀, 0,Dict("InvestmentModels" => extra_inv_data(FixedProfile(800),FixedProfile(25),0,FixedProfile(0),FixedProfile(0),ContinuousInvestment()))),  
-            EMB.RefStorage(6, FixedProfile(0), FixedProfile(9.1), FixedProfile(100),  Dict(CO2 => 1, Power => 0.02), Dict(CO2 => 1),Dict("InvestmentModels" => extra_inv_data(FixedProfile(500),FixedProfile(600),0,FixedProfile(0),FixedProfile(0),ContinuousInvestment()))),
+            EMB.RefStorage(6, FixedProfile(0), 9.1, FixedProfile(100), FixedProfile(10), Dict(CO2 => 1, Power => 0.02), Dict(CO2 => 1),Dict("InvestmentModels" => extra_inv_data(FixedProfile(500),FixedProfile(600),0,FixedProfile(0),FixedProfile(0),ContinuousInvestment()))),
             EMB.RefSink(7, DynamicProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20;
                                        20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20;
                                        20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20;
