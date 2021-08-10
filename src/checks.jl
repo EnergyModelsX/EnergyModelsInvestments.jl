@@ -21,3 +21,6 @@ function EMB.check_node(n::EMB.Node, 𝒯, modeltype::InvestmentModel)
     EMB.check_node(n, 𝒯, EMB.OperationalModel(modeltype.case))
 
 end
+
+# TODO
+# - check that max_add and min_add only have strategic period resolution (and not for every operational period)
