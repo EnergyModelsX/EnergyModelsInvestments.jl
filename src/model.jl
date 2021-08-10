@@ -50,18 +50,18 @@ function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     # Add investment variables for each strategic period:
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     @variable(m,  invest[𝒩, 𝒯ᴵⁿᵛ])
-    @variable(m, capacity[𝒩, 𝒯ᴵⁿᵛ]) # Installed capacity
-    @variable(m, add_cap[𝒩, 𝒯ᴵⁿᵛ])  # Add capacity
-    @variable(m, rem_cap[𝒩, 𝒯ᴵⁿᵛ])  # Remove capacity
-    @variable(m, cap_max[𝒩, 𝒯])     # Max capacity
+    @variable(m, capacity[𝒩, 𝒯ᴵⁿᵛ] >= 0) # Installed capacity
+    @variable(m, add_cap[𝒩, 𝒯ᴵⁿᵛ] >= 0)  # Add capacity
+    @variable(m, rem_cap[𝒩, 𝒯ᴵⁿᵛ]>= 0)  # Remove capacity
+    @variable(m, cap_max[𝒩, 𝒯] >= 0)     # Max capacity
 
     # Add storage specific investment variables for each strategic period:
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
     @variable(m, invest_capacity[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ])
-    @variable(m, cap_storage[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ]) # Installed capacity
-    @variable(m, add_cap_capacity[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ])  # Add capacity
-    @variable(m, rem_cap_capacity[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ])  # Remove capacity
-    @variable(m, stor_max[𝒩ˢᵗᵒʳ, 𝒯])     # Max storage capacity
+    @variable(m, cap_storage[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ] >= 0) # Installed capacity
+    @variable(m, add_cap_capacity[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ] >= 0)  # Add capacity
+    @variable(m, rem_cap_capacity[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ] >= 0)  # Remove capacity
+    @variable(m, stor_max[𝒩ˢᵗᵒʳ, 𝒯] >= 0)     # Max storage capacity
 
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
@@ -146,17 +146,16 @@ function constraints_capacity(m, 𝒩, 𝒯)
             @constraint(m, m[:capacity][n, t] == (isfirst(t) ? existing_cap : m[:capacity][n, previous(t,𝒯)]) + m[:add_cap][n, t] - 
                 (isfirst(t) ? 0 : m[:rem_cap][n, previous(t,𝒯)]))
         end
-        if n ∈ 𝒩ˢᵗᵒʳ
-            existing_cap_cap = n.data["InvestmentModels"].ExistingCapacity_capacity
-            for t ∈ 𝒯ᴵⁿᵛ
-                @constraint(m, m[:cap_storage][n, t] <= n.data["InvestmentModels"].max_inst_cap_capacity[t])
-                @constraint(m, m[:cap_storage][n, t] == (isfirst(t) ? existing_cap_cap : m[:cap_storage][n, previous(t,𝒯)]) + m[:add_cap_capacity][n, t] - 
-                    (isfirst(t) ? 0 : m[:rem_cap_capacity][n, previous(t,𝒯)]))
-            end
-        end
         set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
     end
-
+    for n ∈ 𝒩ˢᵗᵒʳ
+        existing_cap_cap = n.data["InvestmentModels"].ExistingCapacity_capacity
+        for t ∈ 𝒯ᴵⁿᵛ
+            @constraint(m, m[:cap_storage][n, t] <= n.data["InvestmentModels"].max_inst_cap_capacity[t])
+            @constraint(m, m[:cap_storage][n, t] == (isfirst(t) ? existing_cap_cap : m[:cap_storage][n, previous(t,𝒯)]) + m[:add_cap_capacity][n, t] - 
+                    (isfirst(t) ? 0 : m[:rem_cap_capacity][n, previous(t,𝒯)]))
+        end
+    end
 
 
 end
@@ -176,8 +175,8 @@ end
 
 function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     for t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:add_cap][n, t] ≤ n.data["InvestmentModels"].max_add[t] * invest[n, t])
-        @constraint(m, m[:add_cap][n, t] >= n.data["InvestmentModels"].min_add[t] * invest[n, t])
+        @constraint(m, m[:add_cap][n, t] <= n.data["InvestmentModels"].max_add[t] * m[:invest][n, t])
+        @constraint(m, m[:add_cap][n, t] >= n.data["InvestmentModels"].min_add[t] * m[:invest][n, t]) 
     end
 end
 
@@ -192,10 +191,10 @@ end
 
 function set_capacity_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     for t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:add_cap][n, t] ≤ n.data["InvestmentModels"].max_add[t] * invest[n, t])
-        @constraint(m, m[:add_cap][n, t] >= n.data["InvestmentModels"].min_add[t] * invest[n, t])
-        @constraint(m, m[:add_cap_capacity][n, t] ≤ n.data["InvestmentModels"].max_add_capacity[t] * invest_capacity[n, t])
-        @constraint(m, m[:add_cap_capacity][n, t] >= n.data["InvestmentModels"].min_add_capacity[t] * invest_capacity[n, t])
+        @constraint(m, m[:add_cap][n, t] <= n.data["InvestmentModels"].max_add[t] * m[:invest][n, t])
+        @constraint(m, m[:add_cap][n, t] >= n.data["InvestmentModels"].min_add[t] * m[:invest][n, t])
+        @constraint(m, m[:add_cap_capacity][n, t] <= n.data["InvestmentModels"].max_add_capacity[t] * m[:invest_capacity][n, t])
+        @constraint(m, m[:add_cap_capacity][n, t] >= n.data["InvestmentModels"].min_add_capacity[t] * m[:invest_capacity][n, t])
     end
 end
 
@@ -233,9 +232,5 @@ function EMB.variables_storage(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
     # @variable(m, bypass[𝒩ˢᵗᵒʳ, 𝒯] >= 0)
     @variable(m, stor_level[𝒩ˢᵗᵒʳ, 𝒯] >= 0)
-
-    for n ∈ 𝒩ˢᵗᵒʳ, t ∈ 𝒯
-        @constraint(m, m[:stor_max][n, t] == n.cap_storage[t])
-    end
 
 end
