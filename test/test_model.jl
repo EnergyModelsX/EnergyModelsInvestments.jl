@@ -11,15 +11,24 @@
 
     m, data = IM.run_model("", model, GLPK.Optimizer)
     # Check model
-    @test size(all_variables(m))[1] == 7296
+    @test size(all_variables(m))[1] == 7508
 
     # Check results
     @test JuMP.termination_status(m) == MOI.OPTIMAL
-    @test objective_value(m) ≈ -663e6
+    @test objective_value(m) ≈ -5.452697583633743e7
 
-
+    print("~~~~~~ CAPACITY ~~~~~~ \n")
     for n in data[:nodes],t in strategic_periods(data[:T])
         print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
+    end
+    print("~~~~~~ ADD_CAP ~~~~~~ \n")
+    for n in data[:nodes],t in strategic_periods(data[:T])
+        print(n,", ",t,"   :   ",JuMP.value(m[:add_cap][n,t]),"\n")
+    end
+    print("~~~~~~ REM_CAP ~~~~~~ \n")
+    for n in data[:nodes],t in strategic_periods(data[:T])
+
+        print(n,", ",t,"   :   ",JuMP.value(m[:rem_cap][n,t]),"\n")
     end
 
     CH4 = data[:products][1]
