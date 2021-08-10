@@ -14,6 +14,7 @@ function EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)#, sense=Max)
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
+    𝒩ᴵⁿᵛ = (i for i ∈ 𝒩 if has_investment(i))
     r = modeltype.r     # Discount rate
 
     capexunit = 1 # TODO: Fix scaling if operational units are different form CAPEX
@@ -23,7 +24,7 @@ function EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)#, sense=Max)
     haskey(m, :revenue) && (obj += sum(obj_weight(r, 𝒯, t_inv, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
     haskey(m, :opex_var) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_var][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
     haskey(m, :opex_fixed) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_fixed][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :capex) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex][i,t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :capex) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex][i,t]  for i ∈ 𝒩ᴵⁿᵛ, t ∈  𝒯ᴵⁿᵛ))
     
     # TODO: Maintentance cost
     # TODO: Residual value
@@ -77,7 +78,7 @@ function constraints_capacity(m, 𝒩, 𝒯)
 
     #constraints capex
     for n ∈ 𝒩ᴵⁿᵛ, t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:capex][n,t] == n.data["InvestmentModels"].capex[t])
+        @constraint(m, m[:capex][n,t] == n.data["InvestmentModels"].capex[t] * m[:add_cap][n, t])
     end 
 
     # TODO, constraint for setting the minimum investment capacity
