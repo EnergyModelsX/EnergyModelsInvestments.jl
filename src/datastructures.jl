@@ -1,6 +1,7 @@
 
 struct StrategicCase <: EMB.Case
     CO2_limit::TimeProfile
+    emissions_price::Dict{ResourceEmit, TimeProfile}
 end
 
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
