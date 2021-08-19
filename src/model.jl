@@ -52,11 +52,11 @@ function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
     # Add investment variables for each strategic period:
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    @variable(m,  invest[𝒩, 𝒯ᴵⁿᵛ] ≥ 0)
-    @variable(m, capacity[𝒩, 𝒯ᴵⁿᵛ] ≥ 0) # Installed capacity   
-    @variable(m, add_cap[𝒩, 𝒯ᴵⁿᵛ] ≥ 0)  # Add capacity
-    # @variable(m, rem_cap[𝒩, 𝒯ᴵⁿᵛ] ≥ 0)  # Remove capacity
-    @variable(m, cap_max[𝒩, 𝒯] ≥ 0)     # Max capacity
+    @variable(m,  invest[𝒩, 𝒯ᴵⁿᵛ])
+    @variable(m, capacity[𝒩, 𝒯ᴵⁿᵛ]) # Installed capacity
+    @variable(m, add_cap[𝒩, 𝒯ᴵⁿᵛ])  # Add capacity
+    @variable(m, rem_cap[𝒩, 𝒯ᴵⁿᵛ])  # Remove capacity
+    @variable(m, cap_max[𝒩, 𝒯])     # Max capacity
 
 
     # Additional constraints (e.g. for binary investments) are added per node depending on 
@@ -118,10 +118,8 @@ function constraints_capacity(m, 𝒩, 𝒯)
     existing_cap = n.data["InvestmentModels"].ExistingCapacity
         for t ∈ 𝒯ᴵⁿᵛ
             @constraint(m, m[:capacity][n, t] <= n.data["InvestmentModels"].max_inst_cap[t])
-            @constraint(m, m[:capacity][n, t] == (isfirst(t) ? existing_cap : m[:capacity][n, previous(t,𝒯)]) + m[:add_cap][n, t])#  - 
-
-                # (isfirst(t) ? 0 : m[:rem_cap][n, previous(t,𝒯)]))
-            
+            @constraint(m, m[:capacity][n, t] == (isfirst(t) ? existing_cap : m[:capacity][n, previous(t,𝒯)]) + m[:add_cap][n, t] - 
+                (isfirst(t) ? 0 : m[:rem_cap][n, previous(t,𝒯)]))
         end
         set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
     end
