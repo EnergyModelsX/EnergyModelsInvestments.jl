@@ -42,6 +42,23 @@ struct extra_inv_data <: EMB.Data
     # min_inst_cap::TimeProfile #TO DO Implement
  end
 
+ struct extra_inv_data_storage <: EMB.Data
+    #Investment data related to storage power
+    capex::TimeProfile #capex of power
+    max_inst_cap::TimeProfile
+    ExistingCapacity::Real
+    max_add::TimeProfile
+    min_add::TimeProfile
+    #Investment data related to storage capacity
+    capex_capacity::TimeProfile #capex of capacity
+    max_inst_cap_capacity::TimeProfile
+    ExistingCapacity_capacity::Real
+    max_add_capacity::TimeProfile
+    min_add_capacity::TimeProfile
+    inv_mode::Investment
+    # min_inst_cap::TimeProfile #TO DO Implement
+ end
+
 """
     investmentmode(x)
 
