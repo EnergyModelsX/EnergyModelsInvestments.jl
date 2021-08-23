@@ -64,7 +64,7 @@ function run_model(fn, model, optimizer=nothing)
         EMB.Direct(51,nodes[5],nodes[1],EMB.Linear())
         EMB.Direct(61,nodes[6],nodes[1],EMB.Linear())
         EMB.Direct(71,nodes[7],nodes[1],EMB.Linear())
-        EMB.Direct(8,nodes[8],nodes[1],EMB.Linear())
+        EMB.Direct(81,nodes[8],nodes[1],EMB.Linear())
         EMB.Direct(91,nodes[9],nodes[1],EMB.Linear())
         EMB.Direct(101,nodes[10],nodes[1],EMB.Linear())
             ]

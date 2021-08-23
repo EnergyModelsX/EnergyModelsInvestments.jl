@@ -10,10 +10,12 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 
 """
-function EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)#, sense=Max)
+function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)#, sense=Max)
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
+    𝒩ᴵⁿᵛ = (i for i ∈ 𝒩 if has_investment(i))
+    𝒫ᵉᵐ  = EMB.res_sub(𝒫, ResourceEmit)
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
     r = modeltype.r     # Discount rate
 
@@ -24,8 +26,12 @@ function EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)#, sense=Max)
     haskey(m, :revenue) && (obj += sum(obj_weight(r, 𝒯, t_inv, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
     haskey(m, :opex_var) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_var][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
     haskey(m, :opex_fixed) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_fixed][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :capex) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex][i,t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :capex_capacity) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex_capacity][i,t]  for i ∈ 𝒩ˢᵗᵒʳ, t ∈  𝒯ᴵⁿᵛ)) #capex of the capacity part ofthe storage (by opposition to the power part)
+    haskey(m, :capex) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex][i,t]  for i ∈ 𝒩ᴵⁿᵛ, t ∈  𝒯ᴵⁿᵛ))
+    if haskey(m, :capex_capacity) && isempty(𝒩ˢᵗᵒʳ) == false
+        obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex_capacity][i,t]  for i ∈ 𝒩ˢᵗᵒʳ, t ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
+    end
+    em_price = modeltype.case.emissions_price
+    obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:emissions_strategic][t, p_em] * em_price[p_em][t] for p_em ∈ 𝒫ᵉᵐ, t ∈ 𝒯ᴵⁿᵛ)
     
     # TODO: Maintentance cost
     # TODO: Residual value
@@ -87,10 +93,10 @@ function constraints_capacity(m, 𝒩, 𝒯)
 
     #constraints capex
     for n ∈ 𝒩ᴵⁿᵛ, t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:capex][n,t] == n.data["InvestmentModels"].capex[t] * m[:add_cap][n,t])
+        @constraint(m, m[:capex][n,t] == n.data["InvestmentModels"].capex[t] * m[:add_cap][n, t])
     end 
     for n ∈ 𝒩ˢᵗᵒʳ, t ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:capex_capacity][n,t] == n.data["InvestmentModels"].capex_capacity[t] * m[:add_cap_capacity][n,t])
+        @constraint(m, m[:capex_capacity][n,t] == n.data["InvestmentModels"].capex_capacity[t] * m[:add_cap_capacity][n, t])
     end 
     
     
