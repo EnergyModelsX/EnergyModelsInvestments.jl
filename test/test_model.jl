@@ -87,8 +87,8 @@ end
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test round(objective_value(m)) ≈ 203389 #why positive value? All components should be negative... value was almost the same but with a minus before
-    
+        @test round(objective_value(m)) ≈ -204382
+        
         print("~~~~~~ CAPACITY ~~~~~~ \n")
         for n in data[:nodes],t in strategic_periods(data[:T])
             print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
