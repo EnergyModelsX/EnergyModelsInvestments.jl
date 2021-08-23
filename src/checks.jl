@@ -6,7 +6,7 @@ function check_investment_data(n, 𝒯)
 
     for t ∈ 𝒯
         # Check that the installed capacity at the start is below the lower bound.
-        @assert_or_log inv_data.ExistingCapacity <= inv_data.max_inst_cap[t] "Existing capacity can not be larger than max installed capacity in the beginning."
+        @assert_or_log TimeStructures.getindex(n.capacity,t) <= inv_data.max_inst_cap[t] "Existing capacity can not be larger than max installed capacity in the beginning."
         break
     end
 end

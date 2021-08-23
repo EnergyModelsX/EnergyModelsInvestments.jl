@@ -35,7 +35,6 @@ struct IndividualInvestment <: Investment end 	# Look up property of each node t
 struct extra_inv_data <: EMB.Data
     capex::TimeProfile
     max_inst_cap::TimeProfile
-    ExistingCapacity::Real
     max_add::TimeProfile
     min_add::TimeProfile
     inv_mode::Investment
@@ -46,7 +45,6 @@ struct extra_inv_data <: EMB.Data
     #Investment data related to storage power
     capex::TimeProfile #capex of power
     max_inst_cap::TimeProfile
-    ExistingCapacity::Real
     max_add::TimeProfile
     min_add::TimeProfile
     #Investment data related to storage capacity

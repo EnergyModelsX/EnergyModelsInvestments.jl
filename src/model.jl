@@ -146,10 +146,9 @@ function constraints_capacity(m, 𝒩, 𝒯)
     isfirst(sp::StrategicPeriod) = sp.sp == 1 # TODO: Replace with TimeStructures method when released
     # Capacity updating
     for n ∈ 𝒩ᴵⁿᵛ
-        existing_cap = n.data["InvestmentModels"].ExistingCapacity
         for t ∈ 𝒯ᴵⁿᵛ
             @constraint(m, m[:capacity][n, t] <= n.data["InvestmentModels"].max_inst_cap[t])
-            @constraint(m, m[:capacity][n, t] == (isfirst(t) ? existing_cap : m[:capacity][n, previous(t,𝒯)]) + m[:add_cap][n, t] - 
+            @constraint(m, m[:capacity][n, t] == (isfirst(t) ? TimeStructures.getindex(n.capacity,t) : m[:capacity][n, previous(t,𝒯)]) + m[:add_cap][n, t] - 
                 (isfirst(t) ? 0 : m[:rem_cap][n, previous(t,𝒯)]))
         end
         set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)

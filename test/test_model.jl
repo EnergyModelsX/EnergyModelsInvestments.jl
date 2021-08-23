@@ -24,7 +24,6 @@ function small_graph(source=nothing, sink=nothing)
         investment_data_source = IM.extra_inv_data(
             FixedProfile(1000), # capex [€/kW]
             FixedProfile(30), #  max installed capacity [kW]
-            0, # existing capacity [kW]
             FixedProfile(15), # max_add [kW]
             FixedProfile(5), # min_add [kW]
             IM.ContinuousInvestment() # investment mode
@@ -147,7 +146,7 @@ end
 
             for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
-                @test value.(m[:cap_max][source, t]) == source.data["InvestmentModels"].ExistingCapacity + value.(m[:add_cap][source, t_inv])
+                @test value.(m[:cap_max][source, t]) == TimeStructures.getindex(source.capacity,t_inv) + value.(m[:add_cap][source, t_inv])
                 break
             end        
         end
