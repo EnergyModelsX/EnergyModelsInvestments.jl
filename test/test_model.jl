@@ -82,25 +82,25 @@ end
         # Check model
         @test size(all_variables(m))[1] == 11548
 
-        println(solution_summary(m))
+        # println(solution_summary(m))
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
         @test round(objective_value(m)) ≈ -204382
         
-        print("~~~~~~ CAPACITY ~~~~~~ \n")
-        for n in data[:nodes],t in strategic_periods(data[:T])
-            print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
-        end
-        print("~~~~~~ ADD_CAP ~~~~~~ \n")
-        for n in data[:nodes],t in strategic_periods(data[:T])
-            print(n,", ",t,"   :   ",JuMP.value(m[:add_cap][n,t]),"\n")
-        end
-        print("~~~~~~ REM_CAP ~~~~~~ \n")
-        for n in data[:nodes],t in strategic_periods(data[:T])
+        # print("~~~~~~ CAPACITY ~~~~~~ \n")
+        # for n in data[:nodes],t in strategic_periods(data[:T])
+        #     print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
+        # end
+        # print("~~~~~~ ADD_CAP ~~~~~~ \n")
+        # for n in data[:nodes],t in strategic_periods(data[:T])
+        #     print(n,", ",t,"   :   ",JuMP.value(m[:add_cap][n,t]),"\n")
+        # end
+        # print("~~~~~~ REM_CAP ~~~~~~ \n")
+        # for n in data[:nodes],t in strategic_periods(data[:T])
     
-            print(n,", ",t,"   :   ",JuMP.value(m[:rem_cap][n,t]),"\n")
-        end
+        #     print(n,", ",t,"   :   ",JuMP.value(m[:rem_cap][n,t]),"\n")
+        # end
 
 
         CH4 = data[:products][1]
@@ -121,19 +121,19 @@ end
         case = IM.StrategicCase(StrategicFixedProfile([450, 400, 350, 300]),𝒫ᵉᵐ₀)
         m = optimize(data, case)
 
-        println(solution_summary(m))
+        # println(solution_summary(m))
 
-        general_tests(m)
-        @show value.(m[:cap_usage])
-        println()
-        @show value.(m[:cap_max])
-        println()
-        @show value.(m[:add_cap])
-        println()
-        @show value.(m[:capacity])
-        println()
-        @show value.(m[:rem_cap])
-        println()
+        # general_tests(m)
+        # @show value.(m[:cap_usage])
+        # println()
+        # @show value.(m[:cap_max])
+        # println()
+        # @show value.(m[:add_cap])
+        # println()
+        # @show value.(m[:capacity])
+        # println()
+        # @show value.(m[:rem_cap])
+        # println()
         # @show value.(m[:rem_cap])
 
         source = data[:nodes][2]

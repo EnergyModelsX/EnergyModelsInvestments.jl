@@ -6,6 +6,7 @@ using JuMP
 using GLPK
 const IM = InvestmentModels
 const EMB = EnergyModelsBase
+const TS = TimeStructures
 
 
 include("test_discounting.jl")
