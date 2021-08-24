@@ -25,9 +25,9 @@ end
 
 # Investment type traits for nodes
 abstract type Investment end 					# Kind of investment variables 
-struct DiscreteInvestment <: Investment end 	# Binary variables
+struct DiscreteInvestment   <: Investment end 	# Binary variables
 struct ContinuousInvestment <: Investment end 	# Continuous variables
-struct FixedInvestment <: Investment end 		# Fixed variables or as parameter
+struct FixedInvestment      <: Investment end   # Fixed variables or as parameter
 struct IndividualInvestment <: Investment end 	# Look up property of each node to decide
 
 # Define Structure for the additional parameters passed 
@@ -48,11 +48,10 @@ struct extra_inv_data <: EMB.Data
     max_add::TimeProfile
     min_add::TimeProfile
     #Investment data related to storage capacity
-    capex_capacity::TimeProfile #capex of capacity
-    max_inst_cap_capacity::TimeProfile
-    ExistingCapacity_capacity::Real
-    max_add_capacity::TimeProfile
-    min_add_capacity::TimeProfile
+    capex_stor::TimeProfile #capex of capacity
+    max_inst_stor::TimeProfile
+    max_add_stor::TimeProfile
+    min_add_stor::TimeProfile
     inv_mode::Investment
     # min_inst_cap::TimeProfile #TO DO Implement
  end
