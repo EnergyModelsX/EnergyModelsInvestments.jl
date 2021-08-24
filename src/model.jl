@@ -236,7 +236,7 @@ end
 Add constraints related to storage installation depending on investment mode of node `n`
 """
 set_storage_installation(m, n, 𝒯ᴵⁿᵛ) = set_storage_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode(n))
-set_storage_installation(m, n, 𝒯ᴵⁿᵛ) = empty
+set_storage_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode) = empty
 function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investmentmode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:add_stor][n, t_inv] <= n.data["InvestmentModels"].max_add_stor[t_inv])

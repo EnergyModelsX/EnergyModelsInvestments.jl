@@ -25,9 +25,9 @@ end
 
 # Investment type traits for nodes
 abstract type Investment end 					# Kind of investment variables 
-struct DiscreteInvestment <: Investment end 	# Binary variables
+struct DiscreteInvestment   <: Investment end 	# Binary variables
 struct ContinuousInvestment <: Investment end 	# Continuous variables
-struct FixedInvestment <: Investment end 		# Fixed variables or as parameter
+struct FixedInvestment      <: Investment end   # Fixed variables or as parameter
 struct IndividualInvestment <: Investment end 	# Look up property of each node to decide
 
 # Define Structure for the additional parameters passed 
