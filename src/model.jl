@@ -192,7 +192,7 @@ function constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
             end
         else
             for t in 𝒯
-                @constraint(m, m[:stor_max][n, t] == n.cap_storage[t])
+                @constraint(m, m[:stor_max][n, t] == n.cap_stor[t])
             end
         end
     end
@@ -202,7 +202,7 @@ function constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
         for t_inv ∈ 𝒯ᴵⁿᵛ
             @constraint(m, m[:cap_stor][n, t_inv] <= n.data["InvestmentModels"].max_inst_stor[t_inv])
             @constraint(m, m[:cap_stor][n, t_inv] == 
-                (TS.isfirst(t_inv) ? TimeStructures.getindex(n.cap_storage,t_inv) : m[:cap_stor][n, previous(t_inv,𝒯)]) 
+                (TS.isfirst(t_inv) ? TimeStructures.getindex(n.cap_stor,t_inv) : m[:cap_stor][n, previous(t_inv,𝒯)]) 
                 + m[:add_stor][n, t_inv]
                 - (TS.isfirst(t_inv) ? 0 : m[:rem_stor][n, previous(t_inv,𝒯)]))
         end
