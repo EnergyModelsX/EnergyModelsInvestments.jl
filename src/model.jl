@@ -192,7 +192,7 @@ function constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
             end
         else
             for t in 𝒯
-                @constraint(m, m[:stor_max][n, t] == n.cap_stor[t])
+                @constraint(m, m[:stor_max][n, t] == n.cap_storage[t])
             end
         end
     end
