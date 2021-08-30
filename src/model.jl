@@ -86,7 +86,7 @@ function EMB.variables_storage(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     @variable(m, cap_stor[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ] >= 0)    # Installed capacity
     @variable(m, add_stor[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ] >= 0)    # Add capacity
     @variable(m, rem_stor[𝒩ˢᵗᵒʳ, 𝒯ᴵⁿᵛ] >= 0)    # Remove capacity
-    @variable(m, stor_max[𝒩ˢᵗᵒʳ, 𝒯]    >= 0)    # Max storage capacity
+    @variable(m, inst_stor[𝒩ˢᵗᵒʳ, 𝒯]    >= 0)    # Max storage capacity
 
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
@@ -187,12 +187,12 @@ function constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
         if n ∈ 𝒩ᴵⁿᵛ
             for t_inv in 𝒯ᴵⁿᵛ
                 for t in t_inv
-                    @constraint(m, m[:stor_max][n, t] == m[:cap_stor][n,t_inv])
+                    @constraint(m, m[:inst_stor][n, t] == m[:cap_stor][n,t_inv])
                 end
             end
         else
             for t in 𝒯
-                @constraint(m, m[:stor_max][n, t] == n.cap_stor[t])
+                @constraint(m, m[:inst_stor][n, t] == n.cap_stor[t])
             end
         end
     end
