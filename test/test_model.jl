@@ -126,7 +126,7 @@ end
         # general_tests(m)
         # @show value.(m[:cap_usage])
         # println()
-        # @show value.(m[:cap_max])
+        # @show value.(m[:inst_cap])
         # println()
         # @show value.(m[:add_cap])
         # println()
@@ -140,13 +140,13 @@ end
         𝒯 = data[:T]
         𝒯ⁱⁿᵛ = strategic_periods(𝒯)
 
-        @testset "cap_max" begin
-            # Check that cap_max is less than node.data.max_inst_cap at all times.
-            @test sum(value.(m[:cap_max][source, t]) <= source.data["InvestmentModels"].max_inst_cap[t] for t ∈ 𝒯) == length(𝒯)
+        @testset "inst_cap" begin
+            # Check that inst_cap is less than node.data.max_inst_cap at all times.
+            @test sum(value.(m[:inst_cap][source, t]) <= source.data["InvestmentModels"].max_inst_cap[t] for t ∈ 𝒯) == length(𝒯)
 
             for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
-                @test value.(m[:cap_max][source, t]) == TimeStructures.getindex(source.capacity,t_inv) + value.(m[:add_cap][source, t_inv])
+                @test value.(m[:inst_cap][source, t]) == TimeStructures.getindex(source.capacity,t_inv) + value.(m[:add_cap][source, t_inv])
                 break
             end        
         end

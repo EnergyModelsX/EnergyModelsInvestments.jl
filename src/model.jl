@@ -59,7 +59,7 @@ function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     @variable(m, capacity[𝒩, 𝒯ᴵⁿᵛ] >= 0)        # Installed capacity
     @variable(m, add_cap[𝒩, 𝒯ᴵⁿᵛ]  >= 0)        # Add capacity
     @variable(m, rem_cap[𝒩, 𝒯ᴵⁿᵛ]  >= 0)        # Remove capacity
-    @variable(m, cap_max[𝒩, 𝒯]     >= 0)        # Max capacity
+    @variable(m, inst_cap[𝒩, 𝒯]     >= 0)        # Max capacity
 
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
@@ -128,18 +128,18 @@ function constraints_capacity(m, 𝒩, 𝒯)
         if n ∈ 𝒩ᴵⁿᵛ
             for t_inv in 𝒯ᴵⁿᵛ
                 for t in t_inv
-                    @constraint(m, m[:cap_max][n, t] == m[:capacity][n,t_inv])
+                    @constraint(m, m[:inst_cap][n, t] == m[:capacity][n,t_inv])
                 end
             end
         else
             for t in 𝒯
-                @constraint(m, m[:cap_max][n, t] == n.capacity[t])
+                @constraint(m, m[:inst_cap][n, t] == n.capacity[t])
             end
         end
     end
 
     for n ∈ 𝒩ᶜᵃᵖ, t ∈ 𝒯
-        @constraint(m, m[:cap_usage][n, t] <= m[:cap_max][n, t]) # sum add_cap/rem_cap
+        @constraint(m, m[:cap_usage][n, t] <= m[:inst_cap][n, t]) # sum add_cap/rem_cap
     end
 
     # Capacity updating
