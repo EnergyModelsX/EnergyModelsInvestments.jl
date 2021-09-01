@@ -47,7 +47,7 @@ function small_graph(source=nothing, sink=nothing)
     return data
 end
 
-function optimize(data, case; discount_rate=5)
+function optimize(data, case; discount_rate=0.05)
     model = IM.InvestmentModel(case, discount_rate)
     m = EMB.create_model(data, model)
     optimizer = GLPK.Optimizer
