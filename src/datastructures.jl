@@ -33,26 +33,26 @@ struct IndividualInvestment <: Investment end 	# Look up property of each node t
 # Define Structure for the additional parameters passed 
 # to the technology structures defined in other packages
 struct extra_inv_data <: EMB.Data
-    capex::TimeProfile
-    max_inst_cap::TimeProfile
-    max_add::TimeProfile
-    min_add::TimeProfile
-    inv_mode::Investment
+    Capex_Cap::TimeProfile
+    Cap_max_inst::TimeProfile
+    Cap_max_add::TimeProfile
+    Cap_min_add::TimeProfile
+    Cap_mode::Investment
     # min_inst_cap::TimeProfile #TO DO Implement
  end
 
  struct extra_inv_data_storage <: EMB.Data
     #Investment data related to storage power
-    capex::TimeProfile #capex of power
-    max_inst_cap::TimeProfile
-    max_add::TimeProfile
-    min_add::TimeProfile
+    Capex_Cap::TimeProfile #capex of power
+    Cap_max_inst::TimeProfile
+    Cap_max_add::TimeProfile
+    Cap_min_add::TimeProfile
     #Investment data related to storage capacity
-    capex_stor::TimeProfile #capex of capacity
-    max_inst_stor::TimeProfile
-    max_add_stor::TimeProfile
-    min_add_stor::TimeProfile
-    inv_mode::Investment
+    Capex_stor::TimeProfile #capex of capacity
+    Stor_max_inst::TimeProfile
+    Stor_max_add::TimeProfile
+    Stor_min_add::TimeProfile
+    Cap_mode::Investment
     # min_inst_cap::TimeProfile #TO DO Implement
  end
 

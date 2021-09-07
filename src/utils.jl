@@ -14,19 +14,19 @@ end
 function has_capacity(i)
     ~isa(i, EMB.Availability) && 
     (
-        hasproperty(i, :capacity) 
+        hasproperty(i, :Cap) 
     )
 end
 
 function has_investment(i)
     ~isa(i, EMB.Availability) && 
     (
-        hasproperty(i, :data) &&
+        hasproperty(i, :Data) &&
         (
-            hasproperty(i.data["InvestmentModels"], :max_inst_cap) ||
-            hasproperty(i.data["InvestmentModels"], :capex) ||
-            hasproperty(i.data["InvestmentModels"], :max_add) ||
-            hasproperty(i.data["InvestmentModels"], :min_add)
+            hasproperty(i.Data["InvestmentModels"], :Capex_Cap) ||
+            hasproperty(i.Data["InvestmentModels"], :Cap_max_inst) ||
+            hasproperty(i.Data["InvestmentModels"], :Cap_max_add) ||
+            hasproperty(i.Data["InvestmentModels"], :Cap_min_add)
         )
     )
 end
@@ -34,12 +34,12 @@ end
 function has_storage_investment(i)
     ~isa(i, EMB.Availability) && 
     (
-        hasproperty(i, :data) &&
+        hasproperty(i, :Data) &&
         (
-            hasproperty(i.data["InvestmentModels"], :capex_stor) ||
-            hasproperty(i.data["InvestmentModels"], :max_inst_stor) ||
-            hasproperty(i.data["InvestmentModels"], :max_add_stor) ||
-            hasproperty(i.data["InvestmentModels"], :min_add_stor)
+            hasproperty(i.Data["InvestmentModels"], :Capex_stor) ||
+            hasproperty(i.Data["InvestmentModels"], :Stor_max_inst) ||
+            hasproperty(i.Data["InvestmentModels"], :Stor_max_add) ||
+            hasproperty(i.Data["InvestmentModels"], :Stor_min_add)
         )
     )
 end
