@@ -22,11 +22,11 @@ function small_graph(source=nothing, sink=nothing)
 
     if isnothing(source)
         investment_data_source = IM.extra_inv_data(
-            FixedProfile(1000), # capex [€/kW]
-            FixedProfile(30), #  max installed capacity [kW]
-            FixedProfile(15), # max_add [kW]
-            FixedProfile(5), # min_add [kW]
-            IM.ContinuousInvestment() # investment mode
+            capex=FixedProfile(1000), # capex [€/kW]
+            max_inst_cap=FixedProfile(30), #  max installed capacity [kW]
+            max_add=FixedProfile(15), # max_add [kW]
+            min_add=FixedProfile(5), # min_add [kW]
+            #IM.ContinuousInvestment() # investment mode
         )
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
             FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("InvestmentModels"=>investment_data_source))
@@ -88,19 +88,18 @@ end
         @test JuMP.termination_status(m) == MOI.OPTIMAL
         @test round(objective_value(m)) ≈ -204382
         
-        # print("~~~~~~ CAPACITY ~~~~~~ \n")
-        # for n in data[:nodes],t in strategic_periods(data[:T])
-        #     print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
-        # end
-        # print("~~~~~~ ADD_CAP ~~~~~~ \n")
-        # for n in data[:nodes],t in strategic_periods(data[:T])
-        #     print(n,", ",t,"   :   ",JuMP.value(m[:add_cap][n,t]),"\n")
-        # end
-        # print("~~~~~~ REM_CAP ~~~~~~ \n")
-        # for n in data[:nodes],t in strategic_periods(data[:T])
-    
-        #     print(n,", ",t,"   :   ",JuMP.value(m[:rem_cap][n,t]),"\n")
-        # end
+         print("~~~~~~ CAPACITY ~~~~~~ \n")
+         for n in data[:nodes],t in strategic_periods(data[:T])
+             print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
+         end
+         print("~~~~~~ ADD_CAP ~~~~~~ \n")
+         for n in data[:nodes],t in strategic_periods(data[:T])
+             print(n,", ",t,"   :   ",JuMP.value(m[:add_cap][n,t]),"\n")
+         end
+         print("~~~~~~ REM_CAP ~~~~~~ \n")
+         for n in data[:nodes],t in strategic_periods(data[:T])
+             print(n,", ",t,"   :   ",JuMP.value(m[:rem_cap][n,t]),"\n")
+         end
 
 
         CH4 = data[:products][1]

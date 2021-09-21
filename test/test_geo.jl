@@ -63,7 +63,14 @@ print("~~~~~~ CAPACITY ~~~~~~ \n")
     end
     print("\n")
  end
-
+ print("~~~~~~ TRANS CAPACITY ~~~~~~ \n")
+ for l in data[:transmission], cm in GEO.corridor_modes(l)
+    print(l, " ", cm,": ")
+    for t in strategic_periods(data[:T])
+        print(JuMP.value(m[:trans_capacity][l,t,cm]),", ")
+    end
+    print("\n")
+ end
 #trans = Dict((l, cm.name) => [value.(m[:trans_out])[l, t, cm] for t ∈ 𝒯] for l ∈ ℒᵗʳᵃⁿˢ, cm ∈ l.modes)
 
 ## Plot map - areas and transmission
