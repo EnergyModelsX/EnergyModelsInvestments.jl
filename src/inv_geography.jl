@@ -3,13 +3,13 @@ const GEO = Geography
 ## Datastructures
 
 Base.@kwdef struct TransInvData <: EMB.Data
-capex::TimeProfile
-max_inst_cap::TimeProfile
-max_add::TimeProfile
-min_add::TimeProfile
-inv_mode::Investment = ContinuousInvestment()
-start_cap::Union{Real, Nothing} = nothing
-cap_increment::TimeProfile = FixedProfile(0)
+Capex_trans::TimeProfile
+Trans_max_inst::TimeProfile
+Trans_max_add::TimeProfile
+Trans_min_add::TimeProfile
+Inv_mode::Investment = ContinuousInvestment()
+Trans_start::Union{Real, Nothing} = nothing
+Trans_increment::TimeProfile = FixedProfile(0)
 end
 
 ## Model
@@ -57,11 +57,11 @@ function GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, ::InvestmentModel
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    @variable(m, invest_trans[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
-    @variable(m, remove_trans[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
+    @variable(m, trans_invest[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
+    @variable(m, trans_remove[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
     @variable(m, trans_capacity[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)] >= 0)        # Installed capacity
-    @variable(m, add_transcap[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Add capacity
-    @variable(m, rem_transcap[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Remove capacity
+    @variable(m, trans_cap_add[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Add capacity
+    @variable(m, trans_cap_rem[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Remove capacity
 end
 
 
@@ -71,11 +71,11 @@ function GEO.constraints_transmission(m, 𝒜, 𝒯, ℒᵗʳᵃⁿˢ, ::Investm
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l) 
-        @constraint(m, m[:capex_trans][l, t_inv, cm] == l.data[get_cm_index(cm,l)]["InvestmentModels"].capex[t_inv] * m[:add_transcap][l, t_inv, cm])
+        @constraint(m, m[:capex_trans][l, t_inv, cm] == l.data[get_cm_index(cm,l)]["InvestmentModels"].Capex_trans[t_inv] * m[:trans_cap_add][l, t_inv, cm])
     end
 
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l) 
-        set_investment_properties(l, cm, m[:invest_trans][l, t_inv,cm])  
+        set_investment_properties(l, cm, m[:trans_invest][l, t_inv,cm])  
     end
 
     for l ∈ ℒᵗʳᵃⁿˢ, cm ∈ GEO.corridor_modes(l)
@@ -96,12 +96,12 @@ function GEO.constraints_transmission(m, 𝒜, 𝒯, ℒᵗʳᵃⁿˢ, ::Investm
     # Transmission capacity updating
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
         for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap= get_start_cap(cm, t_inv, l.data[get_cm_index(cm, l)]["InvestmentModels"].start_cap)
-            @constraint(m, m[:trans_capacity][l, t_inv, cm] <= l.data[get_cm_index(cm,l)]["InvestmentModels"].max_inst_cap[t_inv])
+            start_cap= get_start_cap(cm, t_inv, l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_start)
+            @constraint(m, m[:trans_capacity][l, t_inv, cm] <= l.data[get_cm_index(cm,l)]["InvestmentModels"].Trans_max_inst[t_inv])
             @constraint(m, m[:trans_capacity][l, t_inv, cm] ==
                 (TS.isfirst(t_inv) ? start_cap : m[:trans_capacity][l, previous(t_inv,𝒯), cm])
-                + m[:add_transcap][l, t_inv, cm] 
-                - (TS.isfirst(t_inv) ? 0 : m[:rem_transcap][l, previous(t_inv,𝒯), cm]))
+                + m[:trans_cap_add][l, t_inv, cm] 
+                - (TS.isfirst(t_inv) ? 0 : m[:trans_cap_rem][l, previous(t_inv,𝒯), cm]))
         end
         set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm)
     end
@@ -130,42 +130,42 @@ function get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing)
     end
 end
 
-investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.data[get_cm_index(cm, l)]["InvestmentModels"].inv_mode
+investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
 
 set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm) = set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode(cm,l))
 function set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:add_transcap][l, t_inv, cm] <= l.data[get_cm_index(cm, l)]["InvestmentModels"].max_add[t_inv])
-        @constraint(m, m[:add_transcap][l, t_inv, cm] >= l.data[get_cm_index(cm, l)]["InvestmentModels"].min_add[t_inv])
-        @constraint(m, m[:rem_transcap][l, t_inv, cm] == 0)
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_max_add[t_inv])
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] >= l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_min_add[t_inv])
+        @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
 end
 
 function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::DiscreteInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_capacity][l, t_inv, cm] == cm.capacity[t_inv] * m[:invest_trans][l, t_inv]) 
+        @constraint(m, m[:trans_capacity][l, t_inv, cm] == cm.capacity[t_inv] * m[:trans_invest][l, t_inv]) 
     end
 end
 
 function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::IntegerInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        set_investment_properties(l, cm, m[:remove_trans][l,t_inv,cm])
-        @constraint(m, m[:add_transcap][l, t_inv, cm] == l.data[get_cm_index(cm, l)]["InvestmentModels"].cap_increment[t_inv] * m[:invest_trans][l, t_inv, cm])
-        @constraint(m, m[:rem_transcap][l, t_inv, cm] == l.data[get_cm_index(cm, l)]["InvestmentModels"].cap_increment[t_inv] * m[:remove_trans][l, t_inv, cm])
+        set_investment_properties(l, cm, m[:trans_remove][l,t_inv,cm])
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] == l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_increment[t_inv] * m[:trans_invest][l, t_inv, cm])
+        @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_increment[t_inv] * m[:trans_remove][l, t_inv, cm])
     end
 end
 
 function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::SemiContinuousInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:add_transcap][l, t_inv, cm] <= l.data[get_cm_index(cm, l)]["InvestmentModels"].max_add[t_inv] )
-        @constraint(m, m[:add_transcap][l, t_inv, cm] >= l.data[get_cm_index(cm, l)]["InvestmentModels"].min_add[t_inv] * m[:invest_trans][l, t_inv, cm]) 
-        @constraint(m, m[:rem_transcap][l, t_inv, cm] == 0)
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_max_add[t_inv] )
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] >= l.data[get_cm_index(cm, l)]["InvestmentModels"].Trans_min_add[t_inv] * m[:trans_invest][l, t_inv, cm]) 
+        @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
 end
 
 function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::FixedInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_capacity][l, t_inv, cm] == cm.capacity[t_inv] * m[:invest_trans][l, t_inv, cm])
+        @constraint(m, m[:trans_capacity][l, t_inv, cm] == cm.capacity[t_inv] * m[:trans_invest][l, t_inv, cm])
     end
 end
 
@@ -183,7 +183,7 @@ function set_investment_properties(l, cm, var, ::SemiContinuousInvestment)
 end
     
 function set_investment_properties(l, cm, var, ::IndividualInvestment)
-    dispatch_mode = l.data[get_cm_index(cm, l)]["InvestmentModels"].inv_mode
+    dispatch_mode = l.data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
     set_investment_properties(l, cm, var, dispatch_mode)
 end
 
@@ -234,10 +234,10 @@ function has_cm_investment(cm,l)
     isa(l, GEO.Transmission) &&
     cm ∈ l.modes  &&
     (
-        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :max_inst_cap) ||
-        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :capex) ||
-        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :max_add) ||
-        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :min_add)
+        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_max_inst) ||
+        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :Capex_trans) ||
+        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_max_add) ||
+        hasproperty(l.data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_min_add)
     )
 end
 
@@ -290,8 +290,8 @@ function GEO.read_data(modeltype::InvestmentModel)
     LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, 100.0, 0.05)#, EMB.Linear)
 
     # Create transmission between areas
-    transmission = [GEO.Transmission(areas[1], areas[2], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(capex=FixedProfile(1000), max_inst_cap=FixedProfile(50), max_add=FixedProfile(100), min_add=FixedProfile(0), inv_mode=DiscreteInvestment()))]),
-                    GEO.Transmission(areas[1], areas[3], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(capex=FixedProfile(1000), max_inst_cap=FixedProfile(100), max_add=FixedProfile(100), min_add=FixedProfile(0)))]),
+    transmission = [GEO.Transmission(areas[1], areas[2], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(1000), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(0), Inv_mode=DiscreteInvestment()))]),
+                    GEO.Transmission(areas[1], areas[3], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(1000), Trans_max_inst=FixedProfile(100), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(0)))]),
                     GEO.Transmission(areas[2], areas[3], [OverheadLine_50MW],[Dict(""=> EMB.EmptyData())]),
                     GEO.Transmission(areas[3], areas[4], [OverheadLine_50MW],[Dict(""=> EMB.EmptyData())]),
                     GEO.Transmission(areas[4], areas[2], [LNG_Ship_100MW],[Dict(""=> EMB.EmptyData())])]
