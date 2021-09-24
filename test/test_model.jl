@@ -22,11 +22,11 @@ function small_graph(source=nothing, sink=nothing)
 
     if isnothing(source)
         investment_data_source = IM.extra_inv_data(
-            FixedProfile(1000),         # Capex_Cap, capital costs [€/kW]
-            FixedProfile(30),           # Cap_max_inst, max installed capacity [kW]
-            FixedProfile(15),           # Cap_max_add, maximum addition [kW]
-            FixedProfile(5),            # Cap_min_add, minimum addition [kW]
-            IM.ContinuousInvestment()   # Investment mode
+            Capex_Cap=FixedProfile(1000), # capex [€/kW]
+            Cap_max_inst=FixedProfile(30), #  max installed capacity [kW]
+            Cap_max_add=FixedProfile(15), # max_add [kW]
+            Cap_min_add=FixedProfile(5), # min_add [kW]
+            #IM.ContinuousInvestment() # investment mode
         )
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
             FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("InvestmentModels"=>investment_data_source))
@@ -47,7 +47,7 @@ function small_graph(source=nothing, sink=nothing)
     return data
 end
 
-function optimize(data, case; discount_rate=5)
+function optimize(data, case; discount_rate=0.05)
     model = IM.InvestmentModel(case, discount_rate)
     m = EMB.create_model(data, model)
     optimizer = GLPK.Optimizer
