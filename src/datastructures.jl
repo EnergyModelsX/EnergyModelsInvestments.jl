@@ -39,7 +39,7 @@ Base.@kwdef struct extra_inv_data <: EMB.Data
     Cap_max_inst::TimeProfile
     Cap_max_add::TimeProfile
     Cap_min_add::TimeProfile
-    Cap_mode::Investment = ContinuousInvestment()
+    Inv_mode::Investment = ContinuousInvestment()
     Cap_start::Union{Real, Nothing} = nothing
     Cap_increment::TimeProfile = FixedProfile(0)
     # min_inst_cap::TimeProfile #TO DO Implement
@@ -48,19 +48,20 @@ Base.@kwdef struct extra_inv_data <: EMB.Data
 
  Base.@kwdef struct extra_inv_data_storage <: EMB.Data
     #Investment data related to storage power
-    Capex_Cap::TimeProfile #capex of power
-    Cap_max_inst::TimeProfile
-    Cap_max_add::TimeProfile
-    Cap_min_add::TimeProfile
+    Capex_rate::TimeProfile #capex of power
+    Rate_max_inst::TimeProfile
+    Rate_max_add::TimeProfile
+    Rate_min_add::TimeProfile
     #Investment data related to storage capacity
     Capex_stor::TimeProfile #capex of capacity
     Stor_max_inst::TimeProfile
     Stor_max_add::TimeProfile
     Stor_min_add::TimeProfile
-    Cap_mode::Investment = ContinuousInvestment()
-    Cap_start::Union{Real, Nothing} = nothing
+    # General inv data
+    Inv_mode::Investment = ContinuousInvestment()
+    Rate_start::Union{Real, Nothing} = nothing
     Stor_start::Union{Real, Nothing} = nothing
-    Cap_increment::TimeProfile = FixedProfile(0)
+    Rate_increment::TimeProfile = FixedProfile(0)
     Stor_increment::TimeProfile = FixedProfile(0)
     # min_inst_cap::TimeProfile #TO DO Implement
  end
@@ -89,6 +90,6 @@ Return the investment mode of the node 'n'. By default, all investments are cont
  definition with the kwdef function).
 """
 
-investmentmode(n) = n.data["InvestmentModels"].inv_mode
+investmentmode(n) = n.Data["InvestmentModels"].Inv_mode
 
 # TO DO function to fetch investment mode from the node type?

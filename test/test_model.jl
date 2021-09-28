@@ -88,17 +88,37 @@ end
         @test JuMP.termination_status(m) == MOI.OPTIMAL
         @test round(objective_value(m)) ≈ -204382
         
-        print("~~~~~~ CAPACITY ~~~~~~ \n")
-        for n in data[:nodes],t in strategic_periods(data[:T])
-            print(n,", ",t,"   :   ",JuMP.value(m[:cap_current][n,t]),"\n")
+        print("~~~~~~ GEN CAPACITY ~~~~~~ \n")
+        for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+           print(n,": ")
+           for t in strategic_periods(data[:T])
+               print(JuMP.value(m[:cap_current][n,t]),", ")
+           end
+           print("\n")
         end
         print("~~~~~~ ADD_CAP ~~~~~~ \n")
-        for n in data[:nodes],t in strategic_periods(data[:T])
-            print(n,", ",t,"   :   ",JuMP.value(m[:cap_add][n,t]),"\n")
+        for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+            print(n,": ")
+            for t in strategic_periods(data[:T])
+                print(JuMP.value(m[:cap_add][n,t]),", ")
+            end
+            print("\n")
         end
         print("~~~~~~ REM_CAP ~~~~~~ \n")
-        for n in data[:nodes],t in strategic_periods(data[:T])
-            print(n,", ",t,"   :   ",JuMP.value(m[:cap_rem][n,t]),"\n")
+        for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+            print(n,": ")
+            for t in strategic_periods(data[:T])
+                print(JuMP.value(m[:cap_rem][n,t]),", ")
+            end
+            print("\n")
+        end
+        print("~~~~~~ STOR CAPACITY ~~~~~~ \n")
+        for n in (i for i ∈ data[:nodes] if IM.has_storage_investment(i))
+           print(n,": ")
+           for t in strategic_periods(data[:T])
+               print(JuMP.value(m[:stor_cap_current][n,t]),", ", JuMP.value(m[:stor_rate_current][n,t]),", ")
+           end
+           print("\n")
         end
 
 

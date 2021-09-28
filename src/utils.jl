@@ -14,7 +14,15 @@ end
 function has_capacity(i)
     ~isa(i, EMB.Availability) && 
     (
-        hasproperty(i, :Cap) 
+        hasproperty(i, :Cap) ||
+        (hasproperty(i, :Rate_cap) && hasproperty(i, :Stor_cap))
+    )
+end
+
+function has_stor_capacity(i)
+    ~isa(i, EMB.Availability) && 
+    (
+        (hasproperty(i, :Rate_cap) && hasproperty(i, :Stor_cap))
     )
 end
 
