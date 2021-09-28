@@ -34,35 +34,35 @@ struct IndividualInvestment     <: Investment end 	# Look up property of each no
 
 # Define Structure for the additional parameters passed 
 # to the technology structures defined in other packages
-
 Base.@kwdef struct extra_inv_data <: EMB.Data
-    capex::TimeProfile
-    max_inst_cap::TimeProfile
-    max_add::TimeProfile
-    min_add::TimeProfile
-    inv_mode::Investment = ContinuousInvestment()
-    start_cap::Union{Real, Nothing} = nothing #start_cap is not necessary in the constructor, the idea is that it would then use the value speicfied in capacity of the node as a start cap
-    cap_increment::TimeProfile = FixedProfile(0)
+    Capex_Cap::TimeProfile
+    Cap_max_inst::TimeProfile
+    Cap_max_add::TimeProfile
+    Cap_min_add::TimeProfile
+    Inv_mode::Investment = ContinuousInvestment()
+    Cap_start::Union{Real, Nothing} = nothing
+    Cap_increment::TimeProfile = FixedProfile(0)
     # min_inst_cap::TimeProfile #TO DO Implement
  end
 
 
  Base.@kwdef struct extra_inv_data_storage <: EMB.Data
     #Investment data related to storage power
-    capex::TimeProfile #capex of power
-    max_inst_cap::TimeProfile
-    max_add::TimeProfile
-    min_add::TimeProfile
+    Capex_rate::TimeProfile #capex of power
+    Rate_max_inst::TimeProfile
+    Rate_max_add::TimeProfile
+    Rate_min_add::TimeProfile
     #Investment data related to storage capacity
-    capex_stor::TimeProfile #capex of capacity
-    max_inst_stor::TimeProfile
-    max_add_stor::TimeProfile
-    min_add_stor::TimeProfile
-    inv_mode::Investment = ContinuousInvestment()
-    start_cap::Union{Real, Nothing} = nothing
-    start_cap_stor::Union{Real, Nothing} = nothing
-    cap_increment::TimeProfile = FixedProfile(0)
-    cap_increment_stor::TimeProfile = FixedProfile(0)
+    Capex_stor::TimeProfile #capex of capacity
+    Stor_max_inst::TimeProfile
+    Stor_max_add::TimeProfile
+    Stor_min_add::TimeProfile
+    # General inv data
+    Inv_mode::Investment = ContinuousInvestment()
+    Rate_start::Union{Real, Nothing} = nothing
+    Stor_start::Union{Real, Nothing} = nothing
+    Rate_increment::TimeProfile = FixedProfile(0)
+    Stor_increment::TimeProfile = FixedProfile(0)
     # min_inst_cap::TimeProfile #TO DO Implement
  end
 #Consider package Parameters.jl to define struct with default values
@@ -90,6 +90,6 @@ Return the investment mode of the node 'n'. By default, all investments are cont
  definition with the kwdef function).
 """
 
-investmentmode(n) = n.data["InvestmentModels"].inv_mode
+investmentmode(n) = n.Data["InvestmentModels"].Inv_mode
 
 # TO DO function to fetch investment mode from the node type?

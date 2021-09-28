@@ -22,17 +22,17 @@ function small_graph(source=nothing, sink=nothing)
 
     if isnothing(source)
         investment_data_source = IM.extra_inv_data(
-            capex=FixedProfile(1000), # capex [€/kW]
-            max_inst_cap=FixedProfile(30), #  max installed capacity [kW]
-            max_add=FixedProfile(15), # max_add [kW]
-            min_add=FixedProfile(5), # min_add [kW]
+            Capex_Cap=FixedProfile(1000), # capex [€/kW]
+            Cap_max_inst=FixedProfile(30), #  max installed capacity [kW]
+            Cap_max_add=FixedProfile(15), # max_add [kW]
+            Cap_min_add=FixedProfile(5), # min_add [kW]
             #IM.ContinuousInvestment() # investment mode
         )
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
             FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("InvestmentModels"=>investment_data_source))
     end
     if isnothing(sink)
-        sink = EMB.RefSink("-snk", FixedProfile(20), Dict(:surplus => 0, :deficit => 1e6), Dict(Power => 1), 𝒫ᵉᵐ₀)
+        sink = EMB.RefSink("-snk", FixedProfile(20), Dict(:Surplus => 0, :Deficit => 1e6), Dict(Power => 1), 𝒫ᵉᵐ₀)
     end
     nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
@@ -88,18 +88,38 @@ end
         @test JuMP.termination_status(m) == MOI.OPTIMAL
         @test round(objective_value(m)) ≈ -204382
         
-         print("~~~~~~ CAPACITY ~~~~~~ \n")
-         for n in data[:nodes],t in strategic_periods(data[:T])
-             print(n,", ",t,"   :   ",JuMP.value(m[:capacity][n,t]),"\n")
-         end
-         print("~~~~~~ ADD_CAP ~~~~~~ \n")
-         for n in data[:nodes],t in strategic_periods(data[:T])
-             print(n,", ",t,"   :   ",JuMP.value(m[:add_cap][n,t]),"\n")
-         end
-         print("~~~~~~ REM_CAP ~~~~~~ \n")
-         for n in data[:nodes],t in strategic_periods(data[:T])
-             print(n,", ",t,"   :   ",JuMP.value(m[:rem_cap][n,t]),"\n")
-         end
+        print("~~~~~~ GEN CAPACITY ~~~~~~ \n")
+        for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+           print(n,": ")
+           for t in strategic_periods(data[:T])
+               print(JuMP.value(m[:cap_current][n,t]),", ")
+           end
+           print("\n")
+        end
+        print("~~~~~~ ADD_CAP ~~~~~~ \n")
+        for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+            print(n,": ")
+            for t in strategic_periods(data[:T])
+                print(JuMP.value(m[:cap_add][n,t]),", ")
+            end
+            print("\n")
+        end
+        print("~~~~~~ REM_CAP ~~~~~~ \n")
+        for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+            print(n,": ")
+            for t in strategic_periods(data[:T])
+                print(JuMP.value(m[:cap_rem][n,t]),", ")
+            end
+            print("\n")
+        end
+        print("~~~~~~ STOR CAPACITY ~~~~~~ \n")
+        for n in (i for i ∈ data[:nodes] if IM.has_storage_investment(i))
+           print(n,": ")
+           for t in strategic_periods(data[:T])
+               print(JuMP.value(m[:stor_cap_current][n,t]),", ", JuMP.value(m[:stor_rate_current][n,t]),", ")
+           end
+           print("\n")
+        end
 
 
         CH4 = data[:products][1]
@@ -122,30 +142,28 @@ end
 
         # println(solution_summary(m))
 
-        # general_tests(m)
-        # @show value.(m[:cap_usage])
-        # println()
-        # @show value.(m[:cap_max])
-        # println()
-        # @show value.(m[:add_cap])
-        # println()
-        # @show value.(m[:capacity])
-        # println()
-        # @show value.(m[:rem_cap])
-        # println()
-        # @show value.(m[:rem_cap])
+        general_tests(m)
+        @show value.(m[:cap_use])
+        println()
+        @show value.(m[:cap_inst])
+        println()
+        @show value.(m[:cap_add])
+        println()
+        @show value.(m[:cap_rem])
+        println()
+        @show value.(m[:cap_current])
 
         source = data[:nodes][2]
         𝒯 = data[:T]
         𝒯ⁱⁿᵛ = strategic_periods(𝒯)
 
-        @testset "cap_max" begin
-            # Check that cap_max is less than node.data.max_inst_cap at all times.
-            @test sum(value.(m[:cap_max][source, t]) <= source.data["InvestmentModels"].max_inst_cap[t] for t ∈ 𝒯) == length(𝒯)
+        @testset "cap_inst" begin
+            # Check that cap_inst is less than node.data.Cap_max_inst at all times.
+            @test sum(value.(m[:cap_inst][source, t]) <= source.Data["InvestmentModels"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
             for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
-                @test value.(m[:cap_max][source, t]) == TimeStructures.getindex(source.capacity,t_inv) + value.(m[:add_cap][source, t_inv])
+                @test value.(m[:cap_inst][source, t]) == TimeStructures.getindex(source.Cap,t_inv) + value.(m[:cap_add][source, t_inv])
                 break
             end        
         end
