@@ -17,6 +17,7 @@ function has_cm_investment(cm,l)
     isa(cm, GEO.TransmissionMode) &&
     isa(l, GEO.Transmission) &&
     cm ∈ l.Modes  &&
+    haskey(l.Data[get_cm_index(cm,l)], "InvestmentModels") &&
     (
         hasproperty(l.Data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_max_inst) ||
         hasproperty(l.Data[get_cm_index(cm,l)]["InvestmentModels"], :Capex_trans) ||
