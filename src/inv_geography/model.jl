@@ -1,6 +1,40 @@
 const GEO = Geography
 
-function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, ::InvestmentModel)
+"""
+    GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+
+Create objective function overloading the default from EMB for InvestmentModel.
+
+Maximize Net Present Value from revenues, investments (CAPEX) and operations (OPEX) 
+
+## TODO: 
+# * consider passing expression around for updating
+# * consider reading objective and adding terms/coefficients (from model object `m`)
+
+"""
+function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    ℒᵗʳᵃⁿˢᴵⁿᵛ = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
+    r= modeltype.r
+
+    obj= JuMP.objective_function(m)
+    if haskey(m, :capex_trans) && isempty(ℒᵗʳᵃⁿˢᴵⁿᵛ) == false
+        for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t ∈  𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
+            obj -= obj_weight_inv(r, 𝒯, t) * m[:capex_trans][l,t,cm] 
+        end
+    end
+
+    @objective(m, Max, obj)
+
+end
+
+"""
+    GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ,, modeltype::InvestmentModel)
+
+Create variables for the capital costs for the investments in transmission.
+"""
+function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
 
     ℒᵗʳᵃⁿˢᴵⁿᵛ = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -8,7 +42,16 @@ function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, ::Investmen
     @variable(m, capex_trans[l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ,  𝒯ᴵⁿᵛ, corridor_modes_with_inv(l)]  >= 0)
 end
 
-function GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, ::InvestmentModel)
+"""
+    GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+
+Create variables to track how much of installed transmision capacity is used for all 
+time periods `t ∈ 𝒯` and how much energy is lossed.
+Create variables for investments into transmission.
+"""
+function GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+
+    
     @variable(m, trans_in[l ∈ ℒᵗʳᵃⁿˢ,  𝒯, GEO.corridor_modes(l)] >= 0)
     @variable(m, trans_out[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
     @variable(m, trans_loss[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
@@ -18,27 +61,45 @@ function GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, ::InvestmentModel
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Add transmission specific investment variables for each strategic period:
     @variable(m, trans_invest_b[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
     @variable(m, trans_remove_b[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
     @variable(m, trans_cap_current[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)] >= 0)        # Installed capacity
     @variable(m, trans_cap_add[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Add capacity
     @variable(m, trans_cap_rem[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Remove capacity
+    
+
+    # Additional constraints (e.g. for binary investments) are added per node depending on 
+    # investment mode on each node. (One alternative could be to build variables iteratively with 
+    # JuMPUtils.jl)
+    constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
 end
 
 
-function GEO.constraints_transmission(m, 𝒜, 𝒯, ℒᵗʳᵃⁿˢ, ::InvestmentModel)
+"""
+    constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
+Set capacity-related constraints for transmissions `ℒᵗʳᵃⁿˢ` for investment time structure `𝒯`:
+* bounds
+* binary for DiscreteInvestment
+* link capacity variables
+
+"""
+function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
     
     ℒᵗʳᵃⁿˢᴵⁿᵛ = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Constraints capex
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l) 
         @constraint(m, m[:capex_trans][l, t_inv, cm] == l.Data[get_cm_index(cm,l)]["InvestmentModels"].Capex_trans[t_inv] * m[:trans_cap_add][l, t_inv, cm])
     end
 
+    # Set investment properties based on investment mode of transmission l
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l) 
         set_investment_properties(l, cm, m[:trans_invest_b][l, t_inv,cm])  
     end
 
+    # Link capacity to installed capacity 
     for l ∈ ℒᵗʳᵃⁿˢ, cm ∈ GEO.corridor_modes(l)
         CM_inv = corridor_modes_with_inv(l) 
         if cm ∈ CM_inv
@@ -66,18 +127,6 @@ function GEO.constraints_transmission(m, 𝒜, 𝒯, ℒᵗʳᵃⁿˢ, ::Investm
         end
         set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm)
     end
-
-    for a ∈ 𝒜
-        ℒᶠʳᵒᵐ, ℒᵗᵒ = GEO.trans_sub(ℒᵗʳᵃⁿˢ, a)
-        @constraint(m, [t ∈ 𝒯, p ∈ GEO.exchange_resources(ℒᵗʳᵃⁿˢ, a)], 
-            m[:area_exchange][a, t, p] == sum(sum(m[:trans_in][l, t, cm] for cm in l.Modes if cm.Resource == p) for l in ℒᶠʳᵒᵐ)
-                                          - sum(sum(m[:trans_out][l, t, cm] for cm in l.Modes if cm.Resource == p) for l in ℒᵗᵒ ))
-    end
-
-    for l in ℒᵗʳᵃⁿˢ
-        GEO.create_trans(m, 𝒯, l)
-    end
-
 end
 
 function get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing)
@@ -90,8 +139,12 @@ function get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing)
     end
 end
 
-investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
+"""
+    set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
 
+Add constraints related to capacity installation depending on investment mode of node `l`
+"""
+investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
 set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm) = set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode(cm,l))
 function set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -128,7 +181,12 @@ function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::FixedInvestment)
         @constraint(m, m[:trans_cap_current][l, t_inv, cm] == cm.Trans_cap[t_inv] * m[:trans_invest_b][l, t_inv, cm])
     end
 end
-
+"""
+    set_investment_properties(l, cm, var, mode)
+Set investment properties for variable `var` for transmission `l` and transmision mode (cm),
+e.g. set to binary for DiscreteInvestment, 
+bounds etc
+"""
 set_investment_properties(l::GEO.Transmission, cm::GEO.TransmissionMode, var) = set_investment_properties(l, cm, var, investmentmode(cm, l))
 function set_investment_properties(l, cm, var, mode)
     set_lower_bound(var, 0)
@@ -156,20 +214,3 @@ function set_investment_properties(l, cm, var, ::IntegerInvestment) # TO DO
     JuMP.set_lower_bound(var,0)
 end
 
-
-function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
-
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    ℒᵗʳᵃⁿˢᴵⁿᵛ = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
-    r= modeltype.r
-
-    obj= JuMP.objective_function(m)
-    if haskey(m, :capex_trans) && isempty(ℒᵗʳᵃⁿˢᴵⁿᵛ) == false
-        for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t ∈  𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
-            obj -= obj_weight_inv(r, 𝒯, t) * m[:capex_trans][l,t,cm] 
-        end
-    end
-
-    @objective(m, Max, obj)
-
-end

@@ -18,7 +18,7 @@ function GEO.read_data(modeltype::InvestmentModel)
     nodes = []
     links = []
     for a_id in area_ids
-        n, l = GEO.get_sub_system_data(a_id, 𝒫₀, 𝒫ᵉᵐ₀, products; gen_scale = gen_scale[a_id], mc_scale = mc_scale[a_id], d_scale = d_scale[a_id], modeltype=modeltype)
+        n, l = GEO.get_sub_system_data(a_id, 𝒫₀, 𝒫ᵉᵐ₀, products, modeltype; gen_scale = gen_scale[a_id], mc_scale = mc_scale[a_id], d_scale = d_scale[a_id])
         append!(nodes, n)
         append!(links, l)
 
@@ -31,7 +31,7 @@ function GEO.read_data(modeltype::InvestmentModel)
             GEO.Area(3, "Trondheim", 10.398, 63.4366, an[3]),
             GEO.Area(4, "Tromsø", 18.953, 69.669, an[4])]
 
-    NG = products[2]
+    NG = products[1]
     Power = products[3]
 
     OverheadLine_50MW = GEO.RefStatic("PowerLine_50", Power, 50.0, 0.05, 2)#, EMB.Linear)
@@ -57,7 +57,8 @@ function GEO.read_data(modeltype::InvestmentModel)
     return data
 end
 
-function GEO.get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products; gen_scale::Float64=1.0, mc_scale::Float64=1.0, d_scale::Float64=1.0, demand=false, modeltype::InvestmentModel)
+function GEO.get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products, modeltype::InvestmentModel;
+                    gen_scale::Float64=1.0, mc_scale::Float64=1.0, d_scale::Float64=1.0, demand=false)
     
     NG, Coal, Power, CO2 = products
 

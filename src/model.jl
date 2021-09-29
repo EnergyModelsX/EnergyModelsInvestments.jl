@@ -1,5 +1,5 @@
 """
-    objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)
+    EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
 Create objective function overloading the default from EMB for InvestmentModel.
 
@@ -42,8 +42,13 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)#, sense=
     @objective(m, Max, obj)
 end
 
+"""
+    EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, ::InvestmentModel)
 
-function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, ::InvestmentModel)
+Create variables for the capital costs for the invesments in storage and 
+technology nodes.
+"""
+function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
     
     𝒩ⁿᵒᵗ = EMB.node_not_av(𝒩)
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
@@ -56,13 +61,14 @@ function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, ::InvestmentModel)
 end
 
 """
-    variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
+    EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
 Create variables to track how much of installed capacity is used in each node
 in terms of either `flow_in` or `flow_out` (depending on node `n ∈ 𝒩`) for all 
 time periods `t ∈ 𝒯`.
+Create variables for investments into capacities
 """
-function EMB.variables_capacity(m, 𝒩, 𝒯, ::InvestmentModel)
+function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     @debug "Create investment variables"
 
     
@@ -83,17 +89,19 @@ function EMB.variables_capacity(m, 𝒩, 𝒯, ::InvestmentModel)
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
     # JuMPUtils.jl)
-    constraints_capacity(m, 𝒩, 𝒯)
+    constraints_capacity_invest(m, 𝒩, 𝒯)
 end
 
 """
-    variables_storage(m, 𝒩, 𝒯, modeltype::InvestmentModel)
+    EMB.variables_storage(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
-Create variables to track how much of installed capacity is used in each node
+
+Create variables to track how much of installed rate is used in each storage node
 in terms of either `flow_in` or `flow_out` (depending on node `n ∈ 𝒩`) for all 
-time periods `t ∈ 𝒯`.
+time periods `t ∈ 𝒯` and what storage level exists.
+Create variables for investments into storages.
 """
-function EMB.variables_storage(m, 𝒩, 𝒯, ::InvestmentModel)
+function EMB.variables_storage(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
 
@@ -119,18 +127,18 @@ function EMB.variables_storage(m, 𝒩, 𝒯, ::InvestmentModel)
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
     # JuMPUtils.jl)
-    constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
+    constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
 end
 
 """
-    constraints_capacity(m, 𝒩, 𝒯)
+    constraints_capacity_invest(m, 𝒩, 𝒯)
 Set capacity-related constraints for nodes `𝒩` for investment time structure `𝒯`:
 * bounds
 * binary for DiscreteInvestment
 * link capacity variables
 
 """
-function constraints_capacity(m, 𝒩, 𝒯)
+function constraints_capacity_invest(m, 𝒩, 𝒯)
 
     𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
     𝒩ˢᵗᵒʳᶜᵃᵖ = (i for i ∈ 𝒩 if has_stor_capacity(i)) 
@@ -183,14 +191,14 @@ function constraints_capacity(m, 𝒩, 𝒯)
 end
 
 """
-    constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
+    constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
 Set storage-related constraints for nodes `𝒩ˢᵗᵒʳ` for investment time structure `𝒯`:
 * bounds
 * binary for DiscreteInvestment
 * link storage variables
 
 """
-function constraints_storage(m, 𝒩ˢᵗᵒʳ, 𝒯)
+function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
     
     𝒩ᴵⁿᵛ = (i for i ∈ 𝒩ˢᵗᵒʳ if has_storage_investment(i))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
