@@ -3,9 +3,6 @@ const GEO = Geography
 
 #------------- From test in Geography ----------------------------------------------------
 
-using DataFrames: Statistics
-using Revise
-using PlotlyJS, DataFrames, CSV
 import Statistics
 
 
@@ -93,26 +90,26 @@ for l ∈ ℒᵗʳᵃⁿˢ
     end
 end
 
-trace=[]
-for (k, v) in trans
-    global trace
-    print(string(k[1]))
-    tr = scatter(; y=v, mode="lines", name=join([string(k[1]), "<br>", k[2], " transmission"]))
-    trace = vcat(trace, tr)
-    tr = scatter(; y=trans_loss[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " loss"]))
-    trace = vcat(trace, tr)
-end
-plot(Array{GenericTrace}(trace))
+# trace=[]
+# for (k, v) in trans
+#     global trace
+#     print(string(k[1]))
+#     tr = scatter(; y=v, mode="lines", name=join([string(k[1]), "<br>", k[2], " transmission"]))
+#     trace = vcat(trace, tr)
+#     tr = scatter(; y=trans_loss[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " loss"]))
+#     trace = vcat(trace, tr)
+# end
+# plot(Array{GenericTrace}(trace))
 
-trace=[]
-k = collect(keys(trans))[1]
-tr = scatter(; y=trans[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " trans out"]))
-trace = vcat(trace, tr)
-tr = scatter(; y=trans_in[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " trans in"]))
-trace = vcat(trace, tr)
-tr = scatter(; y=trans_loss[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " loss"]))
-trace = vcat(trace, tr)
-plot(Array{GenericTrace}(trace))
+# trace=[]
+# k = collect(keys(trans))[1]
+# tr = scatter(; y=trans[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " trans out"]))
+# trace = vcat(trace, tr)
+# tr = scatter(; y=trans_in[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " trans in"]))
+# trace = vcat(trace, tr)
+# tr = scatter(; y=trans_loss[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " loss"]))
+# trace = vcat(trace, tr)
+# plot(Array{GenericTrace}(trace))
 
 exch = Dict()
 for a ∈ areas
@@ -147,7 +144,7 @@ function system_map()
     plot(Array{GenericTrace}(vcat(nodes, lines)), layout)
 end
 
-system_map()
+#system_map()
 
 ## Plot map with sizing for resource
 
@@ -188,4 +185,4 @@ function resource_map_avg(m, resource, times, lines; line_scale = 10, node_scale
     plot(Array{GenericTrace}(vcat(nodes, lines)), layout)
 
 end
-resource_map_avg(m, 𝒫[3], 𝒯, ℒᵗʳᵃⁿˢ)
+#resource_map_avg(m, 𝒫[3], 𝒯, ℒᵗʳᵃⁿˢ)
