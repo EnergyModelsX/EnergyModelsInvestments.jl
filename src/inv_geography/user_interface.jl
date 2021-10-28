@@ -1,24 +1,30 @@
 const GEO = Geography
 
 function GEO.read_data(modeltype::InvestmentModel)
-    @debug "Read data"
+    @debug "Read case data"
     @info "Hard coded dummy model for now (Investment Model)"
 
+    # Retrieve the products
     𝒫₀, 𝒫ᵉᵐ₀, products = GEO.get_resources()
+    NG    = products[1]
+    Power = products[3]
+    CO2   = products[4]
 
-    #
-    area_ids = [1, 2, 3, 4]
-    d_scale = Dict(1=>3.0, 2=>1.5, 3=>1.0, 4=>0.5)
-    mc_scale = Dict(1=>2.0, 2=>2.0, 3=>1.5, 4=>0.5)
-    gen_scale = Dict(1=>1.0, 2=>1.0, 3=>1.0, 4=>0.5)
+    # Create input data for the areas
+    area_ids    = [1, 2, 3, 4]
+    d_scale     = Dict(1=>3.0, 2=>1.5, 3=>1.0, 4=>0.5)
+    mc_scale    = Dict(1=>2.0, 2=>2.0, 3=>1.5, 4=>0.5)
+    gen_scale   = Dict(1=>1.0, 2=>1.0, 3=>1.0, 4=>0.5)
 
     # Create identical areas with index according to input array
-    an = Dict()
+    an           = Dict()
     transmission = []
-    nodes = []
-    links = []
+    nodes        = []
+    links        = []
     for a_id in area_ids
-        n, l = GEO.get_sub_system_data(a_id, 𝒫₀, 𝒫ᵉᵐ₀, products, modeltype; gen_scale = gen_scale[a_id], mc_scale = mc_scale[a_id], d_scale = d_scale[a_id])
+        n, l = GEO.get_sub_system_data(a_id, 𝒫₀, 𝒫ᵉᵐ₀, products, modeltype; 
+                                       gen_scale = gen_scale[a_id], mc_scale = mc_scale[a_id],
+                                       d_scale = d_scale[a_id])
         append!(nodes, n)
         append!(links, l)
 
@@ -26,16 +32,14 @@ function GEO.read_data(modeltype::InvestmentModel)
         an[a_id] = n[1]
     end
 
-    areas = [GEO.Area(1, "Oslo", 10.751, 59.921, an[1]),
-            GEO.Area(2, "Bergen", 5.334, 60.389, an[2]),
-            GEO.Area(3, "Trondheim", 10.398, 63.4366, an[3]),
-            GEO.Area(4, "Tromsø", 18.953, 69.669, an[4])]
+    # Create the individual areas and transmission modes
+    areas = [GEO.Area(1, "Oslo",        10.751, 59.921, an[1]),
+             GEO.Area(2, "Bergen",       5.334, 60.389, an[2]),
+             GEO.Area(3, "Trondheim",   10.398, 63.437, an[3]),
+             GEO.Area(4, "Tromsø",      18.953, 69.669, an[4])]
 
-    NG = products[1]
-    Power = products[3]
-
-    OverheadLine_50MW = GEO.RefStatic("PowerLine_50", Power, 50.0, 0.05, 2)#, EMB.Linear)
-    LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, 100.0, 0.05, 2)#, EMB.Linear)
+    OverheadLine_50MW   = GEO.RefStatic("PowerLine_50", Power, 50.0, 0.05, 2)#, EMB.Linear)
+    LNG_Ship_100MW      = GEO.RefDynamic("LNG_100", NG, 100.0, 0.05, 2)#, EMB.Linear)
 
     # Create transmission between areas
     transmission = [GEO.Transmission(areas[1], areas[2], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(500), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(0), Inv_mode=DiscreteInvestment()))]),
@@ -44,17 +48,24 @@ function GEO.read_data(modeltype::InvestmentModel)
                     GEO.Transmission(areas[3], areas[4], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(1), Inv_mode=ContinuousInvestment(), Trans_start=0))]),
                     GEO.Transmission(areas[4], areas[2], [LNG_Ship_100MW],[Dict(""=> EMB.EmptyData())])]
 
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
+    # Creation of the time structure and global data
+    T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
+    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
+    global_data = IM_global_data(em_limits, em_cost, 0.07)
+
+
     # WIP data structure
-    data = Dict(
-                :areas => Array{GEO.Area}(areas),
-                :transmission => Array{GEO.Transmission}(transmission),
-                :nodes => Array{EMB.Node}(nodes),
-                :links => Array{EMB.Link}(links),
-                :products => products,
-                :T => T
+    case = Dict(
+                :areas          => Array{GEO.Area}(areas),
+                :transmission   => Array{GEO.Transmission}(transmission),
+                :nodes          => Array{EMB.Node}(nodes),
+                :links          => Array{EMB.Link}(links),
+                :products       => products,
+                :T              => T,
+                :global_data    => global_data
                 )
-    return data
+    return case
 end
 
 function GEO.get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products, modeltype::InvestmentModel;

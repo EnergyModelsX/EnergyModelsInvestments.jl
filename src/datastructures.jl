@@ -1,15 +1,13 @@
 
-struct StrategicCase <: EMB.Case
-    CO2_limit::TimeProfile
-    emissions_price::Dict{ResourceEmit, TimeProfile}
+struct IM_global_data <: Global_data
+    Emission_limit::Dict{ResourceEmit, TimeProfile}
+    Emission_price::Dict{ResourceEmit, TimeProfile}
+    r       # Discount rate
 end
 
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 
 struct InvestmentModel <: AbstractInvestmentModel
-    case::StrategicCase
-    # Discount rate
-    r
 end
 
 # struct DiscreteInvestmentModel <: AbstractInvestmentModel

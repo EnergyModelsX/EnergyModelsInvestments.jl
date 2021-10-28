@@ -6,34 +6,34 @@ const GEO = Geography
 import Statistics
 
 
-NG = ResourceEmit("NG", 0.2)
-CO2 = ResourceEmit("CO2", 1.)
-Power = ResourceCarrier("Power", 0.)
-Coal = ResourceCarrier("Coal", 0.35)
-products = [NG, Power, CO2, Coal]
-𝒫ᵉᵐ₀ = Dict(k  => FixedProfile(0) for k ∈ products if typeof(k) == ResourceEmit{Float64})
+# Define the different resources
+NG          = ResourceEmit("NG", 0.2)
+CO2         = ResourceEmit("CO2", 1.)
+Power       = ResourceCarrier("Power", 0.)
+Coal        = ResourceCarrier("Coal", 0.35)
+products    = [NG, Power, CO2, Coal]
+𝒫ᵉᵐ₀        = Dict(k  => FixedProfile(0) for k ∈ products if typeof(k) == ResourceEmit{Float64})
 
-r=0.07
-case = IM.StrategicCase(StrategicFixedProfile([450, 400, 350, 300]),𝒫ᵉᵐ₀)
-model = IM.InvestmentModel(case,r)
+# Create and run the model
+model   = IM.InvestmentModel()
+m, case = GEO.run_model("", model, GLPK.Optimizer)
 
-m, data = GEO.run_model("", model, GLPK.Optimizer)
+# Extract the indiviudal data from the model
+𝒯       = case[:T]
+𝒯ᴵⁿᵛ    = strategic_periods(𝒯)
+𝒩       = case[:nodes]
+𝒩ⁿᵒᵗ    = EMB.node_not_av(𝒩)
+av      = 𝒩[findall(x -> isa(x, EMB.Availability), 𝒩)]
+areas   = case[:areas]
+ℒᵗʳᵃⁿˢ  = case[:transmission]
+𝒫       = case[:products]
 
-𝒯ᴵⁿᵛ = strategic_periods(data[:T])
-𝒯 = data[:T]
-𝒩 = data[:nodes]
-𝒩ⁿᵒᵗ = EMB.node_not_av(𝒩)
-av = 𝒩[findall(x -> isa(x, EMB.Availability), 𝒩)]
-areas = data[:areas]
-ℒᵗʳᵃⁿˢ = data[:transmission]
-𝒫 = data[:products]
+CH4     = 𝒫[1]
+Power   = 𝒫[3]
+CO2     = 𝒫[4]
 
-CH4 = data[:products][1]
-CO2 = data[:products][4]
-
+# Calculatie the CO2 emissions
 emissions_CO2 = [value.(m[:emissions_strategic])[t_inv, CO2] for t_inv ∈ 𝒯ᴵⁿᵛ]
-
-Power = 𝒫[3]
 
 # Flow in to availability nodes in each area
 flow_in = Dict(a => [value.(m[:flow_in])[a.An, t, Power] for t ∈ 𝒯] for a ∈ areas)
@@ -51,26 +51,26 @@ for l ∈ ℒᵗʳᵃⁿˢ
 end
 
 print("~~~~~~ GEN CAPACITY ~~~~~~ \n")
- for n in (i for i ∈ data[:nodes] if IM.has_investment(i))
+ for n in (i for i ∈ case[:nodes] if IM.has_investment(i))
     print(n,": ")
-    for t in strategic_periods(data[:T])
+    for t in strategic_periods(case[:T])
         print(JuMP.value(m[:cap_current][n,t]),", ")
     end
     print("\n")
  end
 
  print("~~~~~~ STOR CAPACITY ~~~~~~ \n")
- for n in (i for i ∈ data[:nodes] if IM.has_storage_investment(i))
+ for n in (i for i ∈ case[:nodes] if IM.has_storage_investment(i))
     print(n,": ")
-    for t in strategic_periods(data[:T])
+    for t in strategic_periods(case[:T])
         print(JuMP.value(m[:stor_cap_current][n,t]),", ", JuMP.value(m[:stor_rate_current][n,t]),", ")
     end
     print("\n")
  end
  print("~~~~~~ TRANS CAPACITY ~~~~~~ \n")
- for l in data[:transmission], cm in GEO.corridor_modes(l)
+ for l in case[:transmission], cm in GEO.corridor_modes(l)
     print(l, " ", cm,": ")
-    for t in strategic_periods(data[:T])
+    for t in strategic_periods(case[:T])
         print(JuMP.value(m[:trans_cap_current][l,t,cm]),", ")
     end
     print("\n")
@@ -90,27 +90,6 @@ for l ∈ ℒᵗʳᵃⁿˢ
     end
 end
 
-# trace=[]
-# for (k, v) in trans
-#     global trace
-#     print(string(k[1]))
-#     tr = scatter(; y=v, mode="lines", name=join([string(k[1]), "<br>", k[2], " transmission"]))
-#     trace = vcat(trace, tr)
-#     tr = scatter(; y=trans_loss[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " loss"]))
-#     trace = vcat(trace, tr)
-# end
-# plot(Array{GenericTrace}(trace))
-
-# trace=[]
-# k = collect(keys(trans))[1]
-# tr = scatter(; y=trans[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " trans out"]))
-# trace = vcat(trace, tr)
-# tr = scatter(; y=trans_in[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " trans in"]))
-# trace = vcat(trace, tr)
-# tr = scatter(; y=trans_loss[k], mode="lines", name=join([string(k[1]), "<br>", k[2], " loss"]))
-# trace = vcat(trace, tr)
-# plot(Array{GenericTrace}(trace))
-
 exch = Dict()
 for a ∈ areas
     for cm ∈ GEO.exchange_resources(ℒᵗʳᵃⁿˢ, a)
@@ -119,8 +98,6 @@ for a ∈ areas
 end
 println("Exchange")
 println(exch)
-
-#trans = Dict((l, cm.Name) => [value.(m[:trans_out])[l, t, cm] for t ∈ 𝒯] for l ∈ ℒᵗʳᵃⁿˢ, cm ∈ l.Modes)
 
 ## Plot map - areas and transmission
 
@@ -131,12 +108,12 @@ function system_map()
                              showland=true, landcolor="lightgrey", showocean=true, oceancolor="lightblue"),
                     width=500, height=550, margin=attr(l=0, r=0, t=10, b=0))
 
-    nodes = scattergeo(mode="markers", lat=[i.Lat for i in data[:areas]], lon=[i.Lon for i in data[:areas]],
-                        marker=marker, name="Areas", text = [i.Name for i in data[:areas]])
+    nodes = scattergeo(mode="markers", lat=[i.Lat for i in case[:areas]], lon=[i.Lon for i in case[:areas]],
+                        marker=marker, name="Areas", text = [i.Name for i in case[:areas]])
 
     linestyle = attr(line= attr(width = 2.0, dash="dash"))
     lines = []
-    for l in data[:transmission]
+    for l in case[:transmission]
         line = scattergeo(;mode="lines", lat=[l.From.Lat, l.To.Lat], lon=[l.From.Lon, l.To.Lon],
                         marker=linestyle, width=2.0,  name=join([cm.Name for cm ∈ l.Modes]))
         lines = vcat(lines, [line])
@@ -158,7 +135,7 @@ function resource_map_avg(m, resource, times, lines; line_scale = 10, node_scale
     time_values = Dict(a.Name => [value.(m[:flow_in])[a.An, t, 𝒫[3]] for t ∈ 𝒯] for a ∈ areas)
     mean_values = Dict(k => round(Statistics.mean(v), digits=2) for (k, v) in time_values)
     scale = node_scale/maximum(values(mean_values))
-    nodes = scattergeo(;lat=[i.Lat for i in data[:areas]], lon=[i.Lon for i in data[:areas]],
+    nodes = scattergeo(;lat=[i.Lat for i in case[:areas]], lon=[i.Lon for i in case[:areas]],
                        mode="markers", marker=attr(size=[mean_values[i.Name]*scale for i in data[:areas]], color=10),
                        name="Areas", text = [join([i.Name, ": ", mean_values[i.Name]]) for i in data[:areas]])
 

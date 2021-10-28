@@ -10,14 +10,14 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 
 """
-function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)#, sense=Max)
+function EMB.objective(m, 𝒩, 𝒯, 𝒫, global_data, modeltype::InvestmentModel)#, sense=Max)
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
     𝒩ᴵⁿᵛ = (i for i ∈ 𝒩 if has_investment(i))
     𝒫ᵉᵐ  = EMB.res_sub(𝒫, ResourceEmit)
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
-    r = modeltype.r     # Discount rate
+    r = global_data.r                               # Discount rate
 
     capexunit = 1 # TODO: Fix scaling if operational units are different form CAPEX
 
@@ -33,7 +33,7 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)#, sense=
     if haskey(m, :capex_rate) && isempty(𝒩ˢᵗᵒʳ) == false
         obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex_rate][i,t]  for i ∈ 𝒩ˢᵗᵒʳ, t ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
     end
-    em_price = modeltype.case.emissions_price
+    em_price = global_data.Emission_price
     obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:emissions_strategic][t, p_em] * em_price[p_em][t] for p_em ∈ 𝒫ᵉᵐ, t ∈ 𝒯ᴵⁿᵛ)
     
     # TODO: Maintentance cost
@@ -48,7 +48,7 @@ end
 Create variables for the capital costs for the invesments in storage and 
 technology nodes.
 """
-function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
+function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, global_data, modeltype::InvestmentModel)
     
     𝒩ⁿᵒᵗ = EMB.node_not_av(𝒩)
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
