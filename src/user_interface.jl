@@ -75,7 +75,7 @@ function run_model(fn, model, optimizer=nothing)
     T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
     em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
-    global_data = IM_global_data(em_limits, em_cost, 0.07)
+    global_data = GlobalData(em_limits, em_cost, 0.07)
 
     # WIP case structure
     case = Dict(

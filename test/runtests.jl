@@ -1,8 +1,8 @@
 using Test
-using InvestmentModels
+using JuMP
 using TimeStructures
 using EnergyModelsBase
-using JuMP
+using InvestmentModels
 using GLPK
 const IM = InvestmentModels
 const EMB = EnergyModelsBase

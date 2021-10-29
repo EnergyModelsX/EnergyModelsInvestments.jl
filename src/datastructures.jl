@@ -1,5 +1,5 @@
 
-struct IM_global_data <: Global_data
+struct GlobalData <: AbstractGlobalData
     Emission_limit::Dict{ResourceEmit, TimeProfile}
     Emission_price::Dict{ResourceEmit, TimeProfile}
     r       # Discount rate

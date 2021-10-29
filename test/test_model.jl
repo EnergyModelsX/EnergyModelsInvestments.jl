@@ -45,7 +45,7 @@ function small_graph(source=nothing, sink=nothing; discount_rate = 0.05)
 
     em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
-    global_data = IM.IM_global_data(em_limits, em_cost, discount_rate)
+    global_data = IM.GlobalData(em_limits, em_cost, discount_rate)
 
     case = Dict(:nodes       => nodes,
                 :links       => links,
