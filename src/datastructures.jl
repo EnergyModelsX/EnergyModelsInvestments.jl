@@ -32,6 +32,12 @@ struct SemiContinuousInvestment <: Investment end 	# Semi-Continuous variables
 struct FixedInvestment          <: Investment end   # Fixed variables or as parameter
 struct IndividualInvestment     <: Investment end 	# Look up property of each node to decide
 
+abstract type Lifetime_mode end
+struct Unlimited_Life       <: Lifetime_mode end    # The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
+struct Study_Inv            <: Lifetime_mode end    # The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
+struct Period_Inv           <: Lifetime_mode end    # The investment is considered to last only for the strategic period. The excess lifetime is considered in the rest value.
+struct Rolling_Inv          <: Lifetime_mode end    # The investment is rolling to the next strategic periods and it is retired at the end of its lifetime or the the end of the previous sp if its lifetime ends between two sp.
+
 # Define Structure for the additional parameters passed 
 # to the technology structures defined in other packages
 Base.@kwdef struct extra_inv_data <: EMB.Data
@@ -43,6 +49,8 @@ Base.@kwdef struct extra_inv_data <: EMB.Data
     Cap_start::Union{Real, Nothing} = nothing
     Cap_increment::TimeProfile = FixedProfile(0)
     # min_inst_cap::TimeProfile #TO DO Implement
+    Life_mode::Lifetime_mode = Unlimited_Life()
+    Lifetime::Timeprofile = FixedProfile(0)
  end
 
 
@@ -64,6 +72,8 @@ Base.@kwdef struct extra_inv_data <: EMB.Data
     Rate_increment::TimeProfile = FixedProfile(0)
     Stor_increment::TimeProfile = FixedProfile(0)
     # min_inst_cap::TimeProfile #TO DO Implement
+    Life_mode::Lifetime_mode = Unlimited_Life()
+    Lifetime::Timeprofile = FixedProfile(0)
  end
 #Consider package Parameters.jl to define struct with default values
 
@@ -91,5 +101,6 @@ Return the investment mode of the node 'n'. By default, all investments are cont
 """
 
 investmentmode(n) = n.Data["InvestmentModels"].Inv_mode
+lifetimemode(n) = n.Data["InvestmentModels"].Life_mode
 
 # TO DO function to fetch investment mode from the node type?

@@ -89,7 +89,7 @@ function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
     # JuMPUtils.jl)
-    constraints_capacity_invest(m, 𝒩, 𝒯)
+    constraints_capacity_invest(m, 𝒩, 𝒯, modeltype)
 end
 
 """
@@ -127,7 +127,7 @@ function EMB.variables_storage(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
     # JuMPUtils.jl)
-    constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
+    constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype)
 end
 
 """
@@ -138,7 +138,7 @@ Set capacity-related constraints for nodes `𝒩` for investment time structure 
 * link capacity variables
 
 """
-function constraints_capacity_invest(m, 𝒩, 𝒯)
+function constraints_capacity_invest(m, 𝒩, 𝒯, modeltype::InvestmentModel)
 
     𝒩ᶜᵃᵖ = (i for i ∈ 𝒩 if has_capacity(i))
     𝒩ˢᵗᵒʳᶜᵃᵖ = (i for i ∈ 𝒩 if has_stor_capacity(i)) 
@@ -147,7 +147,7 @@ function constraints_capacity_invest(m, 𝒩, 𝒯)
 
     #constraints capex
     for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
+        set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
     end 
     
     
@@ -198,7 +198,7 @@ Set storage-related constraints for nodes `𝒩ˢᵗᵒʳ` for investment time s
 * link storage variables
 
 """
-function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
+function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype::InvestmentModel)
     
     𝒩ᴵⁿᵛ = (i for i ∈ 𝒩ˢᵗᵒʳ if has_storage_investment(i))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -267,7 +267,7 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:cap_add][n, t_inv] <= n.Data["InvestmentModels"].Cap_max_add[t_inv])
         @constraint(m, m[:cap_add][n, t_inv] >= n.Data["InvestmentModels"].Cap_min_add[t_inv])
-        @constraint(m, m[:cap_rem][n, t_inv] == 0)
+        #@constraint(m, m[:cap_rem][n, t_inv] == 0)
     end
 end
 
@@ -289,7 +289,7 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestme
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:cap_add][n, t_inv] <= n.Data["InvestmentModels"].Cap_max_add[t_inv] )
         @constraint(m, m[:cap_add][n, t_inv] >= n.Data["InvestmentModels"].Cap_min_add[t_inv] * m[:cap_invest_b][n, t_inv]) 
-        @constraint(m, m[:cap_rem][n, t_inv] == 0)
+        #@constraint(m, m[:cap_rem][n, t_inv] == 0)
     end
 end
 
@@ -412,4 +412,52 @@ end
 function set_investment_properties(n, var, ::IntegerInvestment) # TO DO
     JuMP.set_integer(var)
     JuMP.set_lower_bound(var,0)
+end
+
+set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel) = set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, lifetimemode(n))
+function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Unlimited_Life)
+    @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
+    @constraint(m, m[:cap_rem][n, t_inv] == 0 )
+end
+
+function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Study_Inv)
+    lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    N_inv = ceil(TS.remaining_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for rest of study
+    r=modeltype.r #discount rate
+    study_capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.remaining_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.remaining_years(𝒯, t_inv)))
+    @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+    @constraint(m, m[:cap_rem][n, t_inv] == 0 )
+end
+
+function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Period_Inv)
+    lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    N_inv = ceil(TS.duration_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for current sp
+    r=modeltype.r #discount rate
+    study_capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.duration_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.duration_years(𝒯, t_inv)))
+    @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+    @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
+end
+
+function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Rolling_Inv)
+    lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    if lifetime < TS.duration_years(𝒯, t_inv)
+        set_capacity_cost(m, n, 𝒯, t_inv, modeltype, ::Period_Inv)
+    elseif lifetime == TS.duration_years(𝒯, t_inv)
+        study_capex = n.Data["InvestmentModels"].Capex_Cap[t_inv]
+        @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+        @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
+    elseif lifetime > TS.duration_years(𝒯, t_inv)
+        last_sp = t_inv
+        remaining_lifetime = lifetime
+        while remaining_lifetime >= TS.duration_years(𝒯, last_sp)
+            remaining_lifetime -= TS.duration_years(𝒯, last_sp)
+            last_sp = TS.next(last_sp, 𝒯)
+
+        study_capex = n.Data["InvestmentModels"].Capex_Cap[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
+    @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+    @constraint(m, m[:cap_rem][n, TS.previous(last_sp, 𝒯)] == m[:cap_add][n, t_inv])
+end
+
+function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, lifetimemode)
+    @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
 end
