@@ -205,8 +205,7 @@ function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype::Investme
 
     # Constraints capex
     for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:capex_stor][n,t_inv] == n.Data["InvestmentModels"].Capex_stor[t_inv] * m[:stor_cap_add][n, t_inv])
-        @constraint(m, m[:capex_rate][n,t_inv] == n.Data["InvestmentModels"].Capex_rate[t_inv] * m[:stor_rate_add][n, t_inv])
+        set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
     end 
     
 
@@ -414,6 +413,11 @@ function set_investment_properties(n, var, ::IntegerInvestment) # TO DO
     JuMP.set_lower_bound(var,0)
 end
 
+"""
+    set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel)
+Set the capex_cost based on the technology investment cost, and period strategic period length to include the needs for reinvestments and the rest value. 
+It implements different versions of the lifetime implementation.
+"""
 set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel) = set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, lifetimemode(n))
 function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Unlimited_Life)
     @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
@@ -424,8 +428,8 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Stud
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
     N_inv = ceil(TS.remaining_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for rest of study
     r=modeltype.r #discount rate
-    study_capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.remaining_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.remaining_years(𝒯, t_inv)))
-    @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+    capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.remaining_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.remaining_years(𝒯, t_inv)))
+    @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == 0 )
 end
 
@@ -433,8 +437,8 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Peri
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
     N_inv = ceil(TS.duration_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for current sp
     r=modeltype.r #discount rate
-    study_capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.duration_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.duration_years(𝒯, t_inv)))
-    @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+    capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.duration_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.duration_years(𝒯, t_inv)))
+    @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
 end
 
@@ -443,8 +447,8 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Roll
     if lifetime < TS.duration_years(𝒯, t_inv)
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, ::Period_Inv)
     elseif lifetime == TS.duration_years(𝒯, t_inv)
-        study_capex = n.Data["InvestmentModels"].Capex_Cap[t_inv]
-        @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
+        capex = n.Data["InvestmentModels"].Capex_Cap[t_inv]
+        @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
         @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
     elseif lifetime > TS.duration_years(𝒯, t_inv)
         last_sp = t_inv
@@ -453,11 +457,68 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Roll
             remaining_lifetime -= TS.duration_years(𝒯, last_sp)
             last_sp = TS.next(last_sp, 𝒯)
 
-        study_capex = n.Data["InvestmentModels"].Capex_Cap[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
-    @constraint(m, m[:capex_cap][n,t_inv] == study_capex * m[:cap_add][n, t_inv])
-    @constraint(m, m[:cap_rem][n, TS.previous(last_sp, 𝒯)] == m[:cap_add][n, t_inv])
+        capex = n.Data["InvestmentModels"].Capex_Cap[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
+        @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
+        @constraint(m, m[:cap_rem][n, TS.previous(last_sp, 𝒯)] == m[:cap_add][n, t_inv])
 end
 
-function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, lifetimemode)
-    @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
+@constraint(m, m[:capex_stor][n,t_inv] == n.Data["InvestmentModels"].Capex_stor[t_inv] * m[:stor_cap_add][n, t_inv])
+@constraint(m, m[:capex_rate][n,t_inv] == n.Data["InvestmentModels"].Capex_rate[t_inv] * m[:stor_rate_add][n, t_inv])
+
+
+function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, ::Unlimited_Life)
+    @constraint(m, m[:capex_stor][n,t_inv] == n.Data["InvestmentModels"].Capex_stor[t_inv] * m[:stor_cap_add][n, t_inv])
+    @constraint(m, m[:capex_rate][n,t_inv] == n.Data["InvestmentModels"].Capex_rate[t_inv] * m[:stor_rate_add][n, t_inv])
+    @constraint(m, m[:stor_cap_rem][n, t_inv] == 0 )
+    @constraint(m, m[:stor_rate_rem][n, t_inv] == 0 )
+end
+
+function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, ::Study_Inv)
+    lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    N_inv = ceil(TS.remaining_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for rest of study
+    r=modeltype.r #discount rate
+    stor_capex = sum(n.Data["InvestmentModels"].Capex_stor[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.remaining_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_stor[t_inv] * (1+r)^(-TS.remaining_years(𝒯, t_inv)))
+    rate_capex = sum(n.Data["InvestmentModels"].Capex_rate[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.remaining_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_rate[t_inv] * (1+r)^(-TS.remaining_years(𝒯, t_inv)))
+    @constraint(m, m[:capex_stor][n,t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
+    @constraint(m, m[:capex_rate][n,t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
+    @constraint(m, m[:stor_cap_rem][n, t_inv] == 0 )
+    @constraint(m, m[:stor_rate_rem][n, t_inv] == 0 )
+end
+
+function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, ::Period_Inv)
+    lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    N_inv = ceil(TS.duration_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for current sp
+    r=modeltype.r #discount rate
+    stor_capex = sum(n.Data["InvestmentModels"].Capex_stor[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.duration_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_stor[t_inv] * (1+r)^(-TS.duration_years(𝒯, t_inv)))
+    rate_capex = sum(n.Data["InvestmentModels"].Capex_rate[t_inv] * (1+r)^(-n * lifetime) for n ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.duration_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_rate[t_inv] * (1+r)^(-TS.duration_years(𝒯, t_inv)))
+    @constraint(m, m[:capex_stor][n,t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
+    @constraint(m, m[:capex_rate][n,t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
+    @constraint(m, m[:stor_cap_rem][n, t_inv] == m[:stor_cap_add][n, t_inv] )
+    @constraint(m, m[:stor_rate_rem][n, t_inv] == m[:stor_rate_add][n, t_inv] )
+end
+
+function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, ::Rolling_Inv)
+    lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    if lifetime < TS.duration_years(𝒯, t_inv)
+        set_capacity_cost(m, n, 𝒯, t_inv, modeltype, ::Period_Inv)
+    elseif lifetime == TS.duration_years(𝒯, t_inv)
+        stor_capex = n.Data["InvestmentModels"].Capex_stor[t_inv]
+        rate_capex = n.Data["InvestmentModels"].Capex_rate[t_inv]
+        @constraint(m, m[:capex_stor][n,t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
+        @constraint(m, m[:capex_rate][n,t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
+        @constraint(m, m[:stor_cap_rem][n, t_inv] == m[:stor_cap_add][n, t_inv] )
+        @constraint(m, m[:stor_rate_rem][n, t_inv] == m[:stor_rate_add][n, t_inv] )
+    elseif lifetime > TS.duration_years(𝒯, t_inv)
+        last_sp = t_inv
+        remaining_lifetime = lifetime
+        while remaining_lifetime >= TS.duration_years(𝒯, last_sp)
+            remaining_lifetime -= TS.duration_years(𝒯, last_sp)
+            last_sp = TS.next(last_sp, 𝒯)
+
+        stor_capex = n.Data["InvestmentModels"].Capex_stor[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_stor[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
+        rate_capex = n.Data["InvestmentModels"].Capex_rate[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_rate[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
+        @constraint(m, m[:capex_stor][n,t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
+        @constraint(m, m[:capex_rate][n,t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
+        @constraint(m, m[:stor_cap_rem][n, TS.previous(last_sp, 𝒯)] == m[:stor_cap_add][n, t_inv])
+        @constraint(m, m[:stor_rate_rem][n, TS.previous(last_sp, 𝒯)] == m[:stor_rate_add][n, t_inv])
 end
