@@ -1,7 +1,7 @@
 
 struct StrategicCase <: EMB.Case
-    CO2_limit::TimeProfile
-    emissions_price::Dict{ResourceEmit, TimeProfile}
+    CO2_limit::TS.TimeProfile
+    emissions_price::Dict{ResourceEmit, TS.TimeProfile}
 end
 
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
@@ -41,39 +41,39 @@ struct Rolling_Inv          <: Lifetime_mode end    # The investment is rolling 
 # Define Structure for the additional parameters passed 
 # to the technology structures defined in other packages
 Base.@kwdef struct extra_inv_data <: EMB.Data
-    Capex_Cap::TimeProfile
-    Cap_max_inst::TimeProfile
-    Cap_max_add::TimeProfile
-    Cap_min_add::TimeProfile
+    Capex_Cap::TS.TimeProfile
+    Cap_max_inst::TS.TimeProfile
+    Cap_max_add::TS.TimeProfile
+    Cap_min_add::TS.TimeProfile
     Inv_mode::Investment = ContinuousInvestment()
     Cap_start::Union{Real, Nothing} = nothing
-    Cap_increment::TimeProfile = FixedProfile(0)
-    # min_inst_cap::TimeProfile #TO DO Implement
+    Cap_increment::TS.TimeProfile = FixedProfile(0)
+    # min_inst_cap::TS.TimeProfile #TO DO Implement
     Life_mode::Lifetime_mode = Unlimited_Life()
-    Lifetime::Timeprofile = FixedProfile(0)
+    Lifetime::TS.TimeProfile = FixedProfile(0)
  end
 
 
  Base.@kwdef struct extra_inv_data_storage <: EMB.Data
     #Investment data related to storage power
-    Capex_rate::TimeProfile #capex of power
-    Rate_max_inst::TimeProfile
-    Rate_max_add::TimeProfile
-    Rate_min_add::TimeProfile
+    Capex_rate::TS.TimeProfile #capex of power
+    Rate_max_inst::TS.TimeProfile
+    Rate_max_add::TS.TimeProfile
+    Rate_min_add::TS.TimeProfile
     #Investment data related to storage capacity
-    Capex_stor::TimeProfile #capex of capacity
-    Stor_max_inst::TimeProfile
-    Stor_max_add::TimeProfile
-    Stor_min_add::TimeProfile
+    Capex_stor::TS.TimeProfile #capex of capacity
+    Stor_max_inst::TS.TimeProfile
+    Stor_max_add::TS.TimeProfile
+    Stor_min_add::TS.TimeProfile
     # General inv data
     Inv_mode::Investment = ContinuousInvestment()
     Rate_start::Union{Real, Nothing} = nothing
     Stor_start::Union{Real, Nothing} = nothing
-    Rate_increment::TimeProfile = FixedProfile(0)
-    Stor_increment::TimeProfile = FixedProfile(0)
-    # min_inst_cap::TimeProfile #TO DO Implement
+    Rate_increment::TS.TimeProfile = FixedProfile(0)
+    Stor_increment::TS.TimeProfile = FixedProfile(0)
+    # min_inst_cap::TS.TimeProfile #TO DO Implement
     Life_mode::Lifetime_mode = Unlimited_Life()
-    Lifetime::Timeprofile = FixedProfile(0)
+    Lifetime::TS.TimeProfile = FixedProfile(0)
  end
 #Consider package Parameters.jl to define struct with default values
 
