@@ -38,7 +38,7 @@ function small_graph(source=nothing, sink=nothing)
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
             EMB.Direct(13, nodes[1], nodes[3], EMB.Linear())]
 
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 4, 1))
+    T = UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1))
 
     data = Dict(:nodes => nodes,
                 :links => links,

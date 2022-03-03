@@ -444,6 +444,7 @@ end
 
 function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Rolling_Inv)
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    r=modeltype.r #discount rate
     if lifetime < TS.duration_years(𝒯, t_inv)
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, Period_Inv())
     elseif lifetime == TS.duration_years(𝒯, t_inv)
@@ -452,14 +453,19 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Roll
         @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
     elseif lifetime > TS.duration_years(𝒯, t_inv)
         last_sp = t_inv
+        ante_sp=nothing
         remaining_lifetime = lifetime
-        while remaining_lifetime >= TS.duration_years(𝒯, last_sp)
+        while remaining_lifetime >= TS.duration_years(𝒯, last_sp) 
             remaining_lifetime -= TS.duration_years(𝒯, last_sp)
+            ante_sp = last_sp #register the sp before the last sp
             last_sp = TS.next(last_sp, 𝒯)
+            if last_sp.sp > t_inv.sps #if last_sp is beyond the sps in the model, we stop the loop
+                break
+            end
         end
         capex = n.Data["InvestmentModels"].Capex_Cap[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
         @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
-        @constraint(m, m[:cap_rem][n, TS.previous(last_sp, 𝒯)] == m[:cap_add][n, t_inv])
+        @constraint(m, m[:cap_rem][n, ante_sp] == m[:cap_add][n, t_inv])
     end
 end
 
@@ -496,6 +502,7 @@ end
 
 function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, ::Rolling_Inv)
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
+    r=modeltype.r #discount rate
     if lifetime < TS.duration_years(𝒯, t_inv)
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, Period_Inv())
     elseif lifetime == TS.duration_years(𝒯, t_inv)
@@ -507,16 +514,21 @@ function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentMode
         @constraint(m, m[:stor_rate_rem][n, t_inv] == m[:stor_rate_add][n, t_inv] )
     elseif lifetime > TS.duration_years(𝒯, t_inv)
         last_sp = t_inv
+        ante_sp = nothing
         remaining_lifetime = lifetime
-        while remaining_lifetime >= TS.duration_years(𝒯, last_sp)
+        while remaining_lifetime >= TS.duration_years(𝒯, last_sp) 
             remaining_lifetime -= TS.duration_years(𝒯, last_sp)
+            ante_sp = last_sp #register the sp before the last sp
             last_sp = TS.next(last_sp, 𝒯)
+            if last_sp.sp > t_inv.sps #if last_sp is beyond the sps in the model, we stop the loop
+                break
+            end
         end
         stor_capex = n.Data["InvestmentModels"].Capex_stor[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_stor[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
         rate_capex = n.Data["InvestmentModels"].Capex_rate[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_rate[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
         @constraint(m, m[:capex_stor][n,t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
         @constraint(m, m[:capex_rate][n,t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
-        @constraint(m, m[:stor_cap_rem][n, TS.previous(last_sp, 𝒯)] == m[:stor_cap_add][n, t_inv])
-        @constraint(m, m[:stor_rate_rem][n, TS.previous(last_sp, 𝒯)] == m[:stor_rate_add][n, t_inv])
+        @constraint(m, m[:stor_cap_rem][n, ante_sp] == m[:stor_cap_add][n, t_inv])
+        @constraint(m, m[:stor_rate_rem][n, ante_sp] == m[:stor_rate_add][n, t_inv])
     end
 end
