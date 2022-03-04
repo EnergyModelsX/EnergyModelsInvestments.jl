@@ -416,59 +416,68 @@ end
 """
     set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel)
 Set the capex_cost based on the technology investment cost, and period strategic period length to include the needs for reinvestments and the rest value. 
-It implements different versions of the lifetime implementation.
+It implements different versions of the lifetime implementation:
+- Unlimited_Life:   The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
+- Study_Inv:        The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
+- Period_Inv:       The investment is considered to last only for the strategic period. The excess lifetime is considered in the rest value.
+- Rolling_Inv:      The investment is rolling to the next strategic periods and it is retired at the end of its lifetime or the end 
+                    of the previous sp if its lifetime ends between two sp.
 """
 set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel) = set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, lifetimemode(n))
 function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Unlimited_Life)
-    @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
+    @constraint(m, m[:capex_cap][n,t_inv] == n.Data["InvestmentModels"].Capex_Cap[t_inv] * m[:cap_add][n, t_inv]) #unlimited lifetime, one investment at the beginning
     @constraint(m, m[:cap_rem][n, t_inv] == 0 )
 end
 
 function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Study_Inv)
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
-    N_inv = ceil(TS.remaining_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for rest of study
-    r=modeltype.r #discount rate
+    N_inv = ceil(TS.remaining_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestments necessary + 1 initial investment) for rest of study
+    r=modeltype.r # discount rate
+    # capex based on the number of the reinvestments needed to cover the rest of the study. Ther last term is the rest value based on linear depreciation discounted to the beginning of the period
     capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.remaining_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.remaining_years(𝒯, t_inv)))
     @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
-    @constraint(m, m[:cap_rem][n, t_inv] == 0 )
+    @constraint(m, m[:cap_rem][n, t_inv] == 0 ) #no capacity removed
 end
 
 function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Period_Inv)
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
-    N_inv = ceil(TS.duration_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary +initial investment) for current sp
-    r=modeltype.r #discount rate
+    N_inv = ceil(TS.duration_years(𝒯, t_inv)/lifetime) # Number of investments necessary (i.e. number of reinvestment necessary + 1 initial investment) for current sp
+    r=modeltype.r # discount rate
+    # similar as for Study_Inv but limited to the strategic period instead of the rest of the study
     capex = sum(n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) - (((N_inv * lifetime - TS.duration_years(𝒯, t_inv))/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-TS.duration_years(𝒯, t_inv)))
     @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
-    @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
+    @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] ) #the capacity islimited to the current sp. It has to be removed in the next sp.
+    #the formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
 end
 
 function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::InvestmentModel, ::Rolling_Inv)
     lifetime=n.Data["InvestmentModels"].Lifetime[t_inv]
     r=modeltype.r #discount rate
-    if lifetime < TS.duration_years(𝒯, t_inv)
+    if lifetime < TS.duration_years(𝒯, t_inv) #if lifetime is under the duration of the sp, we apply the method for Period_Inv
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, Period_Inv())
-    elseif lifetime == TS.duration_years(𝒯, t_inv)
+    elseif lifetime == TS.duration_years(𝒯, t_inv) # if lifetime is equal we only need to invest once and there is no rest value
         capex = n.Data["InvestmentModels"].Capex_Cap[t_inv]
         @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
         @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
-    elseif lifetime > TS.duration_years(𝒯, t_inv)
-        last_sp = t_inv
-        ante_sp=nothing
-        remaining_lifetime = lifetime
-        while remaining_lifetime >= TS.duration_years(𝒯, last_sp) 
-            remaining_lifetime -= TS.duration_years(𝒯, last_sp)
-            ante_sp = last_sp #register the sp before the last sp
+    elseif lifetime > TS.duration_years(𝒯, t_inv) #if lifetime is longer than sp duration, the capacity can roll over to the next sp.
+        last_sp = t_inv #initialisation of last_sp. last_sp represents the sp in which the remaining lifetime is not sufficient to cover the whole sp duration.
+        ante_sp=nothing # sp before the last sp
+        remaining_lifetime = lifetime # initialisation of remaining lifetime
+        while remaining_lifetime >= TS.duration_years(𝒯, last_sp) #while there is enough remaining_lifetime to cover the duration of the sp:
+            remaining_lifetime -= TS.duration_years(𝒯, last_sp) # update remaining lifetime
+            ante_sp = last_sp # update the last_sp and ante_sp
             last_sp = TS.next(last_sp, 𝒯)
-            if last_sp.sp > t_inv.sps #if last_sp is beyond the sps in the model, we stop the loop
+            if last_sp.sp > t_inv.sps # if last_sp is beyond the sps in the model, we stop the loop.
                 break
             end
         end
         capex = n.Data["InvestmentModels"].Capex_Cap[t_inv] - ((remaining_lifetime/lifetime) * n.Data["InvestmentModels"].Capex_Cap[t_inv] * (1+r)^(-(lifetime - remaining_lifetime)))
         @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
-        @constraint(m, m[:cap_rem][n, ante_sp] == m[:cap_add][n, t_inv])
+        @constraint(m, m[:cap_rem][n, ante_sp] == m[:cap_add][n, t_inv]) #we set cap_rem to the sp before last_sp, i.e. ante_sp
     end
 end
 
+#same function dispatched for storages
 function set_capacity_cost(m, n::Storage, 𝒯, t_inv, modeltype::InvestmentModel, ::Unlimited_Life)
     @constraint(m, m[:capex_stor][n,t_inv] == n.Data["InvestmentModels"].Capex_stor[t_inv] * m[:stor_cap_add][n, t_inv])
     @constraint(m, m[:capex_rate][n,t_inv] == n.Data["InvestmentModels"].Capex_rate[t_inv] * m[:stor_rate_add][n, t_inv])
