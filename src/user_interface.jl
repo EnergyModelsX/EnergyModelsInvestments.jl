@@ -43,7 +43,7 @@ function run_model(fn, model, optimizer=nothing)
                     Dict(:Surplus => 0, :Deficit => 1e6), Dict(Power => 1), 𝒫ᵉᵐ₀),
             EMB.RefSource(3, FixedProfile(30), FixedProfile(30), FixedProfile(100), Dict(NG => 1), 𝒫ᵉᵐ₀,Dict("InvestmentModels" => extra_inv_data(Capex_Cap=FixedProfile(1000),Cap_max_inst=FixedProfile(200),Cap_max_add=FixedProfile(200),Cap_min_add=FixedProfile(10),Inv_mode=ContinuousInvestment(), Cap_increment=FixedProfile(5), Cap_start=15))),  
             EMB.RefSource(4, FixedProfile(9), FixedProfile(9), FixedProfile(100), Dict(Coal => 1), 𝒫ᵉᵐ₀,Dict("InvestmentModels" => extra_inv_data(Capex_Cap=FixedProfile(1000),Cap_max_inst=FixedProfile(200),Cap_max_add=FixedProfile(200),Cap_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment()))),  
-            EMB.RefGeneration(5, FixedProfile(0), FixedProfile(5.5), FixedProfile(100), Dict(NG => 2), Dict(Power => 1, CO2 => 1), 𝒫ᵉᵐ₀, 0.9,Dict("InvestmentModels" => extra_inv_data(Capex_Cap=FixedProfile(600),Cap_max_inst=FixedProfile(25),Cap_max_add=FixedProfile(25),Cap_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment(),Life_mode=Rolling_Inv(), Lifetime=FixedProfile(21)))),  
+            EMB.RefGeneration(5, FixedProfile(0), FixedProfile(5.5), FixedProfile(100), Dict(NG => 2), Dict(Power => 1, CO2 => 1), 𝒫ᵉᵐ₀, 0.9,Dict("InvestmentModels" => extra_inv_data(Capex_Cap=FixedProfile(600),Cap_max_inst=FixedProfile(25),Cap_max_add=FixedProfile(25),Cap_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment()))),  
             EMB.RefGeneration(6, FixedProfile(0), FixedProfile(6), FixedProfile(100),  Dict(Coal => 2.5), Dict(Power => 1, CO2 => 1), 𝒫ᵉᵐ₀, 0,Dict("InvestmentModels" => extra_inv_data(Capex_Cap=FixedProfile(800),Cap_max_inst=FixedProfile(25),Cap_max_add=FixedProfile(25),Cap_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment()))),  
             EMB.RefStorage(7, FixedProfile(0), FixedProfile(0), FixedProfile(9.1), FixedProfile(100),  Dict(CO2 => 1, Power => 0.02), Dict(CO2 => 1),Dict("InvestmentModels" => extra_inv_data_storage(Capex_rate=FixedProfile(0),Rate_max_inst=FixedProfile(600),Rate_max_add=FixedProfile(600),Rate_min_add=FixedProfile(0),Capex_stor=FixedProfile(500),Stor_max_inst=FixedProfile(600),Stor_max_add=FixedProfile(600),Stor_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment()))),
             EMB.RefGeneration(8, FixedProfile(2), FixedProfile(0), FixedProfile(0),  Dict(Coal => 2.5), Dict(Power => 1, CO2 => 1), 𝒫ᵉᵐ₀, 0,Dict("InvestmentModels" => extra_inv_data(Capex_Cap=FixedProfile(0),Cap_max_inst=FixedProfile(25),Cap_max_add=FixedProfile(2),Cap_min_add=FixedProfile(2),Inv_mode=ContinuousInvestment()))),  
@@ -69,7 +69,7 @@ function run_model(fn, model, optimizer=nothing)
         EMB.Direct(101,nodes[10],nodes[1],EMB.Linear())
             ]
 
-    T = UniformTwoLevel(1, 4, 10, UniformTimes(1, 24, 1))
+    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
     # WIP data structure
     data = Dict(
                 :nodes => nodes,
