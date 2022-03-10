@@ -24,8 +24,8 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, global_data, modeltype::InvestmentMo
     obj = JuMP.AffExpr()
 
     haskey(m, :revenue) && (obj += sum(obj_weight(r, 𝒯, t_inv, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
-    haskey(m, :opex_var) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_var][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :opex_fixed) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_fixed][i, t]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :opex_var) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_var][i, t] * t.duration  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :opex_fixed) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:opex_fixed][i, t * t.duration]  for i ∈ 𝒩ᶜᵃᵖ, t ∈  𝒯ᴵⁿᵛ))
     haskey(m, :capex_cap) && (obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex_cap][i,t]  for i ∈ 𝒩ᴵⁿᵛ, t ∈  𝒯ᴵⁿᵛ))
     if haskey(m, :capex_stor) && isempty(𝒩ˢᵗᵒʳ) == false
         obj -= sum(obj_weight_inv(r, 𝒯, t) * m[:capex_stor][i,t]  for i ∈ 𝒩ˢᵗᵒʳ, t ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)

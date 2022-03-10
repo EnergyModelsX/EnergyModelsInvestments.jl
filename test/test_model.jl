@@ -93,7 +93,7 @@ end
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test round(objective_value(m)) ≈ -242927
+        @test round(objective_value(m)) ≈ -292700
         
         print("~~~~~~ GEN CAPACITY ~~~~~~ \n")
         for n in (i for i ∈ case[:nodes] if IM.has_investment(i))

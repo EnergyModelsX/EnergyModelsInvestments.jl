@@ -12,6 +12,6 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 [compat]
 julia = "^1.6"
 EnergyModelsBase = "^0.2.4"
-JuMP = "^0.21"
+JuMP = "^0.23, 1"
 TimeStructures = "^0.1.7"
 Requires = "1.1.3"
