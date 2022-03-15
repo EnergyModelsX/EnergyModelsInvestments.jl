@@ -78,7 +78,7 @@ resulting_obj= Dict()
         lifetime = 15
         for sp_dur ∈ [2,4,6,10,15,20]
             push!(resulting_obj, "$(sp_dur) years" => [])
-            for Lifemode ∈ [IM.Unlimited_Life(), IM.Study_Inv(), IM.Period_Inv(),IM.Rolling_Inv()]
+            for Lifemode ∈ [IM.UnlimitedLife(), IM.StudyLife(), IM.PeriodLife(),IM.RollingLife()]
                 print("~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~")
                 data = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
                 case = IM.StrategicCase(StrategicFixedProfile([450, 400, 350, 300]),𝒫ᵉᵐ₀)

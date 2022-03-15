@@ -1,7 +1,7 @@
 
 struct StrategicCase <: EMB.Case
-    CO2_limit::TS.TimeProfile
-    emissions_price::Dict{ResourceEmit, TS.TimeProfile}
+    CO2_limit::TimeProfile
+    emissions_price::Dict{ResourceEmit, TimeProfile}
 end
 
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
@@ -32,48 +32,48 @@ struct SemiContinuousInvestment <: Investment end 	# Semi-Continuous variables
 struct FixedInvestment          <: Investment end   # Fixed variables or as parameter
 struct IndividualInvestment     <: Investment end 	# Look up property of each node to decide
 
-abstract type Lifetime_mode end
-struct Unlimited_Life       <: Lifetime_mode end    # The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
-struct Study_Inv            <: Lifetime_mode end    # The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
-struct Period_Inv           <: Lifetime_mode end    # The investment is considered to last only for the strategic period. The excess lifetime is considered in the rest value.
-struct Rolling_Inv          <: Lifetime_mode end    # The investment is rolling to the next strategic periods and it is retired at the end of its lifetime or the the end of the previous sp if its lifetime ends between two sp.
+abstract type LifetimeMode end
+struct UnlimitedLife       <: LifetimeMode end    # The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
+struct StudyLife            <: LifetimeMode end    # The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
+struct PeriodLife           <: LifetimeMode end    # The investment is considered to last only for the strategic period. The excess lifetime is considered in the rest value.
+struct RollingLife          <: LifetimeMode end    # The investment is rolling to the next strategic periods and it is retired at the end of its lifetime or the the end of the previous sp if its lifetime ends between two sp.
 
 # Define Structure for the additional parameters passed 
 # to the technology structures defined in other packages
 Base.@kwdef struct extra_inv_data <: EMB.Data
-    Capex_Cap::TS.TimeProfile
-    Cap_max_inst::TS.TimeProfile
-    Cap_max_add::TS.TimeProfile
-    Cap_min_add::TS.TimeProfile
+    Capex_Cap::TimeProfile
+    Cap_max_inst::TimeProfile
+    Cap_max_add::TimeProfile
+    Cap_min_add::TimeProfile
     Inv_mode::Investment = ContinuousInvestment()
     Cap_start::Union{Real, Nothing} = nothing
-    Cap_increment::TS.TimeProfile = FixedProfile(0)
-    # min_inst_cap::TS.TimeProfile #TO DO Implement
-    Life_mode::Lifetime_mode = Unlimited_Life()
-    Lifetime::TS.TimeProfile = FixedProfile(0)
+    Cap_increment::TimeProfile = FixedProfile(0)
+    # min_inst_cap::TimeProfile #TO DO Implement
+    Life_mode::LifetimeMode = UnlimitedLife()
+    Lifetime::TimeProfile = FixedProfile(0)
  end
 
 
  Base.@kwdef struct extra_inv_data_storage <: EMB.Data
     #Investment data related to storage power
-    Capex_rate::TS.TimeProfile #capex of power
-    Rate_max_inst::TS.TimeProfile
-    Rate_max_add::TS.TimeProfile
-    Rate_min_add::TS.TimeProfile
+    Capex_rate::TimeProfile #capex of power
+    Rate_max_inst::TimeProfile
+    Rate_max_add::TimeProfile
+    Rate_min_add::TimeProfile
     #Investment data related to storage capacity
-    Capex_stor::TS.TimeProfile #capex of capacity
-    Stor_max_inst::TS.TimeProfile
-    Stor_max_add::TS.TimeProfile
-    Stor_min_add::TS.TimeProfile
+    Capex_stor::TimeProfile #capex of capacity
+    Stor_max_inst::TimeProfile
+    Stor_max_add::TimeProfile
+    Stor_min_add::TimeProfile
     # General inv data
     Inv_mode::Investment = ContinuousInvestment()
     Rate_start::Union{Real, Nothing} = nothing
     Stor_start::Union{Real, Nothing} = nothing
-    Rate_increment::TS.TimeProfile = FixedProfile(0)
-    Stor_increment::TS.TimeProfile = FixedProfile(0)
-    # min_inst_cap::TS.TimeProfile #TO DO Implement
-    Life_mode::Lifetime_mode = Unlimited_Life()
-    Lifetime::TS.TimeProfile = FixedProfile(0)
+    Rate_increment::TimeProfile = FixedProfile(0)
+    Stor_increment::TimeProfile = FixedProfile(0)
+    # min_inst_cap::TimeProfile #TO DO Implement
+    Life_mode::LifetimeMode = UnlimitedLife()
+    Lifetime::TimeProfile = FixedProfile(0)
  end
 #Consider package Parameters.jl to define struct with default values
 
