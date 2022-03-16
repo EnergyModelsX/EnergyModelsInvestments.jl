@@ -2,9 +2,9 @@
 function run_model(fn, model, optimizer=nothing)
     @debug "Run model" fn optimizer
  
-     data = read_data(fn)
+     case = read_data(fn)
 
-     m = EMB.create_model(data, model)
+     m = EMB.create_model(case, model)
  
      if !isnothing(optimizer)
          set_optimizer(m, optimizer)
@@ -14,25 +14,27 @@ function run_model(fn, model, optimizer=nothing)
      else
          @info "No optimizer given"
      end
-     return m, data
+     return m, case
  end
 
 
  function read_data(fn)
-    @debug "Read data"
+    @debug "Read case data"
     @info "Hard coded dummy model for now"
 
+    # Define the different resources
     NG       = ResourceEmit("NG", 0.2)
     Coal     = ResourceCarrier("Coal", 0.35)
     Power    = ResourceCarrier("Power", 0.)
     CO2      = ResourceEmit("CO2",1.)
     products = [NG, Coal, Power, CO2]
+
     # Creation of a dictionary with entries of 0. for all resources
     𝒫₀ = Dict(k  => 0 for k ∈ products)
+
     # Creation of a dictionary with entries of 0. for all emission resources
     𝒫ᵉᵐ₀ = Dict(k  => 0. for k ∈ products if typeof(k) == ResourceEmit{Float64})
     𝒫ᵉᵐ₀[CO2] = 0.0
-
 
     nodes = [
             EMB.GenAvailability(1, 𝒫₀, 𝒫₀),
@@ -69,13 +71,19 @@ function run_model(fn, model, optimizer=nothing)
         EMB.Direct(101,nodes[10],nodes[1],EMB.Linear())
             ]
 
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
-    # WIP data structure
-    data = Dict(
-                :nodes => nodes,
-                :links => links,
-                :products => products,
-                :T => T,
+    # Creation of the time structure and global data
+    T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
+    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
+    global_data = GlobalData(em_limits, em_cost, 0.07)
+
+    # WIP case structure
+    case = Dict(
+                :nodes       => nodes,
+                :links       => links,
+                :products    => products,
+                :T           => T,
+                :global_data => global_data
                 )
-    return data
+    return case
 end

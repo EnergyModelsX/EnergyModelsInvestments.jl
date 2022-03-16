@@ -12,13 +12,15 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 
 """
-function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, global_data, modeltype::InvestmentModel)
 
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    ℒᵗʳᵃⁿˢᴵⁿᵛ = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
-    r= modeltype.r
+    # Extraction of data
+    𝒯ᴵⁿᵛ        = strategic_periods(𝒯)
+    ℒᵗʳᵃⁿˢᴵⁿᵛ   = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
+    r           = global_data.r
+    obj = JuMP.objective_function(m)
 
-    obj= JuMP.objective_function(m)
+    # Update of teh cost function for modes with winvestments
     if haskey(m, :capex_trans) && isempty(ℒᵗʳᵃⁿˢᴵⁿᵛ) == false
         for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t ∈  𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
             obj -= obj_weight_inv(r, 𝒯, t) * m[:capex_trans][l,t,cm] 
@@ -34,10 +36,10 @@ end
 
 Create variables for the capital costs for the investments in transmission.
 """
-function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, global_data, modeltype::InvestmentModel)
 
-    ℒᵗʳᵃⁿˢᴵⁿᵛ = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    ℒᵗʳᵃⁿˢᴵⁿᵛ   = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
+    𝒯ᴵⁿᵛ        = strategic_periods(𝒯)
 
     @variable(m, capex_trans[l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ,  𝒯ᴵⁿᵛ, corridor_modes_with_inv(l)]  >= 0)
 end

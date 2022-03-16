@@ -1,15 +1,13 @@
 
-struct StrategicCase <: EMB.Case
-    CO2_limit::TimeProfile
-    emissions_price::Dict{ResourceEmit, TimeProfile}
+struct GlobalData <: AbstractGlobalData
+    Emission_limit::Dict{ResourceEmit, TimeProfile}
+    Emission_price::Dict{ResourceEmit, TimeProfile}
+    r       # Discount rate
 end
 
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 
 struct InvestmentModel <: AbstractInvestmentModel
-    case::StrategicCase
-    # Discount rate
-    r
 end
 
 # struct DiscreteInvestmentModel <: AbstractInvestmentModel
@@ -33,7 +31,7 @@ struct FixedInvestment          <: Investment end   # Fixed variables or as para
 struct IndividualInvestment     <: Investment end 	# Look up property of each node to decide
 
 abstract type LifetimeMode end
-struct UnlimitedLife       <: LifetimeMode end    # The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
+struct UnlimitedLife        <: LifetimeMode end    # The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
 struct StudyLife            <: LifetimeMode end    # The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
 struct PeriodLife           <: LifetimeMode end    # The investment is considered to last only for the strategic period. The excess lifetime is considered in the rest value.
 struct RollingLife          <: LifetimeMode end    # The investment is rolling to the next strategic periods and it is retired at the end of its lifetime or the the end of the previous sp if its lifetime ends between two sp.

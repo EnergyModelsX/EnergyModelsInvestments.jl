@@ -2,7 +2,7 @@
 function check_investment_data(n, 𝒯)
     inv_data = n.Data["InvestmentModels"]
  
-    @assert_or_log sum(inv_data.Cap_min_add[t] ≤ inv_data.Cap_max_add[t] for t ∈ 𝒯) == length(𝒯) "min_add has to be less than max_add in investments data (Node.data)."
+    @assert_or_log sum(inv_data.Cap_min_add[t] ≤ inv_data.Cap_max_add[t] for t ∈ 𝒯) == length(𝒯) "min_add has to be less than max_add in investments data (Node.Data)."
 
     for t ∈ 𝒯
         # Check that the installed capacity at the start is below the lower bound.
@@ -14,8 +14,8 @@ end
 function check_investment_data(n::EMB.Storage, 𝒯)
     inv_data = n.Data["InvestmentModels"]
  
-    @assert_or_log sum(inv_data.Stor_min_add[t] ≤ inv_data.Stor_max_add[t] for t ∈ 𝒯) == length(𝒯) "Stor_min_add has to be less than Stor_max_add in investments data (Node.data)."
-    @assert_or_log sum(inv_data.Rate_min_add[t] ≤ inv_data.Rate_max_add[t] for t ∈ 𝒯) == length(𝒯) "Rate_min_add has to be less than Rate_max_add in investments data (Node.data)."
+    @assert_or_log sum(inv_data.Stor_min_add[t] ≤ inv_data.Stor_max_add[t] for t ∈ 𝒯) == length(𝒯) "Stor_min_add has to be less than Stor_max_add in investments data (Node.Data)."
+    @assert_or_log sum(inv_data.Rate_min_add[t] ≤ inv_data.Rate_max_add[t] for t ∈ 𝒯) == length(𝒯) "Rate_min_add has to be less than Rate_max_add in investments data (Node.Data)."
 
     for t ∈ 𝒯
         # Check that the installed capacity at the start is below the lower bound.
@@ -42,7 +42,7 @@ function EMB.check_node(n::EMB.Node, 𝒯, modeltype::InvestmentModel)
     end
 
     # Do other checks not related to investments.
-    EMB.check_node(n, 𝒯, EMB.OperationalModel(modeltype.case))
+    EMB.check_node(n, 𝒯, EMB.OperationalModel())
 
 end
 
