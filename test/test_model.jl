@@ -41,7 +41,7 @@ function small_graph(source=nothing, sink=nothing; discount_rate = 0.05)
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
              EMB.Direct(13, nodes[1], nodes[3], EMB.Linear())]
 
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 4, 1))
+    T = UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1))
 
     em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
