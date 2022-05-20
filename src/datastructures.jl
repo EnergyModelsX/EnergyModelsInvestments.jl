@@ -1,13 +1,13 @@
 
-struct StrategicCase <: EMB.Case
+#= struct StrategicCase <: EMB.Case
     CO2_limit::TimeProfile
     emissions_price::Dict{ResourceEmit, TimeProfile}
-end
+end =#
 
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 
 struct InvestmentModel <: AbstractInvestmentModel
-    case::StrategicCase
+    #case::StrategicCase
     # Discount rate
     r
 end

@@ -42,7 +42,7 @@ function EMB.check_node(n::EMB.Node, 𝒯, modeltype::InvestmentModel)
     end
 
     # Do other checks not related to investments.
-    EMB.check_node(n, 𝒯, EMB.OperationalModel(modeltype.case))
+    EMB.check_node(n, 𝒯, EMB.OperationalModel())
 
 end
 
