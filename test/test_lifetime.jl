@@ -34,7 +34,8 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount
             FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("InvestmentModels"=>investment_data_source))
     end
     if isnothing(sink)
-        sink = EMB.RefSink("-snk", FixedProfile(20), Dict(:Surplus => 0, :Deficit => 1e6), Dict(Power => 1), 𝒫ᵉᵐ₀)
+        sink = EMB.RefSink("-snk", FixedProfile(20), 
+            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1), 𝒫ᵉᵐ₀)
     end
     nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
