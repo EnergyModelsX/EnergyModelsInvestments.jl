@@ -1,15 +1,19 @@
-using Test
+using GLPK
 using JuMP
-using TimeStructures
+using Test
+
 using EnergyModelsBase
 using InvestmentModels
-using GLPK
-const IM = InvestmentModels
+using TimeStructures
+
 const EMB = EnergyModelsBase
+const IM = InvestmentModels
 const TS = TimeStructures
 
 
-include("test_discounting.jl")
-include("test_model.jl")
-include("test_geo.jl")
-include("test_lifetime.jl")
+@testset "InvestmentModels" begin
+    include("test_discounting.jl")
+    include("test_model.jl")
+    include("test_geo.jl")
+    include("test_lifetime.jl")
+end
