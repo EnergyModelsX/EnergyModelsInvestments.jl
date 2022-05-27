@@ -26,7 +26,7 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, global_data, modeltype::InvestmentMo
     haskey(m, :revenue)     && (obj += sum(obj_weight(r, 𝒯, t_inv, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
     haskey(m, :opex_var)    && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:opex_var][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
     haskey(m, :opex_fixed)  && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:opex_fixed][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :capex_cap)   && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:capex_cap][i, t_inv]  for i ∈ 𝒩ᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :capex_cap)   && !isempty(𝒩ᴵⁿᵛ) && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:capex_cap][i, t_inv]  for i ∈ 𝒩ᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ))
     if haskey(m, :capex_stor) && isempty(𝒩ˢᵗᵒʳ) == false
         obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:capex_stor][i, t_inv]  for i ∈ 𝒩ˢᵗᵒʳ, t_inv ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
     end
@@ -271,7 +271,7 @@ end
 
 function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:cap_current][n, t_inv] == n.capacity[t_inv] * m[:cap_invest_b][n, t_inv]) 
+        @constraint(m, m[:cap_current][n, t_inv] == n.Cap[t_inv] * m[:cap_invest_b][n, t_inv]) 
     end
 end
 
