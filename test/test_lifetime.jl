@@ -11,7 +11,7 @@ products = [NG, Power, CO2, Coal]
 ROUND_DIGITS = 8
 𝒫ᵉᵐ₀ = Dict(k  => FixedProfile(0) for k ∈ products if typeof(k) == ResourceEmit{Float64})
 
-function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing)
+function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount_rate=0.05)
     # products = [NG, Coal, Power, CO2]
     products = [NG, Power, CO2, Coal]
     # Creation of a dictionary with entries of 0. for all resources
@@ -34,7 +34,8 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing)
             FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("InvestmentModels"=>investment_data_source))
     end
     if isnothing(sink)
-        sink = EMB.RefSink("-snk", FixedProfile(20), Dict(:Surplus => 0, :Deficit => 1e6), Dict(Power => 1), 𝒫ᵉᵐ₀)
+        sink = EMB.RefSink("-snk", FixedProfile(20), 
+            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1), 𝒫ᵉᵐ₀)
     end
     nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
@@ -42,16 +43,21 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing)
 
     T = UniformTwoLevel(1, 4, sp_dur, UniformTimes(1, 4, 1))
 
-    data = Dict(:nodes => nodes,
+    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    em_cost     = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
+    global_data = IM.GlobalData(em_limits, em_cost, discount_rate)
+
+    case = Dict(:nodes => nodes,
                 :links => links,
                 :products => products,
-                :T => T)
-    return data
+                :T => T,
+                :global_data => global_data)
+    return case
 end
 
-function optimize(data, case; discount_rate=0.05)
-    model = IM.InvestmentModel(case, discount_rate)
-    m = EMB.create_model(data, model)
+function optimize(case)
+    model = IM.InvestmentModel()
+    m = EMB.create_model(case, model)
     optimizer = GLPK.Optimizer
     set_optimizer(m, optimizer)
     optimize!(m)
@@ -80,9 +86,8 @@ resulting_obj= Dict()
             push!(resulting_obj, "$(sp_dur) years" => [])
             for Lifemode ∈ [IM.UnlimitedLife(), IM.StudyLife(), IM.PeriodLife(),IM.RollingLife()]
                 print("~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~")
-                data = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
-                case = IM.StrategicCase(StrategicFixedProfile([450, 400, 350, 300]),𝒫ᵉᵐ₀)
-                m = optimize(data, case)
+                case = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
+                m = optimize(case)
                 #write_to_file(m, "$(Lifemode)_$(sp_dur).lp")
                 # println(solution_summary(m))
 
@@ -96,8 +101,8 @@ resulting_obj= Dict()
 
                 push!(resulting_obj["$(sp_dur) years"], objective_value(m))
 
-                source = data[:nodes][2]
-                𝒯 = data[:T]
+                source = case[:nodes][2]
+                𝒯 = case[:T]
                 𝒯ⁱⁿᵛ = strategic_periods(𝒯)
 
                 @testset "cap_inst" begin

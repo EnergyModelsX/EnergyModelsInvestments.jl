@@ -1,7 +1,8 @@
 const GEO = Geography
 
 function has_trans_investment(i)
-    """For a given transmission, checks that it contains extra data (i.data : list containing the extra data of the different corridor modes ) and that 
+    """For a given transmission, checks that it contains extra data
+    (i.Data : list containing the extra data of the different corridor modes) and that 
     at leat one corridor mode has investment data defined.
      """
     isa(i, GEO.Transmission) && 
