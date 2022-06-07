@@ -394,14 +394,14 @@ function set_investment_properties(n, var, ::SemiContinuousInvestment)
     JuMP.set_binary(var)
 end
     
-"""
+#= """
     set_investment_properties(n, var, ::IndividualInvestment)
 Look up if binary investment from n and dispatch on that
 """
 function set_investment_properties(n, var, ::IndividualInvestment)
     dispatch_mode = n.Data["InvestmentModels"].Inv_mode
     set_investment_properties(n, var, dispatch_mode)
-end
+end =#
 
 function set_investment_properties(n, var, ::FixedInvestment) # TO DO
     JuMP.fix(var, 1)
@@ -414,7 +414,7 @@ end
 
 """
     set_capacity_cost(m, n, 𝒯, t_inv, global_data)
-Set the capex_cost based on the technology investment cost, and period strategic period length to include the needs for reinvestments and the rest value. 
+Set the capex_cost based on the technology investment cost, and strategic period length to include the needs for reinvestments and the rest value. 
 It implements different versions of the lifetime implementation:
 - UnlimitedLife:    The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
 - StudyLife:        The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
