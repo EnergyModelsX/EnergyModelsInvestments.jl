@@ -42,7 +42,7 @@ end
 """
     corridor_modes_with_inv(l)
     
-Returns a list of corridors modes thta have non empty investment data for a given transmission line 
+Returns a list of corridors modes that have non empty investment data for a given transmission line 
  """
 function corridor_modes_with_inv(l)
     return [m for m in l.Modes if ("InvestmentModels" in keys(l.Data[get_cm_index(m,l)])  && !=(l.Data[get_cm_index(m,l)]["InvestmentModels"], EMB.EmptyData))]

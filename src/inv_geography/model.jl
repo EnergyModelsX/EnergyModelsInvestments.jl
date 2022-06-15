@@ -202,11 +202,6 @@ function set_investment_properties(l, cm, var, ::SemiContinuousInvestment)
     JuMP.set_binary(var)
 end
     
-function set_investment_properties(l, cm, var, ::IndividualInvestment)
-    dispatch_mode = l.Data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
-    set_investment_properties(l, cm, var, dispatch_mode)
-end
-
 function set_investment_properties(l, cm, var, ::FixedInvestment) # TO DO
     JuMP.fix(var, 1)
 end
@@ -215,4 +210,3 @@ function set_investment_properties(l, cm, var, ::IntegerInvestment) # TO DO
     JuMP.set_integer(var)
     JuMP.set_lower_bound(var,0)
 end
-
