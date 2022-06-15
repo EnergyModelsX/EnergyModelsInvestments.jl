@@ -393,15 +393,6 @@ end
 function set_investment_properties(n, var, ::SemiContinuousInvestment)
     JuMP.set_binary(var)
 end
-    
-#= """
-    set_investment_properties(n, var, ::IndividualInvestment)
-Look up if binary investment from n and dispatch on that
-"""
-function set_investment_properties(n, var, ::IndividualInvestment)
-    dispatch_mode = n.Data["InvestmentModels"].Inv_mode
-    set_investment_properties(n, var, dispatch_mode)
-end =#
 
 function set_investment_properties(n, var, ::FixedInvestment) # TO DO
     JuMP.fix(var, 1)

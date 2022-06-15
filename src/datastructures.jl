@@ -45,7 +45,6 @@ struct ContinuousInvestment     <: Investment end
 struct SemiContinuousInvestment <: Investment end
 """ Forced investment in given capacity. """
 struct FixedInvestment          <: Investment end
-#struct IndividualInvestment     <: Investment end 	# Look up property of each node to decide #deprecated
 
 """ Abstract lifetime type """
 abstract type LifetimeMode end
@@ -82,7 +81,7 @@ Base.@kwdef struct extra_inv_data <: EMB.Data # TODO? Move from kwdef to @with_k
     Inv_mode::Investment = ContinuousInvestment()
     Cap_start::Union{Real, Nothing} = nothing
     Cap_increment::TimeProfile = FixedProfile(0)
-    # min_inst_cap::TimeProfile #TO DO Implement
+    # min_inst_cap::TimeProfile # TODO: Implement
     Life_mode::LifetimeMode = UnlimitedLife()
     Lifetime::TimeProfile = FixedProfile(0)
  end
@@ -131,23 +130,7 @@ Base.@kwdef struct extra_inv_data <: EMB.Data # TODO? Move from kwdef to @with_k
     Life_mode::LifetimeMode = UnlimitedLife()
     Lifetime::TimeProfile = FixedProfile(0)
  end
-#Consider package Parameters.jl to define struct with default values
-
-# """
-#     investmentmode(x)
-
-# Return investment mode of node `x`. By default, all investments are continuous.
-# Implement specialised methods to add more investment modes, e.g.:
-# ## Example
-# ```
-# investmentmode(::Battery) = DiscreteInvestment()    # Discrete for Battery nodes
-# investmentmode(::FuelCell) = IndividualInvestment() # Look up for each FuelCell node
-# TO DO SemiContinuous investment mode
-# ```
-
-# """
-# investmentmode(x) = ContinuousInvestment() 			# Default to continuous
-
+# TODO: Consider package Parameters.jl to define struct with default values
 
 """
 investmentmode(n)
@@ -162,4 +145,4 @@ Return the lifetime mode of the node 'n'. By default, all investments are unlimi
 """
 lifetimemode(n) = n.Data["InvestmentModels"].Life_mode
 
-# TO DO function to fetch investment mode from the node type?
+# TODO: function to fetch investment mode from the node type?
