@@ -1,16 +1,23 @@
 """
+    testdata()
+
+Read dummy data from EnergyModelsBase
+"""
+function testdata()
+    data = EMB.read_data("")
+end
+
+"""
     has_capacity(i)
 
 Check if node i should be used for capacity calculations, i.e.
     * is not Availability
     * has capacity
 
+Can also be used for storages.
+
     TODO: Move to EMB?
 """
-function testdata()
-    data = EMB.read_data("")
-end
-
 function has_capacity(i)
     ~isa(i, EMB.Availability) && 
     (
@@ -19,6 +26,15 @@ function has_capacity(i)
     )
 end
 
+"""
+    has_stor_capacity(i)
+
+Check if storage node i should be used for capacity calculations, i.e.
+    * is not Availability
+    * has capacity for rate and storage volume
+
+Can only be used for storages.
+"""
 function has_stor_capacity(i)
     ~isa(i, EMB.Availability) && 
     (
@@ -26,6 +42,18 @@ function has_stor_capacity(i)
     )
 end
 
+"""
+    has_investment(i)
+
+Check if node i should be used for investment analysis, i.e.
+    * is not Availability
+    * has investment data that contains at least:
+        *Capex_Cap
+        *Cap_max_inst
+        *Cap_max_add
+        *Cap_min_add
+
+"""
 function has_investment(i)
     ~isa(i, EMB.Availability) && 
     (
@@ -41,6 +69,17 @@ function has_investment(i)
     )
 end
 
+"""
+has_storage_investment(i)
+
+Check if storage node i should be used for investment analysis, i.e.
+    * is not Availability
+    * has investment data that contains at least:
+        *Capex_stor
+        *Stor_max_inst
+        *Stor_max_add
+        *Stor_min_add
+"""
 function has_storage_investment(i)
     ~isa(i, EMB.Availability) && 
     (

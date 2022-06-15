@@ -1,4 +1,9 @@
+"""
+    run_model(fn, model, optimizer=nothing)
 
+Defines the necessary steps for running the model. 
+This is a temporary implementation before a separate package handles this.
+"""
 function run_model(fn, model, optimizer=nothing)
     @debug "Run model" fn optimizer
  
@@ -17,7 +22,11 @@ function run_model(fn, model, optimizer=nothing)
      return m, case
  end
 
+"""
+    read_data(fn)
 
+Temporary function to create the data for the case study.
+"""
  function read_data(fn)
     @debug "Read case data"
     @info "Hard coded dummy model for now"
