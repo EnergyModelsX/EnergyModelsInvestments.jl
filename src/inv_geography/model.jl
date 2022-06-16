@@ -93,7 +93,7 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
 
     # Constraints capex
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l) 
-        @constraint(m, m[:capex_trans][l, t_inv, cm] == l.Data[get_cm_index(cm,l)]["InvestmentModels"].Capex_trans[t_inv] * m[:trans_cap_add][l, t_inv, cm])
+        @constraint(m, m[:capex_trans][l, t_inv, cm] == l.Data["InvestmentModels"][cm].Capex_trans[t_inv] * m[:trans_cap_add][l, t_inv, cm])
     end
 
     # Set investment properties based on investment mode of transmission l
@@ -120,8 +120,8 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
     # Transmission capacity updating
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
         for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap= get_start_cap(cm, t_inv, l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_start)
-            @constraint(m, m[:trans_cap_current][l, t_inv, cm] <= l.Data[get_cm_index(cm,l)]["InvestmentModels"].Trans_max_inst[t_inv])
+            start_cap= get_start_cap(cm, t_inv, l.Data["InvestmentModels"][cm].Trans_start)
+            @constraint(m, m[:trans_cap_current][l, t_inv, cm] <= l.Data["InvestmentModels"][cm].Trans_max_inst[t_inv])
             @constraint(m, m[:trans_cap_current][l, t_inv, cm] ==
                 (TS.isfirst(t_inv) ? start_cap : m[:trans_cap_current][l, previous(t_inv,𝒯), cm])
                 + m[:trans_cap_add][l, t_inv, cm] 
@@ -146,12 +146,12 @@ end
 
 Add constraints related to capacity installation depending on investment mode of node `l`
 """
-investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
+investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data["InvestmentModels"][cm].Inv_mode
 set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm) = set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode(cm,l))
 function set_transcap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_max_add[t_inv])
-        @constraint(m, m[:trans_cap_add][l, t_inv, cm] >= l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_min_add[t_inv])
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= l.Data["InvestmentModels"][cm].Trans_max_add[t_inv])
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] >= l.Data["InvestmentModels"][cm].Trans_min_add[t_inv])
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
 end
@@ -165,15 +165,15 @@ end
 function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::IntegerInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(l, cm, m[:trans_remove_b][l,t_inv,cm])
-        @constraint(m, m[:trans_cap_add][l, t_inv, cm] == l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_increment[t_inv] * m[:trans_invest_b][l, t_inv, cm])
-        @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_increment[t_inv] * m[:trans_remove_b][l, t_inv, cm])
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] == l.Data["InvestmentModels"][cm].Trans_increment[t_inv] * m[:trans_invest_b][l, t_inv, cm])
+        @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == l.Data["InvestmentModels"][cm].Trans_increment[t_inv] * m[:trans_remove_b][l, t_inv, cm])
     end
 end
 
 function set_capacity_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::SemiContinuousInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_max_add[t_inv] )
-        @constraint(m, m[:trans_cap_add][l, t_inv, cm] >= l.Data[get_cm_index(cm, l)]["InvestmentModels"].Trans_min_add[t_inv] * m[:trans_invest_b][l, t_inv, cm]) 
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= l.Data["InvestmentModels"][cm].Trans_max_add[t_inv] )
+        @constraint(m, m[:trans_cap_add][l, t_inv, cm] >= l.Data["InvestmentModels"][cm].Trans_min_add[t_inv] * m[:trans_invest_b][l, t_inv, cm]) 
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
 end
@@ -203,7 +203,7 @@ function set_investment_properties(l, cm, var, ::SemiContinuousInvestment)
 end
     
 function set_investment_properties(l, cm, var, ::IndividualInvestment)
-    dispatch_mode = l.Data[get_cm_index(cm, l)]["InvestmentModels"].Inv_mode
+    dispatch_mode = l.Data["InvestmentModels"][cm].Inv_mode
     set_investment_properties(l, cm, var, dispatch_mode)
 end
 

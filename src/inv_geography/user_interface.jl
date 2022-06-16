@@ -41,12 +41,11 @@ function GEO.read_data(modeltype::InvestmentModel)
     OverheadLine_50MW   = GEO.RefStatic("PowerLine_50", Power, 50.0, 0.05, 2)#, EMB.Linear)
     LNG_Ship_100MW      = GEO.RefDynamic("LNG_100", NG, 100.0, 0.05, 2)#, EMB.Linear)
 
-    # Create transmission between areas
-    transmission = [GEO.Transmission(areas[1], areas[2], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(500), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(0), Inv_mode=DiscreteInvestment()))]),
-                    GEO.Transmission(areas[1], areas[3], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(100), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(10), Inv_mode=SemiContinuousInvestment(), Trans_start=0))]),
-                    GEO.Transmission(areas[2], areas[3], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(5), Inv_mode=IntegerInvestment(), Trans_increment=FixedProfile(6), Trans_start=20))]),
-                    GEO.Transmission(areas[3], areas[4], [OverheadLine_50MW],[Dict("InvestmentModels"=> TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(1), Inv_mode=ContinuousInvestment(), Trans_start=0))]),
-                    GEO.Transmission(areas[4], areas[2], [LNG_Ship_100MW],[Dict(""=> EMB.EmptyData())])]
+ transmission = [GEO.Transmission(areas[1], areas[2], [OverheadLine_50MW],Dict("InvestmentModels"=> Dict(OverheadLine_50MW => TransInvData(Capex_trans=FixedProfile(500), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(0), Inv_mode=DiscreteInvestment())))),
+ GEO.Transmission(areas[1], areas[3], [OverheadLine_50MW],Dict("InvestmentModels"=> Dict(OverheadLine_50MW => TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(100), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(10), Inv_mode=SemiContinuousInvestment(), Trans_start=0)))),
+ GEO.Transmission(areas[2], areas[3], [OverheadLine_50MW],Dict("InvestmentModels"=> Dict(OverheadLine_50MW => TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(5), Inv_mode=IntegerInvestment(), Trans_increment=FixedProfile(6), Trans_start=20)))),
+ GEO.Transmission(areas[3], areas[4], [OverheadLine_50MW],Dict("InvestmentModels"=> Dict(OverheadLine_50MW => TransInvData(Capex_trans=FixedProfile(10), Trans_max_inst=FixedProfile(50), Trans_max_add=FixedProfile(100), Trans_min_add=FixedProfile(1), Inv_mode=ContinuousInvestment(), Trans_start=0)))),
+ GEO.Transmission(areas[4], areas[2], [LNG_Ship_100MW],Dict(""=> EMB.EmptyData()))]
 
     # Creation of the time structure and global data
     T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))

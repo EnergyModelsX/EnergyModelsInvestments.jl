@@ -18,20 +18,19 @@ function has_cm_investment(cm,l)
     isa(cm, GEO.TransmissionMode) &&
     isa(l, GEO.Transmission) &&
     cm ∈ l.Modes  &&
-    haskey(l.Data[get_cm_index(cm,l)], "InvestmentModels") &&
+    haskey(l.Data, "InvestmentModels") &&
     (
-        hasproperty(l.Data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_max_inst) ||
-        hasproperty(l.Data[get_cm_index(cm,l)]["InvestmentModels"], :Capex_trans) ||
-        hasproperty(l.Data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_max_add) ||
-        hasproperty(l.Data[get_cm_index(cm,l)]["InvestmentModels"], :Trans_min_add)
+        hasproperty(l.Data["InvestmentModels"][cm], :Trans_max_inst) ||
+        hasproperty(l.Data["InvestmentModels"][cm], :Capex_trans) ||
+        hasproperty(l.Data["InvestmentModels"][cm], :Trans_max_add) ||
+        hasproperty(l.Data["InvestmentModels"][cm], :Trans_min_add)
     )
 end
 
 function corridor_modes_with_inv(l)
-    return [m for m in l.Modes if ("InvestmentModels" in keys(l.Data[get_cm_index(m,l)])  && !=(l.Data[get_cm_index(m,l)]["InvestmentModels"], EMB.EmptyData))]
-end
-
-function get_cm_index(cm,l)
-    """ Returns the index of the given corridor mode in the defined transmission """
-    findfirst(x -> x==cm, l.Modes)# we assume that all transmission modes have a different name
+    if "InvestmentModels" ∈ keys(l.Data)
+        return [m for m ∈ l.Modes if (!=(l.Data["InvestmentModels"][m], EMB.EmptyData))]
+    else
+        return []
+    end
 end

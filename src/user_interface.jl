@@ -17,7 +17,7 @@ function run_model(fn, model, optimizer=nothing)
      return m, case
  end
 
-struct InvCaseData <: CEM.CaseDataType
+#= struct InvCaseData <: CEM.CaseDataType
 Scenario::CEM.ScenarioType
 Types::Dict
 T::TimeStructures.TimeStructure
@@ -130,7 +130,7 @@ end
 
 function lifemode(mode::Nothing)
     return UnlimitedLife()
-end
+end =#
 
 function read_data(fn)
     @debug "Read case data"
