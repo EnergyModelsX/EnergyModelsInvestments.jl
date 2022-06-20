@@ -1,4 +1,9 @@
+"""
+    run_model(fn, model, optimizer=nothing)
 
+Defines the necessary steps for running the model. 
+This is a temporary implementation before a separate package handles this.
+"""
 function run_model(fn, model, optimizer=nothing)
     @debug "Run model" fn optimizer
  
@@ -17,122 +22,12 @@ function run_model(fn, model, optimizer=nothing)
      return m, case
  end
 
-#= struct InvCaseData <: CEM.CaseDataType
-Scenario::CEM.ScenarioType
-Types::Dict
-T::TimeStructures.TimeStructure
-r::Real
-end
+"""
+    read_data(fn)
 
-function CEM.create_extra_data(node, nodetype, modeltype::InvestmentModel,T::TimeStructures.TimeStructure)
-    if isempty(node["Data"])
-        extra_data = Dict(""=> EnergyModelsBase.EmptyData())
-    else
-        extra_data = Dict("InvestmentModels" => extra_inv_data(
-        Capex_Cap = CEM.timeprofile(CEM.input_shape(node["Data"]["Capex_Cap"]),T),
-        Cap_max_inst = CEM.timeprofile(CEM.input_shape(node["Data"]["Cap_max_inst"]),T),
-        Cap_max_add = CEM.timeprofile(CEM.input_shape(node["Data"]["Cap_max_add"]),T),
-        Cap_min_add = CEM.timeprofile(CEM.input_shape(node["Data"]["Cap_min_add"]),T),
-        Inv_mode = inv_type(node["Data"]["Inv_mode"]),
-        Cap_start = init_capstart(node["Data"]["Cap_start"]),
-        Cap_increment = CEM.timeprofile(CEM.input_shape(init_capincrement(node["Data"]["Cap_increment"])),T),
-        Life_mode = lifemode(node["Data"]["Life_mode"]),
-        Lifetime = CEM.timeprofile(CEM.input_shape(node["Data"]["Lifetime"]),T)
-        ))
-    end
-    return extra_data
-end
-
-function CEM.create_extra_data_stor(node, nodetype, modeltype::InvestmentModel,T::TimeStructures.TimeStructure)
-    if isempty(node["Data"])
-        extra_data = Dict(""=> EnergyModelsBase.EmptyData())
-    else
-        extra_data = Dict("InvestmentModels" => extra_inv_data(
-        Capex_rate = CEM.timeprofile(CEM.input_shape(node["Data"]["Capex_rate"]),T),
-        Rate_max_inst = CEM.timeprofile(CEM.input_shape(node["Data"]["Rate_max_inst"]),T),
-        Rate_max_add = CEM.timeprofile(CEM.input_shape(node["Data"]["Rate_max_add"]),T),
-        Rate_min_add = CEM.timeprofile(CEM.input_shape(node["Data"]["Rate_min_add"]),T),
-        Capex_stor = CEM.timeprofile(CEM.input_shape(node["Data"]["Capex_stor"]),T),
-        Stor_max_inst = CEM.timeprofile(CEM.input_shape(node["Data"]["Stor_max_inst"]),T),
-        Stor_max_add = CEM.timeprofile(CEM.input_shape(node["Data"]["Stor_max_add"]),T),
-        Stor_min_add = CEM.timeprofile(CEM.input_shape(node["Data"]["Stor_min_add"]),T),
-        Inv_mode = inv_type(node["Data"]["Inv_mode"]),
-        Rate_start = init_capstart(node["Data"]["Rate_start"]),
-        Stor_start = init_capstart(node["Data"]["Stor_start"]),
-        Rate_increment = CEM.timeprofile(CEM.input_shape(init_capincrement(node["Data"]["Rate_increment"])),T),
-        Stor_increment = CEM.timeprofile(CEM.input_shape(init_capincrement(node["Data"]["Stor_increment"])),T),
-        Life_mode = lifemode(node["Data"]["Life_mode"]),
-        Lifetime = CEM.timeprofile(CEM.input_shape(node["Data"]["Lifetime"]),T)
-        ))
-    end
-    return extra_data
-end
-
-function CEM.input_shape(x::Nothing)
-    return nothing
-end
-
-function init_capstart(x)
-    return nothing
-end
-
-function init_capstart(x::Real)
-    return x
-end
-
-function init_capincrement(x::Array)
-    return x
-end
-
-function init_capincrement(x::Real)
-    return x
-end
-
-function init_capincrement(x)
-    return 0
-end
-
-function inv_type(inv::String)
-    if inv == "DiscreteInvestment"
-        return DiscreteInvestment()
-    elseif inv == "IntegerInvestment"
-        return IntegerInvestment()
-    elseif inv == "ContinuousInvestment"
-        return ContinuousInvestment()
-    elseif inv == "SemiContinuousInvestment"
-        return SemiContinuousInvestment()
-    elseif inv == "FixedInvestment"
-        return FixedInvestment()
-    elseif inv == "IndividualInvestment"
-        return IndividualInvestment()
-    else
-        return ContinuousInvestment() 
-    end
-end
-
-function inv_type(inv::Nothing)
-    return ContinuousInvestment()
-end
-
-function lifemode(mode::String)
-    if mode == "UnlimitedLife"
-        return UnlimitedLife()
-    elseif mode == "StudyLife"
-        return StudyLife()
-    elseif mode == "PeriodLife"
-        return PeriodLife()
-    elseif mode == "RollingLife"
-        return RollingLife()
-    else
-        return UnlimitedLife()
-    end
-end
-
-function lifemode(mode::Nothing)
-    return UnlimitedLife()
-end =#
-
-function read_data(fn)
+Temporary function to create the data for the case study.
+"""
+ function read_data(fn)
     @debug "Read case data"
     @info "Hard coded dummy model for now"
 

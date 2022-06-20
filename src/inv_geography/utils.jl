@@ -1,16 +1,28 @@
 const GEO = Geography
 
+"""
+    has_trans_investment(i)
+
+For a given transmission, checks that it contains extra data
+(i.Data : list containing the extra data of the different corridor modes) and that 
+at leat one corridor mode has investment data defined.
+ """
 function has_trans_investment(i)
-    """For a given transmission, checks that it contains extra data
-    (i.Data : list containing the extra data of the different corridor modes) and that 
-    at leat one corridor mode has investment data defined.
-     """
     isa(i, GEO.Transmission) && 
     (
         hasproperty(i, :Data) && haskey(i.Data, "InvestmentModels") && isempty(keys(i.Data["InvestmentModels"])) && any(x-> x != EMB.EmptyData(), values(i.Data["InvestmentModels"]))
     )
 end
 
+"""
+    has_cm_investment(cm,l)
+    
+For a given transmission and corridor mode, checks that it contains extra data:
+ - Trans_max_inst
+ - Capex_trans
+ - Trans_max_add
+ - Trans_min_add
+ """
 function has_cm_investment(cm,l)
     isa(cm, GEO.TransmissionMode) &&
     isa(l, GEO.Transmission) &&
@@ -24,6 +36,11 @@ function has_cm_investment(cm,l)
     )
 end
 
+"""
+    corridor_modes_with_inv(l)
+    
+Returns a list of corridors modes that have non empty investment data for a given transmission line 
+ """
 function corridor_modes_with_inv(l)
     if "InvestmentModels" ∈ keys(l.Data)
         return [m for m ∈ l.Modes if (!=(l.Data["InvestmentModels"][m], EMB.EmptyData))]

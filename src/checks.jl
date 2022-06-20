@@ -1,4 +1,10 @@
+"""
+    check_investment_data(n, 𝒯)
 
+Performs various checks on investment data:
+ - min_add has to be less than max_add in investments data (Node.Data).
+ - Existing capacity can not be larger than max installed capacity in the beginning.
+"""
 function check_investment_data(n, 𝒯)
     !haskey(n.Data, "InvestmentModels") && return
     inv_data = n.Data["InvestmentModels"]
