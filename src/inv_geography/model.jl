@@ -17,7 +17,7 @@ function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, global_data
     # Extraction of data
     𝒯ᴵⁿᵛ        = strategic_periods(𝒯)
     ℒᵗʳᵃⁿˢᴵⁿᵛ   = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
-    r           = global_data.r
+    r           = modeltype.r
     obj = JuMP.objective_function(m)
 
     # Update of teh cost function for modes with winvestments

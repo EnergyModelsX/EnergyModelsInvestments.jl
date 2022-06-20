@@ -7,10 +7,7 @@ function has_trans_investment(i)
      """
     isa(i, GEO.Transmission) && 
     (
-        hasproperty(i, :Data) &&
-        #!=(Base.unique(i.data), Dict{"InvestmentModels", EMB.EmptyData()}) &&
-        #!=(Base.unique([d for d  in i.data if "InvestmentModels" ∈ keys(d)]), Dict{"InvestmentModels", EMB.EmptyData()}) &&
-        !=([d for d in i.Data if ("InvestmentModels" ∈ keys(d) && !=(get(d, "InvestmentModels", EMB.EmptyData()), EMB.EmptyData()) )], [])
+        hasproperty(i, :Data) && haskey(i.Data, "InvestmentModels") && isempty(keys(i.Data["InvestmentModels"])) && any(x-> x != EMB.EmptyData(), values(i.Data["InvestmentModels"]))
     )
 end
 

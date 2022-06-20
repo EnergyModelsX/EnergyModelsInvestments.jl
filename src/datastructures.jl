@@ -99,3 +99,8 @@ investmentmode(n) = n.Data["InvestmentModels"].Inv_mode
 lifetimemode(n) = n.Data["InvestmentModels"].Life_mode
 
 # TO DO function to fetch investment mode from the node type?
+
+struct InvGlobalData <: AbstractGlobalData
+    Emission_limit::Dict{ResourceEmit, TimeProfile}
+    Emission_price::Dict{ResourceEmit, TimeProfile}
+end
