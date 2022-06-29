@@ -7,13 +7,11 @@ export discount_mult_avg.
 """
 module InvestmentModels
 
-using CleanExportMain
 using EnergyModelsBase
 using JuMP
 using TimeStructures
 using Requires
 
-const CEM = CleanExportMain
 const EMB = EnergyModelsBase
 const TS = TimeStructures
 

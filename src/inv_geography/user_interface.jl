@@ -1,4 +1,4 @@
-#= const GEO = Geography
+const GEO = Geography
 
 function GEO.read_data(modeltype::InvestmentModel)
     @debug "Read case data"
@@ -113,4 +113,4 @@ function GEO.get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products, modeltype::
             EMB.Direct(j*10+101,nodes[10],nodes[1],EMB.Linear())
                     ]
     return nodes, links
-end =#
+end

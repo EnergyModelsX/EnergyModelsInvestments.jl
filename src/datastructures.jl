@@ -1,3 +1,20 @@
+
+""" Global data for the study
+
+#Fields
+**`Emission_limit::Dict{ResourceEmit, TimeProfile}`** are the caps for the different emissions types considered.\n
+**`Emission_price::Dict{ResourceEmit, TimeProfile}`** are the prices for the different emissions types considered.\n
+**`r`** is the discount rate in the investment optimization.
+"""
+#TODO: this should be removed. The emission limit and prices should go in energy models base
+# and the discout rate in the model structure InvestmentModel. Done in feature/Input. Still to be commited.
+struct GlobalData <: AbstractGlobalData
+    Emission_limit::Dict{ResourceEmit, TimeProfile}
+    Emission_price::Dict{ResourceEmit, TimeProfile}
+    r       # Discount rate
+end
+
+
 """ An abstract investment model type
 """
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
@@ -5,8 +22,6 @@ abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 """ An concrete basic investment model type
 """
 struct InvestmentModel <: AbstractInvestmentModel
-    # Discount rate
-    r
 end
 
 # struct DiscreteInvestmentModel <: AbstractInvestmentModel
@@ -132,9 +147,3 @@ Return the lifetime mode of the node 'n'. By default, all investments are unlimi
 """
 lifetimemode(n) = n.Data["InvestmentModels"].Life_mode
 
-# TO DO function to fetch investment mode from the node type?
-
-struct InvGlobalData <: AbstractGlobalData
-    Emission_limit::Dict{ResourceEmit, TimeProfile}
-    Emission_price::Dict{ResourceEmit, TimeProfile}
-end
