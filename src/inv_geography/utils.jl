@@ -10,7 +10,10 @@ at leat one corridor mode has investment data defined.
 function has_trans_investment(i)
     isa(i, GEO.Transmission) && 
     (
-        hasproperty(i, :Data) && haskey(i.Data, "InvestmentModels") && isempty(keys(i.Data["InvestmentModels"])) && any(x-> x != EMB.EmptyData(), values(i.Data["InvestmentModels"]))
+        hasproperty(i, :Data) && 
+        haskey(i.Data, "InvestmentModels") && 
+        !isempty(i.Data["InvestmentModels"]) && 
+        any(x -> x != EMB.EmptyData(), values(i.Data["InvestmentModels"]))
     )
 end
 
@@ -48,3 +51,10 @@ function corridor_modes_with_inv(l)
         return []
     end
 end
+
+"""
+    investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) 
+
+Returns the investment mode for a given `Transmission` l and `TransmissionMode` cm.
+"""
+investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data["InvestmentModels"][cm].Inv_mode
