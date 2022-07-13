@@ -159,7 +159,6 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
                             l.Data["InvestmentModels"][cm].Trans_min_add[t_inv])
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
-    println("Function 1 is called")
 end
 
 function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::DiscreteInvestment)
@@ -167,7 +166,6 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::DiscreteInvestmen
         @constraint(m, m[:trans_cap_current][l, t_inv, cm] ==
                             cm.Trans_cap[t_inv] * m[:trans_invest_b][l, t_inv]) 
     end
-    println("Function 2 is called")
 end
 
 function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::IntegerInvestment)
@@ -180,7 +178,6 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::IntegerInvestment
                             l.Data["InvestmentModels"][cm].Trans_increment[t_inv]
                             * m[:trans_remove_b][l, t_inv, cm])
     end
-    println("Function 3 is called")
 end
 
 function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::SemiContinuousInvestment)
@@ -192,7 +189,6 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::SemiContinuousInv
                             * m[:trans_invest_b][l, t_inv, cm]) 
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
-    println("Function 4 is called")
 end
 
 function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::FixedInvestment)
@@ -200,7 +196,6 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::FixedInvestment)
         @constraint(m, m[:trans_cap_current][l, t_inv, cm] ==
                             cm.Trans_cap[t_inv] * m[:trans_invest_b][l, t_inv, cm])
     end
-    println("Function 5 is called")
 end
 
 """
