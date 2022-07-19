@@ -304,6 +304,26 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestme
     end
 end
 
+# To be put somewhere else, related to data handling/utils:
+max_add(n, t_inv) = n.Data["InvestmentModels"].Cap_max_add[t_inv]
+min_add(n, t_inv) = n.Data["InvestmentModels"].Cap_min_add[t_inv]
+# cap_add_name(n::Node) = "node_"
+# cap_add_name(n::Link) = "link_"
+
+function set_capacity_installation_mockup(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestment, cap_add_name=:cap_add)
+    cap_add = m[cap_add_name] # or better use :cap_add everywhere, but add variables indices where necessary (e.g. using SparseVariables)
+    cap_add_b = m[join(cap_add_name, :_b)] # Or something safer, perhaps?
+
+    # These may even be put in separate functions for reuse in other investment modes
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        @constraint(m, cap_add[n, t_inv] <= max_add(n, t_inv) * cap_add_b[n, t_inv]) 
+        @constraint(m, cap_add[n, t_inv] >= min_add(n, t_inv) * cap_add_b[n, t_inv]) 
+        @constraint(m, cap_rem[n, t_inv] == 0)
+    end
+end
+
+
+
 function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::FixedInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:cap_current][n, t_inv] ==
