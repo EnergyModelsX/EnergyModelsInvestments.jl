@@ -122,7 +122,7 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
     # Transmission capacity updating
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
         for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap= get_start_cap(cm, t_inv, l.Data["InvestmentModels"][cm].Trans_start)
+            start_cap = get_start_cap(cm, t_inv, l.Data["InvestmentModels"][cm].Trans_start)
             @constraint(m, m[:trans_cap_current][l, t_inv, cm] <=
                                 l.Data["InvestmentModels"][cm].Trans_max_inst[t_inv])
             @constraint(m, m[:trans_cap_current][l, t_inv, cm] ==
@@ -143,6 +143,7 @@ function get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing)
         print("Type error of cm.Trans_cap")
     end
 end
+
 """
     set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
 
@@ -182,8 +183,10 @@ end
 
 function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::SemiContinuousInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
+        # Disjunctive constraints when investing
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] <=
-                            l.Data["InvestmentModels"][cm].Trans_max_add[t_inv])
+                            l.Data["InvestmentModels"][cm].Trans_max_add[t_inv]
+                            * m[:trans_invest_b][l, t_inv, cm]) 
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] >=
                             l.Data["InvestmentModels"][cm].Trans_min_add[t_inv]
                             * m[:trans_invest_b][l, t_inv, cm]) 

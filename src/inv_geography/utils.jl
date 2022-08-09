@@ -43,10 +43,10 @@ end
     corridor_modes_with_inv(l)
     
 Returns a list of corridors modes that have non empty investment data for a given transmission line 
- """
+"""
 function corridor_modes_with_inv(l)
     if "InvestmentModels" ∈ keys(l.Data)
-        return [m for m ∈ l.Modes if (!=(l.Data["InvestmentModels"][m], EMB.EmptyData))]
+        return [m for m ∈ l.Modes if (!=(typeof(l.Data["InvestmentModels"][m]), EMB.EmptyData))]
     else
         return []
     end
