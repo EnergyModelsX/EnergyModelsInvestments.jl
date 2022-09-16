@@ -270,7 +270,10 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode)
                             n.Data["InvestmentModels"].Cap_max_add[t_inv])
         @constraint(m, m[:cap_add][n, t_inv] >=
                             n.Data["InvestmentModels"].Cap_min_add[t_inv])
-        #@constraint(m, m[:cap_rem][n, t_inv] == 0)
+        # This code leads to a situation in which one does not maximize early investments when using both
+        # Cap_min_add and Cap_max_inst, where both result in a situation that Cap_max_inst would be violated
+        # through larger investments in an early stage --> to be considered for potential soft constraints on
+        # Cap_min_add and Cap_max_inst.
     end
 end
 
@@ -301,6 +304,20 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestme
                             n.Data["InvestmentModels"].Cap_min_add[t_inv]
                             * m[:cap_invest_b][n, t_inv]) 
         #@constraint(m, m[:cap_rem][n, t_inv] == 0)
+    end
+end
+
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode::ContinuousFixedInvestment)
+    sp_inv = investmentmode.Strat_period
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        if t_inv !== sp_inv
+            fix(m[:cap_add][n, t_inv], 0; force=true)
+        else
+            @constraint(m, m[:cap_add][n, t_inv] <=
+                                n.Data["InvestmentModels"].Cap_max_add[t_inv])
+            @constraint(m, m[:cap_add][n, t_inv] >=
+                                n.Data["InvestmentModels"].Cap_min_add[t_inv]) 
+        end
     end
 end
 

@@ -180,6 +180,43 @@ end
         @test sum(value.(m[:cap_inst][source, t]) <= source.Cap[t] for t ∈ 𝒯) == length(𝒯)
 
     end
+    
+    @testset "Investment example - small_graph ContinuousFixed" begin
+        
+        # Variation in the test structure
+        𝒯 = UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1))
+        sp1 = strategic_period(𝒯, 2)
+        investment_data_source = IM.extra_inv_data(
+            Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
+            Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
+            Cap_max_add     = FixedProfile(30),         # max_add [kW]
+            Cap_min_add     = FixedProfile(5),          # min_add [kW]
+            Cap_start       = 0,                        # Starting capacity 
+            Inv_mode        = IM.ContinuousFixedInvestment(sp1)   # investment mode
+        )
+        demand_profile = StrategicFixedProfile([0, 20, 25, 30])
+        data = Dict(
+                    "investment_data" => investment_data_source,
+                    "profile"         => demand_profile
+                    )
+
+        
+        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
+                                FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
+                                Dict("InvestmentModels"=>investment_data_source))
+        
+        # Cration and solving of the model
+        case = small_graph(source=source, data=data, T=𝒯)
+        m = optimize(case)
+
+        # Extraction of required data
+        source = case[:nodes][2]
+        sink   = case[:nodes][3]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        
+        # Check that the investment is only happening in one strategic period
+        @test sum(value.(m[:cap_add][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
+    end
 
     @testset "Investment example - small_graph Continuous fixed manually" begin
         
