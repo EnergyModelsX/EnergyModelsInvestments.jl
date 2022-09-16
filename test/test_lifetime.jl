@@ -58,7 +58,7 @@ end
 function optimize(case)
     model = IM.InvestmentModel()
     m = EMB.create_model(case, model)
-    optimizer = GLPK.Optimizer
+    optimizer = HiGHS.Optimizer
     set_optimizer(m, optimizer)
     optimize!(m)
     return m

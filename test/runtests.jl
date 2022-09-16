@@ -1,4 +1,4 @@
-using GLPK
+using HiGHS
 using JuMP
 using Test
 
