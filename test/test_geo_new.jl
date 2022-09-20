@@ -112,7 +112,7 @@ Optimize the `case`.
 function optimize(case)
     model = IM.InvestmentModel()
     m = GEO.create_model(case, model)
-    optimizer = GLPK.Optimizer
+    optimizer = HiGHS.Optimizer
     set_optimizer(m, optimizer)
     # set_optimizer(m,() -> Gurobi.Optimizer(env))
     optimize!(m)

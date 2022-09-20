@@ -13,6 +13,7 @@ function run_model(fn, model, optimizer=nothing)
  
      if !isnothing(optimizer)
          set_optimizer(m, optimizer)
+         set_optimizer_attribute(m, "output_flag", false)
          optimize!(m)
          # TODO: print_solution(m) optionally show results summary (perhaps using upcoming JuMP function)
          # TODO: save_solution(m) save results

@@ -37,7 +37,8 @@ end
 
 """ Investment type traits for nodes. """
 abstract type Investment end 
-""" Binary investment in given capacity with binary variables. """
+""" Binary investment in given capacity with binary variables. Requires specification
+of `Cap_start` in `extra_inv_data` for proper analyses."""
 struct DiscreteInvestment       <: Investment end
 """ Investment in fixed increments with integer variables. """
 struct IntegerInvestment        <: Investment end 
@@ -48,6 +49,17 @@ involves a binary variable. """
 struct SemiContinuousInvestment <: Investment end
 """ Forced investment in given capacity. """
 struct FixedInvestment          <: Investment end
+""" Continuous investment between zero and a maximum value in a given time period.
+
+This investment strategy alows to specifiy the strategic period `Strat_period` in which
+the model can invest into the technology.
+
+# Fields
+**`Strat_period::StrategicPeriod`** Strategic period in which investments can happen.
+"""
+struct ContinuousFixedInvestment     <: Investment
+    Strat_period::StrategicPeriod
+end
 
 """ Abstract lifetime type """
 abstract type LifetimeMode end
