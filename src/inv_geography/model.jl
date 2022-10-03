@@ -54,8 +54,8 @@ Create variables for investments into transmission.
 function GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
 
     
-    @variable(m, trans_in[l ∈ ℒᵗʳᵃⁿˢ,  𝒯, GEO.corridor_modes(l)] >= 0)
-    @variable(m, trans_out[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
+    @variable(m, trans_in[l ∈ ℒᵗʳᵃⁿˢ,  𝒯, GEO.corridor_modes(l)])
+    @variable(m, trans_out[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)])
     @variable(m, trans_loss[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
     @variable(m, trans_cap[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
     @variable(m, trans_loss_neg[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.modes_of_dir(l, 2)] >= 0)
