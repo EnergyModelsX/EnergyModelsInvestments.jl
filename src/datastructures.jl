@@ -184,11 +184,11 @@ investmentmode(n)
 
 Return the investment mode of the node 'n'. By default, all investments are continuous.
 """
-investmentmode(n) = n.Data["InvestmentModels"].Inv_mode
+investmentmode(n) = n.Data["EnergyModelsInvestments"].Inv_mode
 """
 lifetimemode(n)
 
 Return the lifetime mode of the node 'n'. By default, all investments are unlimited.
 """
-lifetimemode(n) = n.Data["InvestmentModels"].Life_mode
+lifetimemode(n) = n.Data["EnergyModelsInvestments"].Life_mode
 

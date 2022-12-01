@@ -59,7 +59,7 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
     if isnothing(data)
         data = Dict("" => EMB.EmptyData())
     else
-        data = Dict("InvestmentModels" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => data))
+        data = Dict("EnergyModelsInvestments" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => data))
     end
 
     transmissions = [
@@ -112,7 +112,7 @@ Optimize the `case`.
 function optimize(case)
     model = IM.InvestmentModel()
     m = GEO.create_model(case, model)
-    optimizer = HiGHS.Optimizer
+    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(m, optimizer)
     # set_optimizer(m,() -> Gurobi.Optimizer(env))
     optimize!(m)

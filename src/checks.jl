@@ -6,8 +6,8 @@ Performs various checks on investment data:
  - Existing capacity can not be larger than max installed capacity in the beginning.
 """
 function check_investment_data(n, 𝒯)
-    !haskey(n.Data, "InvestmentModels") && return
-    inv_data = n.Data["InvestmentModels"]
+    !haskey(n.Data, "EnergyModelsInvestments") && return
+    inv_data = n.Data["EnergyModelsInvestments"]
  
     @assert_or_log sum(inv_data.Cap_min_add[t] ≤ inv_data.Cap_max_add[t] for t ∈ 𝒯) == length(𝒯) "min_add has to be less than max_add in investments data (Node.Data)."
 
@@ -35,7 +35,7 @@ end
 function EMB.check_node(n::Storage, 𝒯, modeltype::InvestmentModel)
 
     if has_storage_investment(n)
-        inv_data = n.Data["InvestmentModels"]
+        inv_data = n.Data["EnergyModelsInvestments"]
 
         @assert_or_log typeof(inv_data) == extra_inv_data_storage "The investment data for a Storage must be of type `extra_inv_data_storage`."
     

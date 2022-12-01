@@ -1,7 +1,7 @@
 [deps]
 EnergyModelsBase = "5d7e687e-f956-46f3-9045-6f5a5fd49f50"
-GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
-Geography = "3f775d88-a4da-46c4-a2cc-aa9f16db6708"
+EnergyModelsGeography = "3f775d88-a4da-46c4-a2cc-aa9f16db6708"
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

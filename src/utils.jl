@@ -58,12 +58,12 @@ function has_investment(i)
     ~isa(i, EMB.Availability) && 
     (
         hasproperty(i, :Data) && (
-            haskey(i.Data,"InvestmentModels") &&
+            haskey(i.Data,"EnergyModelsInvestments") &&
             (
-                hasproperty(i.Data["InvestmentModels"], :Capex_Cap) ||
-                hasproperty(i.Data["InvestmentModels"], :Cap_max_inst) ||
-                hasproperty(i.Data["InvestmentModels"], :Cap_max_add) ||
-                hasproperty(i.Data["InvestmentModels"], :Cap_min_add)
+                hasproperty(i.Data["EnergyModelsInvestments"], :Capex_Cap) ||
+                hasproperty(i.Data["EnergyModelsInvestments"], :Cap_max_inst) ||
+                hasproperty(i.Data["EnergyModelsInvestments"], :Cap_max_add) ||
+                hasproperty(i.Data["EnergyModelsInvestments"], :Cap_min_add)
             )
         )
     )
@@ -84,12 +84,12 @@ function has_storage_investment(i)
     ~isa(i, EMB.Availability) && 
     (
         hasproperty(i, :Data) && (
-            haskey(i.Data,"InvestmentModels") &&
+            haskey(i.Data,"EnergyModelsInvestments") &&
             (
-                hasproperty(i.Data["InvestmentModels"], :Capex_stor) ||
-                hasproperty(i.Data["InvestmentModels"], :Stor_max_inst) ||
-                hasproperty(i.Data["InvestmentModels"], :Stor_max_add) ||
-                hasproperty(i.Data["InvestmentModels"], :Stor_min_add)
+                hasproperty(i.Data["EnergyModelsInvestments"], :Capex_stor) ||
+                hasproperty(i.Data["EnergyModelsInvestments"], :Stor_max_inst) ||
+                hasproperty(i.Data["EnergyModelsInvestments"], :Stor_max_add) ||
+                hasproperty(i.Data["EnergyModelsInvestments"], :Stor_min_add)
             )
         )
     )

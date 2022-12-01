@@ -1,5 +1,10 @@
-InvestmentModels release notes
+EnergyModelsInvestments release notes
 ===================================
+
+Version 0.1.3 (2022-30-11)
+--------------------------
+### Renamed to EnergyModelsInvestments
+* Renamed for more internally consistent package names
 
 Version 0.1.2 (2021-09-07)
 --------------------------

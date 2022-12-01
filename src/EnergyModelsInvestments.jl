@@ -1,11 +1,11 @@
 """
-Main module for `InvestmentModels.jl`.
+Main module for `EnergyModelsInvestments.jl`.
 
 This module implements functionalities allowing to run investment analysis.
 It also defines weightin and discounting options: obj_weight, obj_weight_inv, obj_weight_inv_end
 export discount_mult_avg.
 """
-module InvestmentModels
+module EnergyModelsInvestments
 
 using EnergyModelsBase
 using JuMP
@@ -23,10 +23,10 @@ include("utils.jl")
 include("checks.jl")
 
 function __init__()
-    @require Geography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/datastructures.jl")
-    @require Geography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/model.jl")
-    @require Geography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/user_interface.jl")
-    @require Geography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/utils.jl")
+    @require EnergyModelsGeography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/datastructures.jl")
+    @require EnergyModelsGeography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/model.jl")
+    @require EnergyModelsGeography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/user_interface.jl")
+    @require EnergyModelsGeography="3f775d88-a4da-46c4-a2cc-aa9f16db6708" include("inv_geography/utils.jl")
 end
 
 export obj_weight, obj_weight_inv, obj_weight_inv_end

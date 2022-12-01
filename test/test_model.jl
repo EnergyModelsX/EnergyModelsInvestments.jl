@@ -38,7 +38,7 @@ function small_graph(;
     if isnothing(source)
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
                                FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
-                               Dict("InvestmentModels"=>investment_data_source))
+                               Dict("EnergyModelsInvestments"=>investment_data_source))
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", demand_profile, 
@@ -64,7 +64,7 @@ end
 function optimize(case)
     model = IM.InvestmentModel()
     m = EMB.create_model(case, model)
-    optimizer = HiGHS.Optimizer
+    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(m, optimizer)
     set_optimizer_attribute(m, "output_flag", false)
     optimize!(m)
@@ -124,7 +124,7 @@ end
         @testset "cap_inst" begin
             # Check that cap_inst is less than node.data.Cap_max_inst at all times.
             @test sum(value.(m[:cap_inst][source, t]) <= 
-                        source.Data["InvestmentModels"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
+                        source.Data["EnergyModelsInvestments"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
@@ -138,7 +138,7 @@ end
                         >= sink.Cap[t] for t ∈ 𝒯) == length(𝒯)
         end
         @test sum(value.(m[:cap_add][source, t_inv]) >= 
-                    source.Data["InvestmentModels"].Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+                    source.Data["EnergyModelsInvestments"].Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 
     end
 
@@ -162,7 +162,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
-                                Dict("InvestmentModels"=>investment_data_source))
+                                Dict("EnergyModelsInvestments"=>investment_data_source))
         
         # Cration and solving of the model
         case = small_graph(source=source, data=data)
@@ -203,7 +203,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
-                                Dict("InvestmentModels"=>investment_data_source))
+                                Dict("EnergyModelsInvestments"=>investment_data_source))
         
         # Cration and solving of the model
         case = small_graph(source=source, data=data, T=𝒯)
@@ -238,7 +238,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
-                                Dict("InvestmentModels"=>investment_data_source))
+                                Dict("EnergyModelsInvestments"=>investment_data_source))
         
         # Cration and solving of the model
         case = small_graph(source=source, data=data)
