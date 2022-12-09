@@ -94,7 +94,7 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
     # Constraints capex
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l) 
         @constraint(m, m[:capex_trans][l, t_inv, cm] ==
-                            l.Data["EnergyModelsInvestments"][cm].Capex_trans[t_inv]
+                            l.Data["Investments"][cm].Capex_trans[t_inv]
                             * m[:trans_cap_add][l, t_inv, cm])
     end
 
@@ -122,9 +122,9 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
     # Transmission capacity updating
     for l ∈ ℒᵗʳᵃⁿˢᴵⁿᵛ, cm ∈ corridor_modes_with_inv(l)
         for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap = get_start_cap(cm, t_inv, l.Data["EnergyModelsInvestments"][cm].Trans_start)
+            start_cap = get_start_cap(cm, t_inv, l.Data["Investments"][cm].Trans_start)
             @constraint(m, m[:trans_cap_current][l, t_inv, cm] <=
-                                l.Data["EnergyModelsInvestments"][cm].Trans_max_inst[t_inv])
+                                l.Data["Investments"][cm].Trans_max_inst[t_inv])
             @constraint(m, m[:trans_cap_current][l, t_inv, cm] ==
                 (TS.isfirst(t_inv) ? start_cap : m[:trans_cap_current][l, previous(t_inv,𝒯), cm])
                 + m[:trans_cap_add][l, t_inv, cm] 
@@ -155,9 +155,9 @@ set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm) =
 function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] <= 
-                            l.Data["EnergyModelsInvestments"][cm].Trans_max_add[t_inv])
+                            l.Data["Investments"][cm].Trans_max_add[t_inv])
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] >=
-                            l.Data["EnergyModelsInvestments"][cm].Trans_min_add[t_inv])
+                            l.Data["Investments"][cm].Trans_min_add[t_inv])
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end
 end
@@ -173,10 +173,10 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::IntegerInvestment
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(l, cm, m[:trans_remove_b][l,t_inv,cm])
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] == 
-                            l.Data["EnergyModelsInvestments"][cm].Trans_increment[t_inv]
+                            l.Data["Investments"][cm].Trans_increment[t_inv]
                             * m[:trans_invest_b][l, t_inv, cm])
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 
-                            l.Data["EnergyModelsInvestments"][cm].Trans_increment[t_inv]
+                            l.Data["Investments"][cm].Trans_increment[t_inv]
                             * m[:trans_remove_b][l, t_inv, cm])
     end
 end
@@ -185,10 +185,10 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::SemiContinuousInv
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Disjunctive constraints when investing
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] <=
-                            l.Data["EnergyModelsInvestments"][cm].Trans_max_add[t_inv]
+                            l.Data["Investments"][cm].Trans_max_add[t_inv]
                             * m[:trans_invest_b][l, t_inv, cm]) 
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] >=
-                            l.Data["EnergyModelsInvestments"][cm].Trans_min_add[t_inv]
+                            l.Data["Investments"][cm].Trans_min_add[t_inv]
                             * m[:trans_invest_b][l, t_inv, cm]) 
         @constraint(m, m[:trans_cap_rem][l, t_inv, cm] == 0)
     end

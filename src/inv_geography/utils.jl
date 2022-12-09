@@ -11,9 +11,9 @@ function has_trans_investment(i)
     isa(i, GEO.Transmission) && 
     (
         hasproperty(i, :Data) && 
-        haskey(i.Data, "EnergyModelsInvestments") && 
-        !isempty(i.Data["EnergyModelsInvestments"]) && 
-        any(x -> x != EMB.EmptyData(), values(i.Data["EnergyModelsInvestments"]))
+        haskey(i.Data, "Investments") && 
+        !isempty(i.Data["Investments"]) && 
+        any(x -> x != EMB.EmptyData(), values(i.Data["Investments"]))
     )
 end
 
@@ -30,12 +30,12 @@ function has_cm_investment(cm,l)
     isa(cm, GEO.TransmissionMode) &&
     isa(l, GEO.Transmission) &&
     cm ∈ l.Modes  &&
-    haskey(l.Data, "EnergyModelsInvestments") &&
+    haskey(l.Data, "Investments") &&
     (
-        hasproperty(l.Data["EnergyModelsInvestments"][cm], :Trans_max_inst) ||
-        hasproperty(l.Data["EnergyModelsInvestments"][cm], :Capex_trans) ||
-        hasproperty(l.Data["EnergyModelsInvestments"][cm], :Trans_max_add) ||
-        hasproperty(l.Data["EnergyModelsInvestments"][cm], :Trans_min_add)
+        hasproperty(l.Data["Investments"][cm], :Trans_max_inst) ||
+        hasproperty(l.Data["Investments"][cm], :Capex_trans) ||
+        hasproperty(l.Data["Investments"][cm], :Trans_max_add) ||
+        hasproperty(l.Data["Investments"][cm], :Trans_min_add)
     )
 end
 
@@ -45,8 +45,8 @@ end
 Returns a list of corridors modes that have non empty investment data for a given transmission line 
 """
 function corridor_modes_with_inv(l)
-    if "EnergyModelsInvestments" ∈ keys(l.Data)
-        return [m for m ∈ l.Modes if (!=(typeof(l.Data["EnergyModelsInvestments"][m]), EMB.EmptyData))]
+    if "Investments" ∈ keys(l.Data)
+        return [m for m ∈ l.Modes if (!=(typeof(l.Data["Investments"][m]), EMB.EmptyData))]
     else
         return []
     end
@@ -57,4 +57,4 @@ end
 
 Returns the investment mode for a given `Transmission` l and `TransmissionMode` cm.
 """
-investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data["EnergyModelsInvestments"][cm].Inv_mode
+investmentmode(cm::GEO.TransmissionMode,l::GEO.Transmission) = l.Data["Investments"][cm].Inv_mode

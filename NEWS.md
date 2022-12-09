@@ -1,6 +1,12 @@
 EnergyModelsInvestments release notes
 ===================================
 
+
+Version 0.1.4 (2022-12-09)
+--------------------------
+### Changes in naming
+ * Renamed dictionary keys from `EnergyModelsInvestments` to `Investments`
+
 Version 0.1.3 (2022-30-11)
 --------------------------
 ### Renamed to EnergyModelsInvestments

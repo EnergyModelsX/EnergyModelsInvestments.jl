@@ -59,7 +59,7 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
     if isnothing(data)
         data = Dict("" => EMB.EmptyData())
     else
-        data = Dict("EnergyModelsInvestments" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => data))
+        data = Dict("Investments" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => data))
     end
 
     transmissions = [
