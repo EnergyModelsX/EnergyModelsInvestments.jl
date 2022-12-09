@@ -31,7 +31,7 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount
             Lifetime=L,
         )
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
-            FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("EnergyModelsInvestments"=>investment_data_source))
+            FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("Investments"=>investment_data_source))
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", FixedProfile(20), 
@@ -107,7 +107,7 @@ resulting_obj= Dict()
 
                 @testset "cap_inst" begin
                     # Check that cap_inst is less than node.data.Cap_max_inst at all times.
-                    @test sum(value.(m[:cap_inst][source, t]) <= source.Data["EnergyModelsInvestments"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
+                    @test sum(value.(m[:cap_inst][source, t]) <= source.Data["Investments"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
                     for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                         # Check the initial installed capacity is correct set.
