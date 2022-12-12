@@ -1,6 +1,10 @@
 EnergyModelsInvestments release notes
 ===================================
 
+Version 0.1.5 (2022-12-12)
+--------------------------
+### Internal release
+* Update Readme
 
 Version 0.1.4 (2022-12-09)
 --------------------------
