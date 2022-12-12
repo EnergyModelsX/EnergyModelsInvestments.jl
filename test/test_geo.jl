@@ -89,20 +89,6 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
     return case
 end
 
-"""
-    general_tests(m)
-
-Check if the solution is optimal.
-"""
-function general_tests(m)
-    @testset "Optimal solution" begin
-        @test termination_status(m) == MOI.OPTIMAL
-
-        if termination_status(m) != MOI.OPTIMAL
-            @show termination_status(m)
-        end
-    end
-end
 
 """
     optimize(cases)
@@ -112,9 +98,7 @@ Optimize the `case`.
 function optimize(case)
     model = IM.InvestmentModel()
     m = GEO.create_model(case, model)
-    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-    set_optimizer(m, optimizer)
-    # set_optimizer(m,() -> Gurobi.Optimizer(env))
+    set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
 end
@@ -237,7 +221,7 @@ end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
-                                >= max(sink.Cap[t] - value.(m[:trans_cap_current][tr_osl_trd, previous(t_inv, 𝒯), trans_mode]), 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tr_osl_trd, previous(t_inv, 𝒯), trans_mode]), 
                                     data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
                     end
                 end
@@ -248,7 +232,7 @@ end
                 if value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode]) == 0
                     @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) == 0
                 else
-                    @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) > 0
+                    @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) ⪆ 0
                 end
             end
         end

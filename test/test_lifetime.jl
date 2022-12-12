@@ -58,23 +58,11 @@ end
 function optimize(case)
     model = IM.InvestmentModel()
     m = EMB.create_model(case, model)
-    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-    set_optimizer(m, optimizer)
+    set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
 end
 
-
-function general_tests(m)
-    # Check if the solution is optimal.
-    @testset "optimal solution" begin
-        @test termination_status(m) == MOI.OPTIMAL
-
-        if termination_status(m) != MOI.OPTIMAL
-            @show termination_status(m)
-        end
-    end
-end
 
 resulting_obj= Dict()
 
@@ -85,19 +73,15 @@ resulting_obj= Dict()
         for sp_dur ∈ [2,4,6,10,15,20]
             push!(resulting_obj, "$(sp_dur) years" => [])
             for Lifemode ∈ [IM.UnlimitedLife(), IM.StudyLife(), IM.PeriodLife(),IM.RollingLife()]
-                print("~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~")
+                @debug "~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~"
                 case = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
                 m = optimize(case)
-                #write_to_file(m, "$(Lifemode)_$(sp_dur).lp")
-                # println(solution_summary(m))
 
                 general_tests(m)
 
-                @show value.(m[:cap_current])
-                println()
-                @show value.(m[:cap_add])
-                println()
-                @show value.(m[:cap_rem])
+                @debug value.(m[:cap_current])
+                @debug value.(m[:cap_add])
+                @debug value.(m[:cap_rem])
 
                 push!(resulting_obj["$(sp_dur) years"], objective_value(m))
 
@@ -129,4 +113,4 @@ resulting_obj= Dict()
     end
 end
 
-print(resulting_obj)
+@debug resulting_obj

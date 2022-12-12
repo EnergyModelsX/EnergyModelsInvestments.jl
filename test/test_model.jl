@@ -64,23 +64,9 @@ end
 function optimize(case)
     model = IM.InvestmentModel()
     m = EMB.create_model(case, model)
-    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-    set_optimizer(m, optimizer)
-    set_optimizer_attribute(m, "output_flag", false)
+    set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
-end
-
-
-function general_tests(m)
-    # Check if the solution is optimal.
-    @testset "optimal solution" begin
-        @test termination_status(m) == MOI.OPTIMAL
-
-        if termination_status(m) != MOI.OPTIMAL
-            @show termination_status(m)
-        end
-    end
 end
 
 
