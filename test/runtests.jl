@@ -3,10 +3,12 @@ using JuMP
 using Test
 
 using EnergyModelsBase
+using EnergyModelsGeography
 using EnergyModelsInvestments
 using TimeStructures
 
 const EMB = EnergyModelsBase
+const GEO = EnergyModelsGeography
 const IM = EnergyModelsInvestments
 const TS = TimeStructures
 
@@ -33,10 +35,9 @@ end
     include("test_discounting.jl")
     include("test_model.jl")
     include("test_lifetime.jl")
+
+    @testset "w/Geography" begin
+        include("test_geo.jl")
+    end
 end
 
-using EnergyModelsGeography
-const GEO = EnergyModelsGeography
-@testset "w/Geography" begin
-    include("test_geo_new.jl")
-end
