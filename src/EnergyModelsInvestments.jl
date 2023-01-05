@@ -2,7 +2,7 @@
 Main module for `EnergyModelsInvestments.jl`.
 
 This module implements functionalities allowing to run investment analysis.
-It also defines weightin and discounting options: obj_weight, obj_weight_inv, obj_weight_inv_end
+It also defines weighting and discounting options: obj_weight, obj_weight_inv, obj_weight_inv_end
 export discount_mult_avg.
 """
 module EnergyModelsInvestments

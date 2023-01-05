@@ -157,7 +157,7 @@ case of `IntegerInvestment`\n
 **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested
 in each period.
 """
- Base.@kwdef struct extra_inv_data_storage <: EMB.Data
+Base.@kwdef struct extra_inv_data_storage <: EMB.Data
     #Investment data related to storage power
     Capex_rate::TimeProfile #capex of power
     Rate_max_inst::TimeProfile
