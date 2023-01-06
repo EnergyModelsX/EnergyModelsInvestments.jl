@@ -1,36 +1,38 @@
+using HiGHS
+using JuMP
+
+using EnergyModelsBase
+using EnergyModelsInvestments
+using TimeStructures
+
+const EMB = EnergyModelsBase
+const IM = EnergyModelsInvestments
+
+
 """
-    run_model(fn, model, optimizer=nothing)
+    run_model(case, model, optimizer)
 
 Defines the necessary steps for running the model. 
 This is a temporary implementation before a separate package handles this.
 """
-function run_model(fn, model, optimizer=nothing)
-    @debug "Run model" fn optimizer
+function run_model(case, model, optimizer=nothing)
+    @info "Run model" model optimizer
  
-     case = read_data(fn)
+    m = EMB.create_model(case, model)
+ 
+    set_optimizer(m, optimizer)
+    optimize!(m)
+    return m
+end
 
-     m = EMB.create_model(case, model)
- 
-     if !isnothing(optimizer)
-         set_optimizer(m, optimizer)
-         set_optimizer_attribute(m, "output_flag", false)
-         optimize!(m)
-         # TODO: print_solution(m) optionally show results summary (perhaps using upcoming JuMP function)
-         # TODO: save_solution(m) save results
-     else
-         @info "No optimizer given"
-     end
-     return m, case
- end
 
 """
-    read_data(fn)
+    generate_data()
 
-Temporary function to create the data for the case study.
+Generate the data for the case study.
 """
- function read_data(fn)
-    @debug "Read case data"
-    @info "Hard coded dummy model for now"
+ function generate_data()
+    @info "Generate case data"
 
     # Define the different resources
     NG       = ResourceEmit("NG", 0.2)
@@ -85,7 +87,7 @@ Temporary function to create the data for the case study.
     T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
     em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
-    global_data = GlobalData(em_limits, em_cost, 0.07)
+    global_data = IM.GlobalData(em_limits, em_cost, 0.07)
 
     # WIP case structure
     case = Dict(
@@ -97,3 +99,15 @@ Temporary function to create the data for the case study.
                 )
     return case
 end
+
+# Generate case data.
+model_type = InvestmentModel()
+case_data = generate_data()
+
+# Run the optimization as an investment model.
+m = run_model(case_data, model_type, HiGHS.Optimizer)
+
+# Uncomment to print all the constraints set in the model.
+# print(m)
+
+solution_summary(m)

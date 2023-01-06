@@ -1,8 +1,31 @@
-const GEO = EnergyModelsGeography
+using HiGHS
+using JuMP
 
-function GEO.read_data(modeltype::InvestmentModel)
-    @debug "Read case data"
-    @info "Hard coded dummy model for now (Investment Model)"
+using EnergyModelsBase
+using EnergyModelsGeography
+using EnergyModelsInvestments
+using TimeStructures
+
+
+const EMB = EnergyModelsBase
+const GEO = EnergyModelsGeography
+const IM = EnergyModelsInvestments
+
+
+function run_model(case, model, optimizer=nothing)
+    @info "Run model" model optimizer
+ 
+    m = EMB.create_model(case, model)
+ 
+    set_optimizer(m, optimizer)
+    optimize!(m)
+    return m
+end
+
+
+function generate_data(modeltype::InvestmentModel)
+    @debug "Generate case data"
+    @info "Generate data coded dummy model for now (Investment Model)"
 
     # Retrieve the products
     𝒫₀, 𝒫ᵉᵐ₀, products = GEO.get_resources()
@@ -22,7 +45,7 @@ function GEO.read_data(modeltype::InvestmentModel)
     nodes        = []
     links        = []
     for a_id in area_ids
-        n, l = GEO.get_sub_system_data(a_id, 𝒫₀, 𝒫ᵉᵐ₀, products, modeltype; 
+        n, l = get_sub_system_data(a_id, 𝒫₀, 𝒫ᵉᵐ₀, products, modeltype; 
                                        gen_scale = gen_scale[a_id], mc_scale = mc_scale[a_id],
                                        d_scale = d_scale[a_id])
         append!(nodes, n)
@@ -51,7 +74,7 @@ function GEO.read_data(modeltype::InvestmentModel)
     T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
     em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
-    global_data = GlobalData(em_limits, em_cost, 0.07)
+    global_data = IM.GlobalData(em_limits, em_cost, 0.07)
 
 
     # WIP data structure
@@ -67,7 +90,28 @@ function GEO.read_data(modeltype::InvestmentModel)
     return case
 end
 
-function GEO.get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products, modeltype::InvestmentModel;
+
+function get_resources()
+
+    # Define the different resources
+    NG       = ResourceEmit("NG", 0.2)
+    Coal     = ResourceCarrier("Coal", 0.35)
+    Power    = ResourceCarrier("Power", 0.)
+    CO2      = ResourceEmit("CO2",1.)
+    products = [NG, Coal, Power, CO2]
+
+    # Creation of a dictionary with entries of 0. for all resources
+    𝒫₀ = Dict(k  => 0 for k ∈ products)
+
+    # Creation of a dictionary with entries of 0. for all emission resources
+    𝒫ᵉᵐ₀ = Dict(k  => 0. for k ∈ products if typeof(k) == ResourceEmit{Float64})
+    𝒫ᵉᵐ₀[CO2] = 0.0
+
+    return 𝒫₀, 𝒫ᵉᵐ₀, products
+end
+
+
+function get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products, modeltype::InvestmentModel;
                     gen_scale::Float64=1.0, mc_scale::Float64=1.0, d_scale::Float64=1.0, demand=false)
     
     NG, Coal, Power, CO2 = products
@@ -114,3 +158,16 @@ function GEO.get_sub_system_data(i,𝒫₀, 𝒫ᵉᵐ₀, products, modeltype::
                     ]
     return nodes, links
 end
+
+
+# Generate case data
+model_type = InvestmentModel()
+case_data = generate_data(model_type)
+
+# Run the optimization as an investment model.
+m = run_model(case_data, model_type, HiGHS.Optimizer)
+
+# Uncomment to print all the constraints set in the model.
+# print(m)
+
+solution_summary(m)
