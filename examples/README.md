@@ -22,6 +22,6 @@ pkg> instantiate
 
 The examples can be run by executing,
 ```shell script
-~/../energymodelsinvestments.jl $ julia --project=. examples/user_interface.jl
+~/../energymodelsinvestments.jl $ julia --project=@. examples/simple_model.jl
 ```
-The flag `--proejct=.` activates a Julia environment in the current directory.
+The flag `--project=@.` activates a Julia environment in the current directory, or in the parent directory if no `Project.toml` file is found.
