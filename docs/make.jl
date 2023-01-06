@@ -4,7 +4,10 @@ using EnergyModelsInvestments
 const INV = EnergyModelsInvestments
 
 # Copy the NEWS.md file
-rm("src/manual/NEWS.md")
+news = "src/manual/NEWS.md"
+if isfile(news)
+    rm(news)
+end
 cp("../NEWS.md", "src/manual/NEWS.md")
 
 makedocs(

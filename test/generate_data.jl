@@ -1,39 +1,9 @@
-using HiGHS
-using JuMP
-
-using EnergyModelsBase
-using EnergyModelsInvestments
-using TimeStructures
-
-const EMB = EnergyModelsBase
-const IM = EnergyModelsInvestments
-
-
-"""
-    run_model(case, model, optimizer)
-
-Defines the necessary steps for running the model. 
-This is a temporary implementation before a separate package handles this.
-"""
-function run_model(case, model, optimizer=nothing)
-    @info "Run model" model optimizer
- 
-    m = EMB.create_model(case, model)
- 
-    set_optimizer(m, optimizer)
-    optimize!(m)
-    return m
-end
-
-
 """
     generate_data()
 
-Generate the data for the case study.
+Generate the data for the tests.
 """
 function generate_data()
-    @info "Generate case data"
-
     # Define the different resources
     NG       = ResourceEmit("NG", 0.2)
     Coal     = ResourceCarrier("Coal", 0.35)
@@ -99,15 +69,3 @@ function generate_data()
                 )
     return case
 end
-
-# Generate case data.
-model_type = InvestmentModel()
-case_data = generate_data()
-
-# Run the optimization as an investment model.
-m = run_model(case_data, model_type, HiGHS.Optimizer)
-
-# Uncomment to print all the constraints set in the model.
-# print(m)
-
-solution_summary(m)

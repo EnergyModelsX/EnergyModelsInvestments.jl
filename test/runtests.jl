@@ -16,6 +16,7 @@ const TEST_ATOL = 1e-6
 ⪆(x,y) = x > y || isapprox(x,y;atol=TEST_ATOL)
 const OPTIMIZER = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 
+
 """
     general_tests(m)
 
@@ -30,6 +31,8 @@ function general_tests(m)
         end
     end
 end
+
+include("generate_data.jl")
 
 @testset "Investments" begin
     include("test_discounting.jl")

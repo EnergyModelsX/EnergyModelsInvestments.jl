@@ -51,6 +51,20 @@ test:1.8:
   <<: *test_definition
 
 
+# Below is the template to run the examples.
+.test_examples_template: &test_examples_definition
+  script:
+    - echo "Run examples"
+    # Install the dependencies.
+    - julia --project=. -e 'using Pkg; Pkg.instantiate()'
+    # Run examples.
+    - ./test/test_examples.sh
+
+test_examples:
+  image: julia:1.8
+  <<: *test_examples_definition
+  
+
 # Deploy the documentation.
 pages:
   image: julia:1.8
@@ -66,4 +80,4 @@ pages:
     paths:
       - public
   rules:
-    # - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
