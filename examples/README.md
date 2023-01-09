@@ -3,7 +3,7 @@
 
 ## Adding the internal package registry
 
-First, we need to add the  `EnergyModelsBase` internal Julia registry. First, start the Julia REPL in the root of this package,
+First, we need to add the internal `Clean Export` Julia package registry. First, start the Julia REPL in the root of this package,
 ```shell script
 ~/../energymodelsinvestments.jl $ julia
 ```
