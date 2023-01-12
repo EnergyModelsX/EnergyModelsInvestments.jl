@@ -38,6 +38,7 @@ include("generate_data.jl")
     include("test_discounting.jl")
     include("test_model.jl")
     include("test_lifetime.jl")
+    include("test_examples.jl")
 
     @testset "w/Geography" begin
         include("test_geo.jl")

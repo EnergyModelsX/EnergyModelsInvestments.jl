@@ -1,6 +1,10 @@
-# Install example dependency.
-using Pkg
-Pkg.add("PrettyTables")
+try
+    using PrettyTables
+catch
+    # Install example dependency.
+    using Pkg
+    Pkg.add("PrettyTables")
+end
 
 using HiGHS
 using JuMP
@@ -82,7 +86,7 @@ function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
     )
 
     # Create model and optimize
-    model = IM.InvestmentModel()
+    model = InvestmentModel()
     m = EMB.create_model(case, model)
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(m, optimizer)
