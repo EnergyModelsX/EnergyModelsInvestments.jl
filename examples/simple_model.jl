@@ -1,9 +1,16 @@
 try
+    using HiGHS
     using PrettyTables
 catch
-    # Install example dependency.
     using Pkg
-    Pkg.add("PrettyTables")
+    # Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
+    Pkg.activate(joinpath(@__DIR__, "../test"))
+    # Install the dependencies.
+    Pkg.instantiate()
+    # Add the package EnergyModelsInvestments to the environment.
+    Pkg.develop(path=joinpath(@__DIR__, ".."))
+
+    using HiGHS, PrettyTables
 end
 
 using HiGHS
@@ -100,6 +107,7 @@ function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
             header = [:Source, :StrategicPeriod, :CapInvest],
         ),
     )
+    return m
 end
 
-demo_invest()
+m = demo_invest()

@@ -1,4 +1,14 @@
-using HiGHS
+try
+    using HiGHS
+catch
+    using Pkg
+    Pkg.activate(joinpath(@__DIR__, "../test"))
+    Pkg.instantiate()
+    Pkg.develop(path=joinpath(@__DIR__, ".."))
+
+    using HiGHS
+end
+
 using JuMP
 
 using EnergyModelsBase

@@ -8,6 +8,8 @@
             @testset "Example $file" begin
                 @info "Run example $file"
                 include(joinpath(exdir, file))
+
+                @test termination_status(m) == MOI.OPTIMAL
             end
         end
     end

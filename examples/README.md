@@ -1,27 +1,28 @@
 # Running the examples
 
 
-## Adding the internal package registry
+## The package is installed with `] add`
 
-First, we need to add the internal `Clean Export` Julia package registry. First, start the Julia REPL in the root of this package,
-```shell script
-~/../energymodelsinvestments.jl $ julia
+First, add the [*Clean Export* Julia packages repository](https://gitlab.sintef.no/clean_export/registrycleanexport). Then run 
 ```
-Now add the registry by
+~/some/directory/ $ julia           # Starts the Julia REPL
+julia> ]                            # Enter Pkg mode 
+pkg> add EnergyModelsInvestments    # Install the package EnergyModelsInvestments to the current environment.
 ```
-julia> ] 
-pkg> registry add git@gitlab.sintef.no:clean_export/registrycleanexport.git
-```
-Install the dependencies,
+From the Julia REPL, run
 ```julia
-pkg> instantiate
+# Starts the Julia REPL
+julia> using EnergyModelsInvestments
+# Get the path of the examples directory
+julia> exdir = joinpath(pkgdir(EnergyModelsInvestments), "examples")
+# Include the code into the Julia REPL to run the examples
+julia> include(joinpath(exdir, "simple_model.jl"))
 ```
 
 
-## Running
+## The code was downloaded with `git clone`
 
-The examples can be run by executing,
+First, add the internal [*Clean Export* Julia package registry](https://gitlab.sintef.no/clean_export/registrycleanexport). The examples can then be run from the terminal with
 ```shell script
-~/../energymodelsinvestments.jl $ julia --project=@. examples/simple_model.jl
+~/.../energymodelsinvestments.jl/examples $ julia simple_model.jl
 ```
-The flag `--project=@.` activates a Julia environment in the current directory, or in the parent directory if no `Project.toml` file is found.
