@@ -2,7 +2,7 @@
 cd examples
 for f in *.jl; do
     echo "julia $f"
-    julia --project=@. $f
+    julia $f
 
     # Exit with an error if the example failed.
     if [ $? -ne 0 ]; then

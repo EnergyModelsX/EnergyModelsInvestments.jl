@@ -1,12 +1,6 @@
 # [Public interface](@id sec_lib_public)
 
 
-## Contents
-
-```@contents
-Pages = ["public.md"]
-```
-
 ## Index
 
 ```@index
@@ -17,6 +11,7 @@ Pages = ["public.md"]
 
 ```@autodocs
 Modules = [EnergyModelsInvestments]
+Private = false
 Order = [:type]
 ```
 
@@ -24,5 +19,6 @@ Order = [:type]
 
 ```@autodocs
 Modules = [EnergyModelsInvestments]
+Private = false
 Order = [:function]
 ```
