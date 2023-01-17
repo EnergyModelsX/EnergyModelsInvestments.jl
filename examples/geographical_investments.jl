@@ -1,22 +1,15 @@
-try
-    using HiGHS
-catch
-    using Pkg
-    Pkg.activate(joinpath(@__DIR__, "../test"))
-    Pkg.instantiate()
-    Pkg.develop(path=joinpath(@__DIR__, ".."))
-    Pkg.status()
-
-    using HiGHS
-end
-
-using JuMP
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../test"))
+Pkg.instantiate()
+Pkg.develop(path=joinpath(@__DIR__, ".."))
+Pkg.status()
 
 using EnergyModelsBase
 using EnergyModelsGeography
 using EnergyModelsInvestments
+using HiGHS
+using JuMP
 using TimeStructures
-
 
 const EMB = EnergyModelsBase
 const GEO = EnergyModelsGeography

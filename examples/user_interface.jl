@@ -1,18 +1,12 @@
-try
-    using HiGHS
-catch
-    using Pkg
-    Pkg.activate(joinpath(@__DIR__, "../test"))
-    Pkg.instantiate()
-    Pkg.develop(path=joinpath(@__DIR__, ".."))
-
-    using HiGHS
-end
-
-using JuMP
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../test"))
+Pkg.instantiate()
+Pkg.develop(path=joinpath(@__DIR__, ".."))
 
 using EnergyModelsBase
 using EnergyModelsInvestments
+using HiGHS
+using JuMP
 using TimeStructures
 
 const EMB = EnergyModelsBase

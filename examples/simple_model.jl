@@ -1,24 +1,16 @@
-try
-    using HiGHS
-    using PrettyTables
-catch
-    using Pkg
-    # Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
-    Pkg.activate(joinpath(@__DIR__, "../test"))
-    # Install the dependencies.
-    Pkg.instantiate()
-    # Add the package EnergyModelsInvestments to the environment.
-    Pkg.develop(path=joinpath(@__DIR__, ".."))
-
-    using HiGHS, PrettyTables
-end
-
-using HiGHS
-using JuMP
-using PrettyTables
+using Pkg
+# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
+Pkg.activate(joinpath(@__DIR__, "../test"))
+# Install the dependencies.
+Pkg.instantiate()
+# Add the package EnergyModelsInvestments to the environment.
+Pkg.develop(path=joinpath(@__DIR__, ".."))
 
 using EnergyModelsBase
 using EnergyModelsInvestments
+using HiGHS
+using JuMP
+using PrettyTables
 using TimeStructures
 
 const EMB = EnergyModelsBase
