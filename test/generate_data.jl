@@ -1,37 +1,9 @@
 """
-    run_model(fn, model, optimizer=nothing)
+    generate_data()
 
-Defines the necessary steps for running the model. 
-This is a temporary implementation before a separate package handles this.
+Generate the data for the tests.
 """
-function run_model(fn, model, optimizer=nothing)
-    @debug "Run model" fn optimizer
- 
-     case = read_data(fn)
-
-     m = EMB.create_model(case, model)
- 
-     if !isnothing(optimizer)
-         set_optimizer(m, optimizer)
-         set_optimizer_attribute(m, "output_flag", false)
-         optimize!(m)
-         # TODO: print_solution(m) optionally show results summary (perhaps using upcoming JuMP function)
-         # TODO: save_solution(m) save results
-     else
-         @info "No optimizer given"
-     end
-     return m, case
- end
-
-"""
-    read_data(fn)
-
-Temporary function to create the data for the case study.
-"""
- function read_data(fn)
-    @debug "Read case data"
-    @info "Hard coded dummy model for now"
-
+function generate_data()
     # Define the different resources
     NG       = ResourceEmit("NG", 0.2)
     Coal     = ResourceCarrier("Coal", 0.35)
@@ -85,7 +57,7 @@ Temporary function to create the data for the case study.
     T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
     em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
-    global_data = GlobalData(em_limits, em_cost, 0.07)
+    global_data = IM.GlobalData(em_limits, em_cost, 0.07)
 
     # WIP case structure
     case = Dict(

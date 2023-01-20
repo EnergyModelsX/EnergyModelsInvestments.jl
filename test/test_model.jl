@@ -74,10 +74,9 @@ end
 
     @testset "Investment example - user interface" begin
         
-        model = IM.InvestmentModel()
-
         # Create simple model
-        m, case = IM.run_model("", model, HiGHS.Optimizer)
+        case = generate_data()
+        m = optimize(case)
 
         # Check model
         @test size(all_variables(m))[1] == 11948

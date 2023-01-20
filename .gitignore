@@ -1,1 +1,8 @@
 Manifest.toml
+
+# Docs
+
+docs/Manifest.toml
+# This file is copied in when the documentation is built.
+docs/src/manual/NEWS.md
+docs/build
