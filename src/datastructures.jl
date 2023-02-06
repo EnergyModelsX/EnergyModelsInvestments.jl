@@ -20,24 +20,14 @@ struct InvestmentModel <: AbstractInvestmentModel
     r       # Discount rate
 end
 
-# struct DiscreteInvestmentModel <: AbstractInvestmentModel
-#     case
-#     # Discount rate
-#     r       
-# end
-# struct ContinuousInvestmentModel <: AbstractInvestmentModel
-#     case
-#     # Discount rate
-#     r       
-# end
 
 """ Investment type traits for nodes. """
 abstract type Investment end 
 """ Binary investment in given capacity with binary variables. Requires specification
 of `Cap_start` in `extra_inv_data` for proper analyses."""
-struct DiscreteInvestment       <: Investment end
+struct BinaryInvestment       <: Investment end
 """ Investment in fixed increments with integer variables. """
-struct IntegerInvestment        <: Investment end 
+struct DiscreteInvestment        <: Investment end 
 """ Continuous investment between zero and a maximum value. """
 struct ContinuousInvestment     <: Investment end
 """ Semi-continuous investment, either zero or between a minimum and a maximum value,
@@ -88,12 +78,12 @@ each period.\n
 - **`Cap_max_add::TimeProfile`** Maximum capacity addition in one period from the previous.\n
 - **`Cap_min_add::TimeProfile`** Minimum capacity addition in one period from the previous.\n
 - **`Inv_mode::Investment = ContinuousInvestment()`** Type of the investment:
-`DiscreteInvestment`, `IntegerInvestment`, `ContinuousInvestment`, `SemiContinuousInvestment`,
+`BinaryInvestment`, `DiscreteInvestment`, `ContinuousInvestment`, `SemiContinuousInvestment`,
  or `FixedInvestment`.\n
 - **`Cap_start::Union{Real, Nothing} = nothing`** Starting capacity in first period.
 If nothing is given, it is set by `get_start_cap()` to the capacity `Cap` of the node.\n
 - **`Cap_increment::TimeProfile = FixedProfile(0)`** Capacity increment used in the case of
-`IntegerInvestment`\n
+`DiscreteInvestment`\n
 - **`Life_mode::LifetimeMode = UnlimitedLife()`** Type of handling of the lifetime:
 `UnlimitedLife`, `StudyLife`, `PeriodLife` or `RollingLife`\n
 - **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested
@@ -138,16 +128,16 @@ previous.\n
 - **`Stor_min_add::TimeProfile`** Minimum storage volume addition in one period from the 
 previous.\n
 - **`Inv_mode::Investment = ContinuousInvestment()`** Type of the investment:
-`DiscreteInvestment`, `IntegerInvestment`, `ContinuousInvestment`, `SemiContinuousInvestment` 
+`BinaryInvestment`, `DiscreteInvestment`, `ContinuousInvestment`, `SemiContinuousInvestment` 
 or `FixedInvestment`.\n
 - **`Rate_start::Union{Real, Nothing} = nothing`** Starting rate in first period. 
 If nothing is given, it is set by `get_start_cap()` to the capacity `Rate_cap` of the node.\n
 - **`Stor_start::Union{Real, Nothing} = nothing`** Starting storage volume in first period.
 If nothing is given, it is set by `get_start_cap()` to the capacity `Stor_cap` of the node.\n
 - **`Rate_increment::TimeProfile = FixedProfile(0)`** Rate increment used in the case of 
-`IntegerInvestment`\n
+`DiscreteInvestment`\n
 - **`Stor_increment::TimeProfile = FixedProfile(0)`** Storage volume increment used in the
-case of `IntegerInvestment`\n
+case of `DiscreteInvestment`\n
 - **`Life_mode::LifetimeMode = UnlimitedLife()`** Type of handling of the lifetime:
 `UnlimitedLife`, `StudyLife`, `PeriodLife`, or `RollingLife`\n
 - **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested

@@ -9,9 +9,9 @@ It uses Base.@kwdef to use keyword arguments and default values. The name of the
 - **`Trans_max_inst::TimeProfile`** Maximum possible installed transmission capacity in each period.\n
 - **`Trans_max_add::TimeProfile`** Maximum transmission capacity addition in one period from the previous.\n
 - **`Trans_min_add::TimeProfile`** Minimum transmission capacity addition in one period from the previous.\n
-- **`Inv_mode::Investment = ContinuousInvestment()`** Type of the investment: DiscreteInvestment, IntegerInvestment, ContinuousInvestment, SemiContinuousInvestment or FixedInvestment.\n
+- **`Inv_mode::Investment = ContinuousInvestment()`** Type of the investment: BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment or FixedInvestment.\n
 - **`Trans_start::Union{Real, Nothing} = nothing`** Starting transmission capacity in first period. If nothing is given, it is set by get_start_cap() to the capacity Trans_Cap of the transmission.\n
-- **`Trans_increment::TimeProfile = FixedProfile(0)`** Transmission capacity increment used in the case of IntegerInvestment\n
+- **`Trans_increment::TimeProfile = FixedProfile(0)`** Transmission capacity increment used in the case of DiscreteInvestment\n
 """
 Base.@kwdef struct TransInvData <: EMB.Data
     Capex_trans::TimeProfile

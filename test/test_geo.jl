@@ -229,7 +229,7 @@ end
 
 
 # Test set for discrete investments
-@testset "Unidirectional transmission with IntegerInvestment" begin
+@testset "Unidirectional transmission with DiscreteInvestment" begin
 
     # Creation and run of the optimization problem
     inv_data = IM.TransInvData(
@@ -237,7 +237,7 @@ end
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
                 Trans_min_add   = FixedProfile(10),     # min_add [kW]
-                Inv_mode        = IM.IntegerInvestment(),
+                Inv_mode        = IM.DiscreteInvestment(),
                 Trans_increment = FixedProfile(5),
                 Trans_start     = 5,
             )

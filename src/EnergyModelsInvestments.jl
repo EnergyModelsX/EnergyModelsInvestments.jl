@@ -29,7 +29,7 @@ end
 
 
 export InvestmentModel
-export DiscreteInvestment, IntegerInvestment, ContinuousInvestment, SemiContinuousInvestment, 
+export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment, 
     FixedInvestment, ContinuousFixedInvestment
 export extra_inv_data, extra_inv_data_storage
 

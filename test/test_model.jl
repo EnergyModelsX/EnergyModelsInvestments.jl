@@ -139,7 +139,7 @@ end
             Cap_max_add     = FixedProfile(20),         # max_add [kW]
             Cap_min_add     = FixedProfile(5),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
-            Inv_mode        = IM.DiscreteInvestment()   # investment mode
+            Inv_mode        = IM.BinaryInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 20, 0])
         inv_data = Dict(
