@@ -82,7 +82,7 @@ end
     constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
 Set capacity-related constraints for transmissions `ℒᵗʳᵃⁿˢ` for investment time structure `𝒯`:
 * bounds
-* binary for DiscreteInvestment
+* binary for BinaryInvestment
 * link capacity variables
 
 """
@@ -162,14 +162,14 @@ function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, investmentmode)
     end
 end
 
-function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::DiscreteInvestment)
+function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:trans_cap_current][l, t_inv, cm] ==
                             cm.Trans_cap[t_inv] * m[:trans_invest_b][l, t_inv]) 
     end
 end
 
-function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::IntegerInvestment)
+function set_trans_cap_installation(m, l, 𝒯ᴵⁿᵛ, cm, ::DiscreteInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(l, cm, m[:trans_remove_b][l,t_inv,cm])
         @constraint(m, m[:trans_cap_add][l, t_inv, cm] == 
@@ -204,7 +204,7 @@ end
 """
     set_investment_properties(l, cm, var, mode)
 Set investment properties for variable `var` for transmission `l` and transmision mode (cm),
-e.g. set to binary for DiscreteInvestment, 
+e.g. set to binary for BinaryInvestment, 
 bounds etc
 """
 set_investment_properties(l::GEO.Transmission, cm::GEO.TransmissionMode, var) =
@@ -213,7 +213,7 @@ function set_investment_properties(l, cm, var, mode)
     set_lower_bound(var, 0)
 end
 
-function set_investment_properties(l, cm, var, ::DiscreteInvestment)
+function set_investment_properties(l, cm, var, ::BinaryInvestment)
     JuMP.set_binary(var)
 end
 
@@ -225,7 +225,7 @@ function set_investment_properties(l, cm, var, ::FixedInvestment) # TO DO
     JuMP.fix(var, 1)
 end
 
-function set_investment_properties(l, cm, var, ::IntegerInvestment) # TO DO
+function set_investment_properties(l, cm, var, ::DiscreteInvestment) # TO DO
     JuMP.set_integer(var)
     JuMP.set_lower_bound(var,0)
 end

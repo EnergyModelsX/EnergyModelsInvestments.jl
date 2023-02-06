@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+Version 0.2.1 (2023-02-06)
+--------------------------
+ * Renaming of investment modes:
+    - Rename `DiscreteInvestment` to `BinaryInvestment`
+    - Rename `IntegerInvestment` to `DiscreteInvestment`
+
 Version 0.2.0 (2023-02-03)
 --------------------------
 ### Adjustmends to updates in EnergyModelsBase

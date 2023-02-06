@@ -1,3 +1,4 @@
+using Pkg
 
 @testset "Run examples" begin
     exdir = joinpath(@__DIR__, "../examples")
@@ -13,4 +14,9 @@
             end
         end
     end
+
+    # Cleanup the test environment. Remove EnergyModelsInvestments from the environment,
+    # since it is added with `Pkg.develop` by the examples. The tests can not be run with
+    # with the package in the environment.
+    Pkg.rm("EnergyModelsInvestments")
 end

@@ -152,7 +152,7 @@ end
     constraints_capacity_invest(m, 𝒩, 𝒯)
 Set capacity-related constraints for nodes `𝒩` for investment time structure `𝒯`:
 * bounds
-* binary for DiscreteInvestment
+* binary for BinaryInvestment
 * link capacity variables
 
 """
@@ -213,7 +213,7 @@ end
     constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
 Set storage-related constraints for nodes `𝒩ˢᵗᵒʳ` for investment time structure `𝒯`:
 * bounds
-* binary for DiscreteInvestment
+* binary for BinaryInvestment
 * link storage variables
 
 """
@@ -296,13 +296,13 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode)
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:cap_current][n, t_inv] == n.Cap[t_inv] * m[:cap_invest_b][n, t_inv]) 
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::IntegerInvestment)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(n, m[:cap_remove_b][n,t_inv])
         @constraint(m, m[:cap_add][n, t_inv] == 
@@ -396,7 +396,7 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investmentmode)
     end
 end
 
-function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
+function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:stor_cap_current][n, t_inv] <= 
                             n.Stor_cap[t_inv] * m[:stor_cap_invest_b][n, t_inv])
@@ -406,7 +406,7 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::DiscreteInvest
     end
 end
 
-function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, ::IntegerInvestment)
+function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(n, m[:stor_cap_remove_b][n,t_inv])
         @constraint(m, m[:stor_cap_add][n, t_inv] ==
@@ -472,7 +472,7 @@ end
 
 """
     set_investment_properties(n, var)
-Set investment properties for variable `var` for node `n`, e.g. set to binary for DiscreteInvestment, 
+Set investment properties for variable `var` for node `n`, e.g. set to binary for BinaryInvestment, 
 bounds etc
 """
 set_investment_properties(n, var) = set_investment_properties(n, var, investmentmode(n))
@@ -480,7 +480,7 @@ function set_investment_properties(n, var, mode)
     set_lower_bound(var, 0)
 end
 
-function set_investment_properties(n, var, ::DiscreteInvestment)
+function set_investment_properties(n, var, ::BinaryInvestment)
     JuMP.set_binary(var)
 end
 
@@ -492,7 +492,7 @@ function set_investment_properties(n, var, ::FixedInvestment) # TO DO
     JuMP.fix(var, 1)
 end
 
-function set_investment_properties(n, var, ::IntegerInvestment) # TO DO
+function set_investment_properties(n, var, ::DiscreteInvestment) # TO DO
     JuMP.set_integer(var)
     JuMP.set_lower_bound(var,0)
 end
