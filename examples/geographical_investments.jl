@@ -27,7 +27,7 @@ function run_model(case, model, optimizer = nothing)
 end
 
 
-function generate_data(modeltype::InvestmentModel)
+function generate_data()
     @debug "Generate case data"
     @info "Generate data coded dummy model for now (Investment Model)"
 
@@ -53,8 +53,7 @@ function generate_data(modeltype::InvestmentModel)
             a_id,
             𝒫₀,
             𝒫ᵉᵐ₀,
-            products,
-            modeltype;
+            products;
             gen_scale = gen_scale[a_id],
             mc_scale = mc_scale[a_id],
             d_scale = d_scale[a_id],
@@ -154,7 +153,7 @@ function generate_data(modeltype::InvestmentModel)
     em_limits =
         Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
-    global_data = IM.GlobalData(em_limits, em_cost, 0.07)
+    modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 
 
     # WIP data structure
@@ -165,9 +164,8 @@ function generate_data(modeltype::InvestmentModel)
         :links => Array{EMB.Link}(links),
         :products => products,
         :T => T,
-        :global_data => global_data,
     )
-    return case
+    return case, modeltype
 end
 
 
@@ -195,8 +193,7 @@ function get_sub_system_data(
     i,
     𝒫₀,
     𝒫ᵉᵐ₀,
-    products,
-    modeltype::InvestmentModel;
+    products;
     gen_scale::Float64 = 1.0,
     mc_scale::Float64 = 1.0,
     d_scale::Float64 = 1.0,
@@ -231,7 +228,6 @@ function get_sub_system_data(
             FixedProfile(30 * mc_scale),
             FixedProfile(100),
             Dict(NG => 1),
-            𝒫ᵉᵐ₀,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(1000),
@@ -250,7 +246,6 @@ function get_sub_system_data(
             FixedProfile(9 * mc_scale),
             FixedProfile(100),
             Dict(Coal => 1),
-            𝒫ᵉᵐ₀,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(1000),
@@ -262,7 +257,7 @@ function get_sub_system_data(
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetworkEmissions(
             j + 5,
             FixedProfile(0),
             FixedProfile(5.5 * mc_scale),
@@ -281,15 +276,13 @@ function get_sub_system_data(
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetwork(
             j + 6,
             FixedProfile(0),
             FixedProfile(6 * mc_scale),
             FixedProfile(100),
             Dict(Coal => 2.5),
             Dict(Power => 1, CO2 => 1),
-            𝒫ᵉᵐ₀,
-            0,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(800),
@@ -300,12 +293,13 @@ function get_sub_system_data(
                 ),
             ),
         ),
-        EMB.RefStorage(
+        EMB.RefStorageEmissions(
             j + 7,
             FixedProfile(0),
             FixedProfile(0),
             FixedProfile(9.1 * mc_scale),
             FixedProfile(100),
+            CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
             Dict(
@@ -322,15 +316,13 @@ function get_sub_system_data(
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetwork(
             j + 8,
             FixedProfile(0),
             FixedProfile(0 * mc_scale),
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1, CO2 => 1),
-            𝒫ᵉᵐ₀,
-            0,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(1000),
@@ -341,12 +333,13 @@ function get_sub_system_data(
                 ),
             ),
         ),
-        EMB.RefStorage(
+        EMB.RefStorageEmissions(
             j + 9,
             FixedProfile(3),
             FixedProfile(5),
             FixedProfile(0 * mc_scale),
             FixedProfile(0),
+            CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
             Dict(
@@ -363,15 +356,13 @@ function get_sub_system_data(
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetwork(
             j + 10,
             FixedProfile(0),
             FixedProfile(0 * mc_scale),
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1, CO2 => 1),
-            𝒫ᵉᵐ₀,
-            0,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(10000),
@@ -406,11 +397,10 @@ end
 
 
 # Generate case data
-model_type = InvestmentModel()
-case_data = generate_data(model_type)
+case_data, modeltype = generate_data()
 
 # Run the optimization as an investment model.
-m = run_model(case_data, model_type, HiGHS.Optimizer)
+m = run_model(case_data, modeltype, HiGHS.Optimizer)
 
 # Uncomment to print all the constraints set in the model.
 # print(m)

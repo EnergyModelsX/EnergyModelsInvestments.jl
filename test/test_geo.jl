@@ -1,26 +1,16 @@
 # Definition of the individual resources used in the simple system
 CO2     = ResourceEmit("CO2", 1.)
 Power   = ResourceCarrier("Power", 0.)
-
-ROUND_DIGITS = 8
-
-# import Gurobi
-# const env = Gurobi.Env()
+products = [Power, CO2]
 
 """
-
-
 Creates a simple geography test case with the potential for investments in transmission infrastructure
-if provided with transmission investments through the argument `inv`
+if provided with transmission investments through the argument `inv_data`.
 """
-function small_graph(; data=nothing, source=nothing, sink=nothing)
-    products = [Power, CO2]
+function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
 
     # Creation of a dictionary with entries of 0. for all resources
     𝒫₀ = Dict(k  => 0 for k ∈ products)
-
-    # Creation of a dictionary with entries of 0. for all emission resources
-    𝒫ᵉᵐ₀ = Dict(k  => 0. for k ∈ products if typeof(k) == ResourceEmit{Float64})
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
@@ -30,7 +20,6 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
                     FixedProfile(10),
                     FixedProfile(5),
                     Dict(Power => 1),
-                    𝒫ᵉᵐ₀,
                     Dict("" => EMB.EmptyData())
                 )
     end
@@ -41,7 +30,6 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
                     StrategicFixedProfile([20, 25, 30, 35]),
                     Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
                     Dict(Power => 1),
-                    𝒫ᵉᵐ₀,
                 )
     end
 
@@ -56,21 +44,22 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
     transmission_line = GEO.RefStatic("transline", Power, 10, 0.1, 1)
     
     # Check if investments are included
-    if isnothing(data)
-        data = Dict("" => EMB.EmptyData())
+    if isnothing(inv_data)
+        inv_data = Dict("" => EMB.EmptyData())
     else
-        data = Dict("Investments" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => data))
+        inv_data = Dict("Investments" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => inv_data))
     end
 
     transmissions = [
-                    GEO.Transmission(areas[1], areas[2], [transmission_line], data),
+                    GEO.Transmission(areas[1], areas[2], [transmission_line], inv_data),
                     ]
 
     # Creation of the time structure and the used global data
     T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 1, 1))
-    global_data = IM.GlobalData(
+    modeltype = InvestmentModel(
                             Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300])),
                             Dict(CO2 => StrategicFixedProfile([0, 0, 0, 0])),
+                            CO2,
                             0.07
                         )
 
@@ -83,10 +72,9 @@ function small_graph(; data=nothing, source=nothing, sink=nothing)
                 :areas          => areas,
                 :transmission   => transmissions,
                 :T              => T,
-                :global_data    => global_data,
                 )
 
-    return case
+    return case, modeltype
 end
 
 
@@ -95,9 +83,8 @@ end
 
 Optimize the `case`.
 """
-function optimize(case)
-    model = IM.InvestmentModel()
-    m = GEO.create_model(case, model)
+function optimize(case, modeltype)
+    m = GEO.create_model(case, modeltype)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
@@ -107,8 +94,8 @@ end
 @testset "Unidirectional transmission without investments" begin
 
     # Creation and run of the optimization problem
-    case = small_graph()
-    m    = optimize(case)
+    case, modeltype = small_graph_geo()
+    m                = optimize(case, modeltype)
 
     general_tests(m)
 
@@ -133,7 +120,7 @@ end
 @testset "Unidirectional transmission with ContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    data = IM.TransInvData(
+    inv_data = IM.TransInvData(
                 Capex_trans     = FixedProfile(10),     # capex [€/kW]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
@@ -143,8 +130,8 @@ end
                 Trans_start     = 0,
             )
 
-    case = small_graph(data=data)
-    m    = optimize(case)
+    case, modeltype = small_graph_geo(inv_data=inv_data)
+    m                = optimize(case, modeltype)
 
     general_tests(m)
 
@@ -164,7 +151,7 @@ end
             @testset "First investment period" begin
                 for t ∈ t_inv
                     @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
-                                    ≈ sink.Cap[t]-data.Trans_start)
+                                    ≈ sink.Cap[t]-inv_data.Trans_start)
                 end
             end
         else
@@ -183,7 +170,7 @@ end
 @testset "Unidirectional transmission with SemiContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    data = IM.TransInvData(
+    inv_data = IM.TransInvData(
                 Capex_trans     = FixedProfile(10),     # capex [€/kW]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
@@ -193,8 +180,8 @@ end
                 Trans_start     = 0,
             )
 
-    case = small_graph(data=data)
-    m    = optimize(case)
+    case, modeltype = small_graph_geo(inv_data=inv_data)
+    m                = optimize(case, modeltype)
 
     general_tests(m)
 
@@ -215,14 +202,14 @@ end
                 if TS.isfirst(t_inv)
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
-                                        >= max(sink.Cap[t] - data.Trans_start, 
-                                            data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
+                                        >= max(sink.Cap[t] - inv_data.Trans_start, 
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
                     end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
                                         ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tr_osl_trd, previous(t_inv, 𝒯), trans_mode]), 
-                                    data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
                     end
                 end
             end
@@ -245,7 +232,7 @@ end
 @testset "Unidirectional transmission with IntegerInvestment" begin
 
     # Creation and run of the optimization problem
-    data = IM.TransInvData(
+    inv_data = IM.TransInvData(
                 Capex_trans     = FixedProfile(10),     # capex [€/kW]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
@@ -255,8 +242,8 @@ end
                 Trans_start     = 5,
             )
 
-    case = small_graph(data=data)
-    m    = optimize(case)
+    case, modeltype = small_graph_geo(inv_data=inv_data)
+    m                = optimize(case, modeltype)
 
     general_tests(m)
 
@@ -277,7 +264,7 @@ end
                 @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) == 0
             else
                 @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) ≈ 
-                    data.Trans_increment[t_inv] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode]) 
+                    inv_data.Trans_increment[t_inv] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode]) 
             end
         end
     end

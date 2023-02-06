@@ -1,26 +1,24 @@
-NG          = ResourceEmit("NG", 0.2)
-CO2         = ResourceEmit("CO2", 1.)
-Power       = ResourceCarrier("Power", 0.)
-Coal        = ResourceCarrier("Coal", 0.35)
-products    = [NG, Power, CO2, Coal]
-ROUND_DIGITS = 8
-𝒫ᵉᵐ₀ = Dict(k  => 0 for k ∈ products if typeof(k) == ResourceEmit{Float64})
+# Declaration of the required resources
+CO2 = ResourceEmit("CO2", 1.)
+Power = ResourceCarrier("Power", 0.)
+products = [Power, CO2]
 
+"""
+Creates a simple test case with the potential for investments in capacity 
+if provided with investments through the argument `inv_data`.
+"""
 function small_graph(;
                     source=nothing,
                     sink=nothing,
-                    data=nothing,
+                    inv_data=nothing,
                     T=UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1)),
                     discount_rate = 0.05,
                     )
 
-    # products = [NG, Coal, Power, CO2]
-    products = [NG, Power, CO2, Coal]
-    
     # Creation of a dictionary with entries of 0. for all resources
     𝒫₀ = Dict(k => 0 for k ∈ products)
 
-    if isnothing(data)
+    if isnothing(inv_data)
         investment_data_source = IM.extra_inv_data(
             Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
@@ -30,40 +28,44 @@ function small_graph(;
         )
         demand_profile = FixedProfile(20)
     else
-        investment_data_source = data["investment_data"]
-        demand_profile         = data["profile"]
+        investment_data_source = inv_data["investment_data"]
+        demand_profile         = inv_data["profile"]
     end
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
-                               FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
+                               FixedProfile(5), Dict(Power => 1),
                                Dict("Investments"=>investment_data_source))
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", demand_profile, 
             Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), 
-            Dict(Power => 1), 𝒫ᵉᵐ₀)
+            Dict(Power => 1))
     end
     nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
              EMB.Direct(13, nodes[1], nodes[3], EMB.Linear())]
 
-    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
-    em_cost     = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
-    global_data = IM.GlobalData(em_limits, em_cost, discount_rate)
+    em_limits   = Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    em_cost     = Dict(CO2 => FixedProfile(0))
+    modeltype  = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
     case = Dict(:nodes       => nodes,
                 :links       => links,
                 :products    => products,
                 :T           => T,
-                :global_data => global_data)
-    return case
+                )
+    return case, modeltype
 end
 
-function optimize(case)
-    model = IM.InvestmentModel()
-    m = EMB.create_model(case, model)
+"""
+    optimize(cases)
+
+Optimize the `case`.
+"""
+function optimize(case, modeltype)
+    m = EMB.create_model(case, modeltype)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
@@ -75,11 +77,11 @@ end
     @testset "Investment example - user interface" begin
         
         # Create simple model
-        case = generate_data()
-        m = optimize(case)
+        case, modeltype = generate_data()
+        m                = optimize(case, modeltype)
 
         # Check model
-        @test size(all_variables(m))[1] == 11948
+        @test size(all_variables(m))[1] == 11084
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
@@ -97,10 +99,11 @@ end
     @testset "Investment example - small_graph Continuous" begin
     
         # Cration and solving of the model
-        case = small_graph()
-        m = optimize(case)
+        case, modeltype = small_graph()
+        m                = optimize(case, modeltype)
 
         # Extraction of required data
+        println(case[:nodes])
         source = case[:nodes][2]
         sink   = case[:nodes][3]
         𝒯    = case[:T]
@@ -114,7 +117,7 @@ end
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
                 @test value.(m[:cap_inst][source, t]) == 
-                            TS.getindex(source.Cap,t_inv) + value.(m[:cap_add][source, t_inv])
+                            source.Cap[t_inv] + value.(m[:cap_add][source, t_inv])
                 break
             end
 
@@ -139,19 +142,19 @@ end
             Inv_mode        = IM.DiscreteInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 20, 0])
-        data = Dict(
+        inv_data = Dict(
                     "investment_data" => investment_data_source,
                     "profile"         => demand_profile
                     )
 
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
-                                FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
+                                FixedProfile(5), Dict(Power => 1),
                                 Dict("Investments"=>investment_data_source))
         
         # Cration and solving of the model
-        case = small_graph(source=source, data=data)
-        m = optimize(case)
+        case, modeltype = small_graph(source=source, inv_data=inv_data)
+        m                = optimize(case, modeltype)
 
         # Extraction of required data
         source = case[:nodes][2]
@@ -180,19 +183,19 @@ end
             Inv_mode        = IM.ContinuousFixedInvestment(sp1)   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 25, 30])
-        data = Dict(
+        inv_data = Dict(
                     "investment_data" => investment_data_source,
                     "profile"         => demand_profile
                     )
 
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
-                                FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
+                                FixedProfile(5), Dict(Power => 1),
                                 Dict("Investments"=>investment_data_source))
         
         # Cration and solving of the model
-        case = small_graph(source=source, data=data, T=𝒯)
-        m = optimize(case)
+        case, modeltype = small_graph(source=source, inv_data=inv_data, T=𝒯)
+        m                = optimize(case, modeltype)
 
         # Extraction of required data
         source = case[:nodes][2]
@@ -215,19 +218,19 @@ end
             Inv_mode        = IM.ContinuousInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 25, 30])
-        data = Dict(
+        inv_data = Dict(
                     "investment_data" => investment_data_source,
                     "profile"         => demand_profile
                     )
 
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
-                                FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀,
+                                FixedProfile(5), Dict(Power => 1),
                                 Dict("Investments"=>investment_data_source))
         
         # Cration and solving of the model
-        case = small_graph(source=source, data=data)
-        m = optimize(case)
+        case, modeltype = small_graph(source=source, inv_data=inv_data)
+        m                = optimize(case, modeltype)
 
         # Extraction of required data
         source = case[:nodes][2]

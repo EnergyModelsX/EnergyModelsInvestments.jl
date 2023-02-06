@@ -50,7 +50,6 @@ function generate_data()
 
     # Creation of a dictionary with entries of 0. for all emission resources
     𝒫ᵉᵐ₀ = Dict(k => 0.0 for k ∈ products if typeof(k) == ResourceEmit{Float64})
-    𝒫ᵉᵐ₀[CO2] = 0.0
 
     nodes = [
         EMB.GenAvailability(1, 𝒫₀, 𝒫₀),
@@ -66,7 +65,6 @@ function generate_data()
             ),
             Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
             Dict(Power => 1),
-            𝒫ᵉᵐ₀,
         ),
         EMB.RefSource(
             3,
@@ -74,7 +72,6 @@ function generate_data()
             FixedProfile(30),
             FixedProfile(100),
             Dict(NG => 1),
-            𝒫ᵉᵐ₀,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(1000),
@@ -93,7 +90,6 @@ function generate_data()
             FixedProfile(9),
             FixedProfile(100),
             Dict(Coal => 1),
-            𝒫ᵉᵐ₀,
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(1000),
@@ -104,13 +100,13 @@ function generate_data()
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetworkEmissions(
             5,
             FixedProfile(0),
             FixedProfile(5.5),
             FixedProfile(100),
             Dict(NG => 2),
-            Dict(Power => 1, CO2 => 1),
+            Dict(Power => 1, CO2 => 0),
             𝒫ᵉᵐ₀,
             0.9,
             Dict(
@@ -123,15 +119,13 @@ function generate_data()
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetwork(
             6,
             FixedProfile(0),
             FixedProfile(6),
             FixedProfile(100),
             Dict(Coal => 2.5),
-            Dict(Power => 1, CO2 => 1),
-            𝒫ᵉᵐ₀,
-            0,
+            Dict(Power => 1),
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(800),
@@ -142,12 +136,13 @@ function generate_data()
                 ),
             ),
         ),
-        EMB.RefStorage(
+        EMB.RefStorageEmissions(
             7,
             FixedProfile(0),
             FixedProfile(0),
             FixedProfile(9.1),
             FixedProfile(100),
+            CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
             Dict(
@@ -164,15 +159,13 @@ function generate_data()
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetwork(
             8,
             FixedProfile(2),
             FixedProfile(0),
             FixedProfile(0),
             Dict(Coal => 2.5),
-            Dict(Power => 1, CO2 => 1),
-            𝒫ᵉᵐ₀,
-            0,
+            Dict(Power => 1),
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(0),
@@ -183,12 +176,13 @@ function generate_data()
                 ),
             ),
         ),
-        EMB.RefStorage(
+        EMB.RefStorageEmissions(
             9,
             FixedProfile(3),
             FixedProfile(5),
             FixedProfile(0),
             FixedProfile(0),
+            CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
             Dict(
@@ -205,15 +199,13 @@ function generate_data()
                 ),
             ),
         ),
-        EMB.RefGeneration(
+        EMB.RefNetwork(
             10,
             FixedProfile(0),
             FixedProfile(0),
             FixedProfile(0),
             Dict(Coal => 2.5),
-            Dict(Power => 1, CO2 => 1),
-            𝒫ᵉᵐ₀,
-            0,
+            Dict(Power => 1),
             Dict(
                 "Investments" => extra_inv_data(
                     Capex_Cap = FixedProfile(10000),
@@ -248,7 +240,7 @@ function generate_data()
     em_limits =
         Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
     em_cost = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
-    global_data = IM.GlobalData(em_limits, em_cost, 0.07)
+    modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 
     # WIP case structure
     case = Dict(
@@ -256,17 +248,15 @@ function generate_data()
         :links => links,
         :products => products,
         :T => T,
-        :global_data => global_data,
     )
-    return case
+    return case, modeltype
 end
 
 # Generate case data.
-model_type = InvestmentModel()
-case_data = generate_data()
+case_data, modeltype = generate_data()
 
 # Run the optimization as an investment model.
-m = run_model(case_data, model_type, HiGHS.Optimizer)
+m = run_model(case_data, modeltype, HiGHS.Optimizer)
 
 # Uncomment to print all the constraints set in the model.
 # print(m)
