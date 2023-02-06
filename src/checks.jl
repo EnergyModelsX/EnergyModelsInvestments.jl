@@ -19,8 +19,9 @@ end
 function EMB.check_node(n::Source, 𝒯, modeltype::InvestmentModel)
     check_investment_data(n, 𝒯)
 
+    operational_model = EMB.OperationalModel(modeltype.Emission_limit, modeltype.CO2_instance)
     # Do other checks not related to investments.
-    EMB.check_node(n, 𝒯, EMB.OperationalModel())
+    EMB.check_node(n, 𝒯, operational_model)
 end
 
 
@@ -28,7 +29,8 @@ function EMB.check_node(n::Network, 𝒯, modeltype::InvestmentModel)
     hasfield(typeof(n), :Data) && check_investment_data(n, 𝒯)
 
     # Do other checks not related to investments.
-    EMB.check_node(n, 𝒯, EMB.OperationalModel())
+    operational_model = EMB.OperationalModel(modeltype.Emission_limit, modeltype.CO2_instance)
+    EMB.check_node(n, 𝒯, operational_model)
 end
 
 
@@ -60,7 +62,8 @@ function EMB.check_node(n::Storage, 𝒯, modeltype::InvestmentModel)
     end
     
     # Do other checks not related to investments.
-    EMB.check_node(n, 𝒯, EMB.OperationalModel())
+    operational_model = EMB.OperationalModel(modeltype.Emission_limit, modeltype.CO2_instance)
+    EMB.check_node(n, 𝒯, operational_model)
 end
 
 

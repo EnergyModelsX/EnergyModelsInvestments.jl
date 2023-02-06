@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+Version 0.2.0 (2023-02-03)
+--------------------------
+### Adjustmends to updates in EnergyModelsBase
+Adjustment to version 0.3.0, namely:
+* Changed type (`Node`) calls in tests to be consistent with version 0.3.0
+* Changed call of function for the creation of `Storage` variables
+* Removal of the type `GlobalData` and replacement with fields in the type `InvestmentModel` in all tests
+
 Version 0.1.5 (2022-12-12)
 --------------------------
 ### Internal release

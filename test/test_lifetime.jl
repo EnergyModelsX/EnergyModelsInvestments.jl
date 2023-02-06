@@ -1,25 +1,15 @@
-
-#IM = EnergyModelsInvestments
-#EMB = EnergyModelsBase
-
-
-NG = ResourceEmit("NG", 0.2)
+# Declaration of the required resources
 CO2 = ResourceEmit("CO2", 1.)
 Power = ResourceCarrier("Power", 0.)
-Coal = ResourceCarrier("Coal", 0.35)
-products = [NG, Power, CO2, Coal]
-ROUND_DIGITS = 8
-𝒫ᵉᵐ₀ = Dict(k  => FixedProfile(0) for k ∈ products if typeof(k) == ResourceEmit{Float64})
+products = [Power, CO2]
 
+"""
+Creates a simple test case for testing the individual Life_mode in the model
+"""
 function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount_rate=0.05)
-    # products = [NG, Coal, Power, CO2]
-    products = [NG, Power, CO2, Coal]
+
     # Creation of a dictionary with entries of 0. for all resources
     𝒫₀ = Dict(k  => 0 for k ∈ products)
-    # Creation of a dictionary with entries of 0. for all emission resources
-    𝒫ᵉᵐ₀ = Dict(k  => 0. for k ∈ products if typeof(k) == ResourceEmit{Float64})
-    𝒫ᵉᵐ₀[CO2] = 0.0
-
     if isnothing(source)
         investment_data_source = IM.extra_inv_data(
             Capex_Cap=FixedProfile(1000), # capex [€/kW]
@@ -31,11 +21,11 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount
             Lifetime=L,
         )
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
-            FixedProfile(5), Dict(Power => 1), 𝒫ᵉᵐ₀, Dict("Investments"=>investment_data_source))
+            FixedProfile(5), Dict(Power => 1), Dict("Investments"=>investment_data_source))
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", FixedProfile(20), 
-            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1), 𝒫ᵉᵐ₀)
+            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1))
     end
     nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
@@ -43,28 +33,32 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount
 
     T = UniformTwoLevel(1, 4, sp_dur, UniformTimes(1, 4, 1))
 
-    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
-    em_cost     = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
-    global_data = IM.GlobalData(em_limits, em_cost, discount_rate)
+    em_limits   = Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    em_cost     = Dict(CO2 => FixedProfile(0))
+    modeltype  = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
     case = Dict(:nodes => nodes,
                 :links => links,
                 :products => products,
                 :T => T,
-                :global_data => global_data)
-    return case
+                )
+    return case, modeltype
 end
 
-function optimize(case)
-    model = IM.InvestmentModel()
-    m = EMB.create_model(case, model)
+"""
+    optimize(cases)
+
+Optimize the `case`.
+"""
+function optimize(case, modeltype)
+    m = EMB.create_model(case, modeltype)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
 end
 
 
-resulting_obj= Dict()
+resulting_obj = Dict()
 
 @testset "Test Lifetime" begin
 
@@ -74,8 +68,8 @@ resulting_obj= Dict()
             push!(resulting_obj, "$(sp_dur) years" => [])
             for Lifemode ∈ [IM.UnlimitedLife(), IM.StudyLife(), IM.PeriodLife(),IM.RollingLife()]
                 @debug "~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~"
-                case = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
-                m = optimize(case)
+                case, modeltype = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
+                m                = optimize(case, modeltype)
 
                 general_tests(m)
 

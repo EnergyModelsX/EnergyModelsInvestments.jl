@@ -12,12 +12,12 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 
 """
-function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, global_data, modeltype::InvestmentModel)
+function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
 
     # Extraction of data
     𝒯ᴵⁿᵛ        = strategic_periods(𝒯)
     ℒᵗʳᵃⁿˢᴵⁿᵛ   = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
-    r           = global_data.r
+    r           = modeltype.r
     obj = JuMP.objective_function(m)
 
     # Update of teh cost function for modes with winvestments
@@ -36,7 +36,7 @@ end
 
 Create variables for the capital costs for the investments in transmission.
 """
-function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, global_data, modeltype::InvestmentModel)
+function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
 
     ℒᵗʳᵃⁿˢᴵⁿᵛ   = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
     𝒯ᴵⁿᵛ        = strategic_periods(𝒯)
