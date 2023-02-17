@@ -38,10 +38,10 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
              EMB.Direct(24, nodes[2], nodes[4], EMB.Linear())]
     
     # Creation of the two areas and potential transmission lines
-    areas = [GEO.Area(1, "Oslo", 10.751, 59.921, nodes[1]), 
-             GEO.Area(2, "Trondheim", 10.398, 63.4366, nodes[2])]        
+    areas = [GEO.RefArea(1, "Oslo", 10.751, 59.921, nodes[1]), 
+             GEO.RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2])]        
 
-    transmission_line = GEO.RefStatic("transline", Power, 10, 0.1, 1)
+    transmission_line = GEO.RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), 1)
     
     # Check if investments are included
     if isnothing(inv_data)
@@ -95,7 +95,7 @@ end
 
     # Creation and run of the optimization problem
     case, modeltype = small_graph_geo()
-    m                = optimize(case, modeltype)
+    m               = optimize(case, modeltype)
 
     general_tests(m)
 
@@ -108,7 +108,7 @@ end
 
     # Test identifying that the proper deficit is calculated
     @test sum(value.(m[:sink_deficit][sink, t])
-                        ≈ sink.Cap[t] - trans_mode.Trans_cap for t ∈ 𝒯) == length(𝒯)
+                        ≈ sink.Cap[t] - trans_mode.Trans_cap[t] for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that no investments take place
     @test sum(value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode])
@@ -131,7 +131,7 @@ end
             )
 
     case, modeltype = small_graph_geo(inv_data=inv_data)
-    m                = optimize(case, modeltype)
+    m               = optimize(case, modeltype)
 
     general_tests(m)
 

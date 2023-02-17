@@ -67,14 +67,14 @@ function generate_data()
 
     # Create the individual areas and transmission modes
     areas = [
-        GEO.Area(1, "Oslo", 10.751, 59.921, an[1]),
-        GEO.Area(2, "Bergen", 5.334, 60.389, an[2]),
-        GEO.Area(3, "Trondheim", 10.398, 63.437, an[3]),
-        GEO.Area(4, "Tromsø", 18.953, 69.669, an[4]),
+        GEO.RefArea(1, "Oslo", 10.751, 59.921, an[1]),
+        GEO.RefArea(2, "Bergen", 5.334, 60.389, an[2]),
+        GEO.RefArea(3, "Trondheim", 10.398, 63.437, an[3]),
+        GEO.RefArea(4, "Tromsø", 18.953, 69.669, an[4]),
     ]
 
-    OverheadLine_50MW = GEO.RefStatic("PowerLine_50", Power, 50.0, 0.05, 2)#, EMB.Linear)
-    LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, 100.0, 0.05, 2)#, EMB.Linear)
+    OverheadLine_50MW = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), 2)#, EMB.Linear)
+    LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, FixedProfile(100.0), FixedProfile(0.05), 2)#, EMB.Linear)
 
     transmission = [
         GEO.Transmission(

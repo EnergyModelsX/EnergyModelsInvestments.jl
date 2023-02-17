@@ -32,11 +32,11 @@ function GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::
 end
 
 """
-    GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ,, modeltype::InvestmentModel)
+    GEO.variables_trans_capex(m, 𝒯, ℒᵗʳᵃⁿˢ,, modeltype::InvestmentModel)
 
 Create variables for the capital costs for the investments in transmission.
 """
-function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+function GEO.variables_trans_capex(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
 
     ℒᵗʳᵃⁿˢᴵⁿᵛ   = (i for i ∈ ℒᵗʳᵃⁿˢ if has_trans_investment(i))
     𝒯ᴵⁿᵛ        = strategic_periods(𝒯)
@@ -45,30 +45,31 @@ function GEO.variables_capex_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::
 end
 
 """
-    GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+    GEO.variables_trans_capacity(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
 
 Create variables to track how much of installed transmision capacity is used for all 
-time periods `t ∈ 𝒯` and how much energy is lossed.
-Create variables for investments into transmission.
-"""
-function GEO.variables_transmission(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
-
+time periods `t ∈ 𝒯` and how much energy is lossed. Introduction of the additional
+constraints for investments.
     
-    @variable(m, trans_in[l ∈ ℒᵗʳᵃⁿˢ,  𝒯, GEO.corridor_modes(l)])
-    @variable(m, trans_out[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)])
-    @variable(m, trans_loss[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
+Additional variables for investment in capacity:
+    * `:trans_invest_b` - binary variable whether investments in capacity are happening
+    * `:trans_remove_b` - binary variable whether investments in capacity are removed
+    * `:trans_cap_current` - installed capacity for storage in each strategic period
+    * `:trans_cap_add` - added capacity
+    * `:trans_cap_rem` - removed capacity
+"""
+function GEO.variables_trans_capacity(m, 𝒯, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+
     @variable(m, trans_cap[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.corridor_modes(l)] >= 0)
-    @variable(m, trans_loss_neg[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.modes_of_dir(l, 2)] >= 0)
-    @variable(m, trans_loss_pos[l ∈ ℒᵗʳᵃⁿˢ, 𝒯, GEO.modes_of_dir(l, 2)] >= 0)
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Add transmission specific investment variables for each strategic period:
     @variable(m, trans_invest_b[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
     @variable(m, trans_remove_b[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)])
-    @variable(m, trans_cap_current[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)] >= 0)        # Installed capacity
-    @variable(m, trans_cap_add[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Add capacity
-    @variable(m, trans_cap_rem[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)        # Remove capacity
+    @variable(m, trans_cap_current[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)] >= 0)   # Installed capacity
+    @variable(m, trans_cap_add[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)      # Add capacity
+    @variable(m, trans_cap_rem[l ∈ ℒᵗʳᵃⁿˢ, 𝒯ᴵⁿᵛ, GEO.corridor_modes(l)]  >= 0)      # Remove capacity
     
 
     # Additional constraints (e.g. for binary investments) are added per node depending on 
@@ -114,7 +115,7 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
             end
         else
             for t in 𝒯
-                @constraint(m, m[:trans_cap][l, t, cm] == cm.Trans_cap)
+                @constraint(m, m[:trans_cap][l, t, cm] == cm.Trans_cap[t])
             end
         end
     end
@@ -135,13 +136,7 @@ function constraints_transmission_invest(m, 𝒯, ℒᵗʳᵃⁿˢ)
 end
 
 function get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing)
-    if cm.Trans_cap isa Base.Real
-        return cm.Trans_cap
-    elseif cm.Trans_cap isa TimeStructures.TimeProfile
-        return TimeStructures.getindex(cm.Trans_cap,t)
-    else 
-        print("Type error of cm.Trans_cap")
-    end
+    return cm.Trans_cap[t]
 end
 
 """
