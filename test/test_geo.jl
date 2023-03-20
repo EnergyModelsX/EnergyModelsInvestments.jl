@@ -14,18 +14,18 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
-        source = EMB.RefSource(
+        source = RefSource(
                     "-src",
                     FixedProfile(50),
                     FixedProfile(10),
                     FixedProfile(5),
                     Dict(Power => 1),
-                    Dict("" => EMB.EmptyData())
+                    Dict("" => EmptyData())
                 )
     end
 
     if isnothing(sink)
-        sink = EMB.RefSink(
+        sink = RefSink(
                     "-snk",
                     StrategicFixedProfile([20, 25, 30, 35]),
                     Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
@@ -33,25 +33,25 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
                 )
     end
 
-    nodes = [GEO.GeoAvailability(1, 𝒫₀, 𝒫₀), GEO.GeoAvailability(1, 𝒫₀, 𝒫₀), source, sink]
-    links = [EMB.Direct(31, nodes[3], nodes[1], EMB.Linear())
-             EMB.Direct(24, nodes[2], nodes[4], EMB.Linear())]
+    nodes = [GeoAvailability(1, 𝒫₀, 𝒫₀), GeoAvailability(1, 𝒫₀, 𝒫₀), source, sink]
+    links = [Direct(31, nodes[3], nodes[1], Linear())
+             Direct(24, nodes[2], nodes[4], Linear())]
     
     # Creation of the two areas and potential transmission lines
-    areas = [GEO.RefArea(1, "Oslo", 10.751, 59.921, nodes[1]), 
-             GEO.RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2])]        
+    areas = [RefArea(1, "Oslo", 10.751, 59.921, nodes[1]), 
+             RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2])]        
 
-    transmission_line = GEO.RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), 1)
-    
     # Check if investments are included
     if isnothing(inv_data)
         inv_data = Dict("" => EMB.EmptyData())
     else
-        inv_data = Dict("Investments" => Dict{GEO.TransmissionMode,EMB.Data}(transmission_line => inv_data))
+        inv_data = Dict("Investments" => inv_data)
     end
 
+    transmission_line = RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), 1, inv_data)
+
     transmissions = [
-                    GEO.Transmission(areas[1], areas[2], [transmission_line], inv_data),
+                    Transmission(areas[1], areas[2], [transmission_line]),
                     ]
 
     # Creation of the time structure and the used global data
@@ -62,7 +62,6 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
                             CO2,
                             0.07
                         )
-
 
     # Creation of the case dictionary
     case = Dict(
@@ -110,9 +109,12 @@ end
     @test sum(value.(m[:sink_deficit][sink, t])
                         ≈ sink.Cap[t] - trans_mode.Trans_cap[t] for t ∈ 𝒯) == length(𝒯)
                         
-    # Test showing that no investments take place
-    @test sum(value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode])
-                        == 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+    # Test showing that no investment variables are created
+    @test size(m[:trans_invest_b])[1] == 0
+    @test size(m[:trans_remove_b])[1] == 0
+    @test size(m[:trans_cap_current])[1] == 0
+    @test size(m[:trans_cap_add])[1] == 0
+    @test size(m[:trans_cap_rem])[1] == 0
 
 end
 
@@ -150,15 +152,15 @@ end
         if TS.isfirst(t_inv)
             @testset "First investment period" begin
                 for t ∈ t_inv
-                    @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
+                    @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
                                     ≈ sink.Cap[t]-inv_data.Trans_start)
                 end
             end
         else
             @testset "Subsequent investment periods" begin
                 for t ∈ t_inv
-                    @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
-                            ≈ sink.Cap[t]-value.(m[:trans_cap_current][tr_osl_trd, previous(t_inv, 𝒯), trans_mode]))
+                    @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                            ≈ sink.Cap[t]-value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]))
                 end
             end
         end
@@ -201,25 +203,25 @@ end
             @testset "Invested capacity" begin
                 if TS.isfirst(t_inv)
                     for t ∈ t_inv
-                        @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
+                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
-                                            inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
                     end
                 else
                     for t ∈ t_inv
-                        @test (value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) 
-                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tr_osl_trd, previous(t_inv, 𝒯), trans_mode]), 
-                                    inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode])))
+                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]), 
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
                     end
                 end
             end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode]) == 0
-                    @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) == 0
+                if value.(m[:trans_invest_b][trans_mode, t_inv]) == 0
+                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
                 else
-                    @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) ⪆ 0
+                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) ⪆ 0
                 end
             end
         end
@@ -260,11 +262,11 @@ end
     # Test showing that the investments are as expected
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @testset "Invested capacity $(t_inv.sp)" begin
-            if value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode]) == 0
-                @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) == 0
+            if value.(m[:trans_invest_b][trans_mode, t_inv]) == 0
+                @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
             else
-                @test value.(m[:trans_cap_add][tr_osl_trd, t_inv, trans_mode]) ≈ 
-                    inv_data.Trans_increment[t_inv] * value.(m[:trans_invest_b][tr_osl_trd, t_inv, trans_mode]) 
+                @test value.(m[:trans_cap_add][trans_mode, t_inv]) ≈ 
+                    inv_data.Trans_increment[t_inv] * value.(m[:trans_invest_b][trans_mode, t_inv]) 
             end
         end
     end

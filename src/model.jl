@@ -180,11 +180,11 @@ function constraints_capacity_invest(m, 𝒩, 𝒯, modeltype::InvestmentModel)
     # Link capacity usage to installed capacity 
     for n ∈ setdiff(𝒩ᶜᵃᵖ,𝒩ˢᵗᵒʳᶜᵃᵖ)
         if n ∈ 𝒩ᴵⁿᵛ
-            for t_inv in 𝒯ᴵⁿᵛ, t in t_inv
+            for t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ t_inv
                 @constraint(m, m[:cap_inst][n, t] == m[:cap_current][n,t_inv])
             end
         else
-            for t in 𝒯
+            for t ∈ 𝒯
                 @constraint(m, m[:cap_inst][n, t] == n.Cap[t])
             end
         end
@@ -237,12 +237,12 @@ function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype::Investme
     # Link capacity usage to installed capacity 
     for n ∈ 𝒩ˢᵗᵒʳ
         if n ∈ 𝒩ᴵⁿᵛ
-            for t_inv in 𝒯ᴵⁿᵛ, t in t_inv
+            for t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ t_inv
                 @constraint(m, m[:stor_cap_inst][n, t] == m[:stor_cap_current][n,t_inv])
                 @constraint(m, m[:stor_rate_inst][n, t] == m[:stor_rate_current][n,t_inv])
             end
         else
-            for t in 𝒯
+            for t ∈ 𝒯
                 @constraint(m, m[:stor_cap_inst][n, t] == n.Stor_cap[t])
                 @constraint(m, m[:stor_rate_inst][n, t] == n.Rate_cap[t])
             end
