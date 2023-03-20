@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+Version 0.2.3 (2023-03-20)
+--------------------------
+ * Adjustments in tests and functions to changes introduced in `EnergyModelsGeography` version 0.4.0
+
 Version 0.2.2 (2023-02-17)
 --------------------------
  * Adjustments in tests and functions to changes introduced in `EnergyModelsGeography` version 0.3.1
