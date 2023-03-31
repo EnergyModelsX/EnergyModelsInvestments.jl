@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+Version 0.2.4 (2023-03-31)
+--------------------------
+ * Removal of type `ContinuousFixedInvestment` as this can be represented with `ContinuousInvestment` and `Cap_max_add` limited to a given period
+ * Introduction of abstract type `SemiContiInvestment` and composite type `SemiContinuousOffsetInvestment` to introduce semi-continuous investments in which the cost function has an offset. This is only included for Transmission in the first step
+
 Version 0.2.3 (2023-03-20)
 --------------------------
  * Adjustments in tests and functions to changes introduced in `EnergyModelsGeography` version 0.4.0

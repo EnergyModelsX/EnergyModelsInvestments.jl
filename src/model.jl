@@ -314,7 +314,7 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestment)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::SemiContiInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:cap_add][n, t_inv] <=
                             n.Data["Investments"].Cap_max_add[t_inv]
@@ -326,27 +326,13 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestme
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investmentmode::ContinuousFixedInvestment)
-    sp_inv = investmentmode.Strat_period
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        if t_inv !== sp_inv
-            fix(m[:cap_add][n, t_inv], 0; force=true)
-        else
-            @constraint(m, m[:cap_add][n, t_inv] <=
-                                n.Data["Investments"].Cap_max_add[t_inv])
-            @constraint(m, m[:cap_add][n, t_inv] >=
-                                n.Data["Investments"].Cap_min_add[t_inv]) 
-        end
-    end
-end
-
 # To be put somewhere else, related to data handling/utils:
 max_add(n, t_inv) = n.Data["Investments"].Cap_max_add[t_inv]
 min_add(n, t_inv) = n.Data["Investments"].Cap_min_add[t_inv]
 # cap_add_name(n::Node) = "node_"
 # cap_add_name(n::Link) = "link_"
 
-function set_capacity_installation_mockup(m, n, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestment, cap_add_name=:cap_add)
+function set_capacity_installation_mockup(m, n, 𝒯ᴵⁿᵛ, ::SemiContiInvestment, cap_add_name=:cap_add)
     cap_add = m[cap_add_name] # or better use :cap_add everywhere, but add variables indices where necessary (e.g. using SparseVariables)
     cap_add_b = m[join(cap_add_name, :_b)] # Or something safer, perhaps?
 
@@ -426,7 +412,7 @@ function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     end
 end
 
-function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestment)
+function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode::SemiContiInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:stor_cap_add][n, t_inv] <= 
                             n.Data["Investments"].Stor_max_add[t_inv]
@@ -484,7 +470,7 @@ function set_investment_properties(n, var, ::BinaryInvestment)
     JuMP.set_binary(var)
 end
 
-function set_investment_properties(n, var, ::SemiContinuousInvestment)
+function set_investment_properties(n, var, ::SemiContiInvestment)
     JuMP.set_binary(var)
 end
 

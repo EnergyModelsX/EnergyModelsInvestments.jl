@@ -25,44 +25,43 @@ end
 abstract type Investment end 
 """ Binary investment in given capacity with binary variables. Requires specification
 of `Cap_start` in `extra_inv_data` for proper analyses."""
-struct BinaryInvestment       <: Investment end
+struct BinaryInvestment <: Investment end
 """ Investment in fixed increments with integer variables. """
-struct DiscreteInvestment        <: Investment end 
+struct DiscreteInvestment <: Investment end 
 """ Continuous investment between zero and a maximum value. """
-struct ContinuousInvestment     <: Investment end
+struct ContinuousInvestment <: Investment end
+""" Forced investment in given capacity. """
+struct FixedInvestment <: Investment end
 """ Semi-continuous investment, either zero or between a minimum and a maximum value,
 involves a binary variable. """
-struct SemiContinuousInvestment <: Investment end
-""" Forced investment in given capacity. """
-struct FixedInvestment          <: Investment end
-""" Continuous investment between zero and a maximum value in a given time period.
+abstract type SemiContiInvestment <: Investment end
+""" Semi-continuous investment where the cost is going through the origin. """
+struct SemiContinuousInvestment <: SemiContiInvestment end
+""" Semi-continuous investment where the cost has an additional offset"""
+struct SemiContinuousOffsetInvestment <: SemiContiInvestment end
 
-This investment strategy alows to specifiy the strategic period `Strat_period` in which
-the model can invest into the technology.
-
-# Fields
-- **`Strat_period::StrategicPeriod`** Strategic period in which investments can happen.
-"""
-struct ContinuousFixedInvestment     <: Investment
-    Strat_period::StrategicPeriod
-end
 
 """ Abstract lifetime type """
 abstract type LifetimeMode end
 """ The investment's life is not limited. The investment costs do not consider any 
 reinvestment or rest value. """
-struct UnlimitedLife        <: LifetimeMode end
+struct UnlimitedLife <: LifetimeMode end
 """ The investment lasts for the whole study period with adequate reinvestments at the 
 end of the lifetime and considering the rest value. """
-struct StudyLife            <: LifetimeMode end
+struct StudyLife <: LifetimeMode end
 """ The investment is considered to last only for the strategic period. The excess 
 lifetime is considered in the rest value. If the lifetime is lower than the length 
 of the period, reivnvestment is considered as well. """
-struct PeriodLife           <: LifetimeMode end
+struct PeriodLife <: LifetimeMode end
 """ The investment is rolling to the next strategic periods and it is retired at the 
 end of its lifetime or the the end of the previous startegic period if its lifetime 
 ends between two periods."""
-struct RollingLife          <: LifetimeMode end
+struct RollingLife <: LifetimeMode end
+
+"""
+Abstract type for the extra data for investing in technologies.
+"""
+abstract type InvestmentData <: EMB.Data end
 
 """ Extra data for investing in technologies.
 

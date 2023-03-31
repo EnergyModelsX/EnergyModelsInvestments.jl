@@ -229,6 +229,71 @@ end
 
 end
 
+# Test set for semicontinuous investments with offsets in the cost
+@testset "Unidirectional transmission with SemiContinuousOffsetInvestment" begin
+
+    # Creation and run of the optimization problem
+    inv_data = IM.TransInvData(
+                Capex_trans     = FixedProfile(1),     # capex [€/kW]
+                Capex_trans_offset = FixedProfile(10),    # capex [€]
+                Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
+                Trans_max_add   = FixedProfile(30),     # max_add [kW]
+                Trans_min_add   = FixedProfile(10),     # min_add [kW]
+                Inv_mode        = IM.SemiContinuousOffsetInvestment(),
+                Trans_increment = FixedProfile(10),
+                Trans_start     = 0,
+            )
+
+    case, modeltype = small_graph_geo(inv_data=inv_data)
+    m                = optimize(case, modeltype)
+
+    general_tests(m)
+
+    # Extraction of required data
+    𝒯    = case[:T]
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    sink = case[:nodes][4]
+    tr_osl_trd  = case[:transmission][1]
+    trans_mode  = tr_osl_trd.Modes[1]
+
+    # Test identifying that the there is no deficit
+    @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
+                        
+    # Test showing that the investments are as expected
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        @testset "Investment period $(t_inv.sp)" begin
+            @testset "Invested capacity" begin
+                if TS.isfirst(t_inv)
+                    for t ∈ t_inv
+                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                                        >= max(sink.Cap[t] - inv_data.Trans_start, 
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
+                    end
+                else
+                    for t ∈ t_inv
+                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]), 
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
+                    end
+                end
+            end
+
+            # Test that the binary value is regulating the investments
+            @testset "Binary value" begin
+                if value.(m[:trans_invest_b][trans_mode, t_inv]) == 0
+                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
+                else
+                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) ⪆ 0
+                end
+            end
+        end
+    end
+    @testset "Investment costs" begin
+        @test sum(value(m[:trans_cap_add][trans_mode, t_inv]) * inv_data.Capex_trans[t_inv] + 
+            inv_data.Capex_trans_offset[t_inv] * value(m[:trans_invest_b][trans_mode, t_inv]) ≈ 
+            value(m[:capex_trans][trans_mode, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, atol=TEST_ATOL) == length(𝒯ᴵⁿᵛ)
+    end
+end
 
 # Test set for discrete investments
 @testset "Unidirectional transmission with DiscreteInvestment" begin
@@ -270,5 +335,4 @@ end
             end
         end
     end
-
 end
