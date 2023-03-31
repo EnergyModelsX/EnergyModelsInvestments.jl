@@ -94,9 +94,7 @@ function constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::Investment
     
     # Constraints capex
     for t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ 𝒞ℳᴵⁿᵛ 
-        @constraint(m, m[:capex_trans][cm, t_inv] ==
-                            cm.Data["Investments"].Capex_trans[t_inv]
-                            * m[:trans_cap_add][cm, t_inv])
+        set_capacity_cost(m, cm, 𝒯, t_inv, modeltype)
     end
 
     # Set investment properties based on investment mode of `TransmissionMode` cm
@@ -172,7 +170,7 @@ function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::SemiContinuousInvestment)
+function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::SemiContiInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Disjunctive constraints when investing
         @constraint(m, m[:trans_cap_add][cm, t_inv] <=
@@ -192,31 +190,27 @@ function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::FixedInvestment)
     end
 end
 
+
 """
-    set_investment_properties(cm, var, mode)
-Set investment properties for variable `var` for transmision mode `cm`,
-e.g. set to binary for BinaryInvestment, 
-bounds etc
+    set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype)
+Set `capex_trans` based on the technology investment cost to include the potential for either
+semi continuous costs with offsets or piecewise linear costs. 
+It implements different versions of cost calculations:
+- `Investment`: The cost is linear dependent on the installed capacity. This is the default
+for all invcestment options
+- `SemiContinuousOffsetInvestment`: The cost is linear dependent on the added capacity with a
+given offset
 """
-set_investment_properties(cm::GEO.TransmissionMode, var) =
-    set_investment_properties(cm, var, investmentmode(cm))
-function set_investment_properties(cm, var, mode)
-    set_lower_bound(var, 0)
+set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype) = set_capacity_cost(m, cm, 𝒯, t_inv, modeltype, investmentmode(cm))
+
+function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, investment_mode::Investment)
+    @constraint(m, m[:capex_trans][cm, t_inv] ==
+                        cm.Data["Investments"].Capex_trans[t_inv]
+                        * m[:trans_cap_add][cm, t_inv])
 end
 
-function set_investment_properties(cm, var, ::BinaryInvestment)
-    JuMP.set_binary(var)
-end
-
-function set_investment_properties(cm, var, ::SemiContinuousInvestment)
-    JuMP.set_binary(var)
-end
-    
-function set_investment_properties(cm, var, ::FixedInvestment) # TO DO
-    JuMP.fix(var, 1)
-end
-
-function set_investment_properties(cm, var, ::DiscreteInvestment) # TO DO
-    JuMP.set_integer(var)
-    JuMP.set_lower_bound(var, 0)
+function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, investment_mode::SemiContinuousOffsetInvestment)
+    @constraint(m, m[:capex_trans][cm, t_inv] ==
+                        cm.Data["Investments"].Capex_trans[t_inv] * m[:trans_cap_add][cm, t_inv] + 
+                        cm.Data["Investments"].Capex_trans_offset[t_inv] * m[:trans_invest_b][cm, t_inv])
 end

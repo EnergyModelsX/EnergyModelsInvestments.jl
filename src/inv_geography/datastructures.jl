@@ -21,4 +21,5 @@ Base.@kwdef struct TransInvData <: EMB.Data
     Inv_mode::Investment = ContinuousInvestment()
     Trans_start::Union{Real, Nothing} = nothing
     Trans_increment::TimeProfile = FixedProfile(0)
+    Capex_trans_offset::TimeProfile = FixedProfile(0)
 end

@@ -177,10 +177,10 @@ end
         investment_data_source = IM.extra_inv_data(
             Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-            Cap_max_add     = FixedProfile(30),         # max_add [kW]
-            Cap_min_add     = FixedProfile(5),          # min_add [kW]
+            Cap_max_add     = StrategicFixedProfile([0, 30, 0, 0]), # max_add [kW]
+            Cap_min_add     = FixedProfile(0),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
-            Inv_mode        = IM.ContinuousFixedInvestment(sp1)   # investment mode
+            Inv_mode        = IM.ContinuousInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 25, 30])
         inv_data = Dict(
