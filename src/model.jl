@@ -190,10 +190,6 @@ function constraints_capacity_invest(m, 𝒩, 𝒯, modeltype::InvestmentModel)
         end
     end
 
-    for n ∈ setdiff(𝒩ᶜᵃᵖ,𝒩ˢᵗᵒʳᶜᵃᵖ), t ∈ 𝒯
-        @constraint(m, m[:cap_use][n, t] <= m[:cap_inst][n, t]) # sum cap_add/cap_rem
-    end
-
     # Capacity updating
     for n ∈ 𝒩ᴵⁿᵛ
         for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -247,11 +243,6 @@ function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype::Investme
                 @constraint(m, m[:stor_rate_inst][n, t] == n.Rate_cap[t])
             end
         end
-    end
-
-    for n ∈ 𝒩ˢᵗᵒʳ, t ∈ 𝒯
-        @constraint(m, m[:stor_rate_use][n, t] <= m[:stor_rate_inst][n, t]) # sum cap_add/cap_rem
-        @constraint(m, m[:stor_level][n, t] <= m[:stor_cap_inst][n, t])
     end
 
     # Capacity updating

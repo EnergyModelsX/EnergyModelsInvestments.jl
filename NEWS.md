@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+Version 0.2.5 (2023-04-18)
+--------------------------
+ * Bugfix related to constraint on `cap_use`,  `stor_rate_use`, and `stor_level`:
+    - The variables are constrained using the function `constraints_capacity` and in addition in `constraints_capacity_invest` and `constraints_storage_invest` with the latter constraint being inconsistent for `Sink` nodes.
+    - The constraint in `EnergyModelsInvestments` was therefore removed
+
 Version 0.2.4 (2023-03-31)
 --------------------------
  * Removal of type `ContinuousFixedInvestment` as this can be represented with `ContinuousInvestment` and `Cap_max_add` limited to a given period
