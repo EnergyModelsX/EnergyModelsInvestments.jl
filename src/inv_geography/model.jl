@@ -51,8 +51,8 @@ time periods `t ∈ 𝒯` and how much energy is lossed. Introduction of the add
 constraints for investments.
     
 Additional variables for investment in capacity:
-    * `:trans_invest_b` - binary variable whether investments in capacity are happening
-    * `:trans_remove_b` - binary variable whether investments in capacity are removed
+    * `:trans_cap_invest_b` - binary variable whether investments in capacity are happening
+    * `:trans_cap_remove_b` - binary variable whether investments in capacity are removed
     * `:trans_cap_current` - installed capacity for storage in each strategic period
     * `:trans_cap_add` - added capacity
     * `:trans_cap_rem` - removed capacity
@@ -65,8 +65,8 @@ function GEO.variables_trans_capacity(m, 𝒯, 𝒞ℳ, modeltype::InvestmentMod
     𝒞ℳᴵⁿᵛ = has_investment(𝒞ℳ)
 
     # Add transmission specific investment variables for each strategic period:
-    @variable(m, trans_invest_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
-    @variable(m, trans_remove_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
+    @variable(m, trans_cap_invest_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
+    @variable(m, trans_cap_remove_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, trans_cap_current[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)   # Installed capacity
     @variable(m, trans_cap_add[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Add capacity
     @variable(m, trans_cap_rem[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Remove capacity
@@ -99,7 +99,7 @@ function constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::Investment
 
     # Set investment properties based on investment mode of `TransmissionMode` cm
     for t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ 𝒞ℳᴵⁿᵛ 
-        set_investment_properties(cm, m[:trans_invest_b][cm, t_inv])  
+        set_investment_properties(cm, m[:trans_cap_invest_b][cm, t_inv])  
     end
 
     # Link capacity to installed capacity 
@@ -129,19 +129,16 @@ function constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::Investment
     end
 end
 
-function get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing)
-    return cm.Trans_cap[t]
-end
 
 """
-    set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investmentmode)
+    set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode)
 
 Add constraints related to capacity installation depending on investment mode of
 `TransmissionMode` cm.
 """
 set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ) = 
-    set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investmentmode(cm))
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investmentmode)
+    set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode(cm))
+function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:trans_cap_add][cm, t_inv] <= 
                             cm.Data["Investments"].Trans_max_add[t_inv])
@@ -151,22 +148,22 @@ function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investmentmode)
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
+function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:trans_cap_current][cm, t_inv] ==
-                            cm.Trans_cap[t_inv] * m[:trans_invest_b][cm, t_inv]) 
+                            cm.Trans_cap[t_inv] * m[:trans_cap_invest_b][cm, t_inv]) 
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
+function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::DiscreteInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        set_investment_properties( cm, m[:trans_remove_b][cm, t_inv])
+        set_investment_properties( cm, m[:trans_cap_remove_b][cm, t_inv])
         @constraint(m, m[:trans_cap_add][cm, t_inv] == 
                             cm.Data["Investments"].Trans_increment[t_inv]
-                            * m[:trans_invest_b][cm, t_inv])
+                            * m[:trans_cap_invest_b][cm, t_inv])
         @constraint(m, m[:trans_cap_rem][cm, t_inv] == 
                             cm.Data["Investments"].Trans_increment[t_inv]
-                            * m[:trans_remove_b][cm, t_inv])
+                            * m[:trans_cap_remove_b][cm, t_inv])
     end
 end
 
@@ -175,18 +172,18 @@ function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::SemiC
         # Disjunctive constraints when investing
         @constraint(m, m[:trans_cap_add][cm, t_inv] <=
                             cm.Data["Investments"].Trans_max_add[t_inv]
-                            * m[:trans_invest_b][cm, t_inv]) 
+                            * m[:trans_cap_invest_b][cm, t_inv]) 
         @constraint(m, m[:trans_cap_add][cm, t_inv] >=
                             cm.Data["Investments"].Trans_min_add[t_inv]
-                            * m[:trans_invest_b][cm, t_inv]) 
+                            * m[:trans_cap_invest_b][cm, t_inv]) 
         @constraint(m, m[:trans_cap_rem][cm, t_inv] == 0)
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::FixedInvestment)
+function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::FixedInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:trans_cap_current][cm, t_inv] ==
-                            cm.Trans_cap[t_inv] * m[:trans_invest_b][cm, t_inv])
+                            cm.Trans_cap[t_inv] * m[:trans_cap_invest_b][cm, t_inv])
     end
 end
 
@@ -201,7 +198,7 @@ for all invcestment options
 - `SemiContinuousOffsetInvestment`: The cost is linear dependent on the added capacity with a
 given offset
 """
-set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype) = set_capacity_cost(m, cm, 𝒯, t_inv, modeltype, investmentmode(cm))
+set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype) = set_capacity_cost(m, cm, 𝒯, t_inv, modeltype, investment_mode(cm))
 
 function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, investment_mode::Investment)
     @constraint(m, m[:capex_trans][cm, t_inv] ==
@@ -212,5 +209,5 @@ end
 function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, investment_mode::SemiContinuousOffsetInvestment)
     @constraint(m, m[:capex_trans][cm, t_inv] ==
                         cm.Data["Investments"].Capex_trans[t_inv] * m[:trans_cap_add][cm, t_inv] + 
-                        cm.Data["Investments"].Capex_trans_offset[t_inv] * m[:trans_invest_b][cm, t_inv])
+                        cm.Data["Investments"].Capex_trans_offset[t_inv] * m[:trans_cap_invest_b][cm, t_inv])
 end

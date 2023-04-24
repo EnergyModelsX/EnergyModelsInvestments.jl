@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+Version 0.2.6 (2023-04-24)
+--------------------------
+ * Introduction of abstract type `InvestmentData` as subtype of `Data` to dispatch specifically on data related to investments
+ * Changes in the individual utility functions for improved utilization of the multiple dispatch
+ 
 Version 0.2.5 (2023-04-18)
 --------------------------
  * Bugfix related to constraint on `cap_use`,  `stor_rate_use`, and `stor_level`:

@@ -36,7 +36,7 @@ end
 
 function EMB.check_node(n::Storage, 𝒯, modeltype::InvestmentModel)
 
-    if has_storage_investment(n)
+    if has_investment(n)
         inv_data = n.Data["Investments"]
 
         @assert_or_log typeof(inv_data) == extra_inv_data_storage "The investment data for a Storage must be of type `extra_inv_data_storage`."

@@ -88,7 +88,7 @@ If nothing is given, it is set by `get_start_cap()` to the capacity `Cap` of the
 - **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested
 in each period.
 """
-Base.@kwdef struct extra_inv_data <: EMB.Data # TODO? Move from kwdef to @with_kw from Parameters.jl
+Base.@kwdef struct extra_inv_data <: InvestmentData
     Capex_Cap::TimeProfile
     Cap_max_inst::TimeProfile
     Cap_max_add::TimeProfile
@@ -142,7 +142,7 @@ case of `DiscreteInvestment`\n
 - **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested
 in each period.
 """
-Base.@kwdef struct extra_inv_data_storage <: EMB.Data
+Base.@kwdef struct extra_inv_data_storage <: InvestmentData
     #Investment data related to storage power
     Capex_rate::TimeProfile #capex of power
     Rate_max_inst::TimeProfile
@@ -163,17 +163,3 @@ Base.@kwdef struct extra_inv_data_storage <: EMB.Data
     Lifetime::TimeProfile = FixedProfile(0)
  end
 # TODO: Consider package Parameters.jl to define struct with default values
-
-"""
-investmentmode(n)
-
-Return the investment mode of the node 'n'. By default, all investments are continuous.
-"""
-investmentmode(n) = n.Data["Investments"].Inv_mode
-"""
-lifetimemode(n)
-
-Return the lifetime mode of the node 'n'. By default, all investments are unlimited.
-"""
-lifetimemode(n) = n.Data["Investments"].Life_mode
-

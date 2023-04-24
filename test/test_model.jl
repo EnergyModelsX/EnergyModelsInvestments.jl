@@ -81,7 +81,7 @@ end
         m                = optimize(case, modeltype)
 
         # Check model
-        @test size(all_variables(m))[1] == 11084
+        @test size(all_variables(m))[1] == 10496
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
@@ -103,7 +103,6 @@ end
         m                = optimize(case, modeltype)
 
         # Extraction of required data
-        println(case[:nodes])
         source = case[:nodes][2]
         sink   = case[:nodes][3]
         𝒯    = case[:T]
