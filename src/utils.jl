@@ -1,96 +1,68 @@
 """
-    testdata()
+    has_investment(n::EMB.Node)
 
-Read dummy data from EnergyModelsBase
+For a given `Node`, checks that it contains the required investment data.
 """
-function testdata()
-    data = EMB.read_data("")
-end
-
-"""
-    has_capacity(i)
-
-Check if node i should be used for capacity calculations, i.e.
-    * is not Availability
-    * has capacity
-
-Can also be used for storages.
-
-    TODO: Move to EMB?
-"""
-function has_capacity(i)
-    ~isa(i, EMB.Availability) && 
+function has_investment(n::EMB.Node)
     (
-        hasproperty(i, :Cap) ||
-        (hasproperty(i, :Rate_cap) && hasproperty(i, :Stor_cap))
+        hasproperty(n, :Data) && 
+        haskey(n.Data,"Investments") && 
+        typeof(n.Data["Investments"]) <: InvestmentData
     )
 end
 
-"""
-    has_stor_capacity(i)
 
-Check if storage node i should be used for capacity calculations, i.e.
-    * is not Availability
-    * has capacity for rate and storage volume
-
-Can only be used for storages.
 """
-function has_stor_capacity(i)
-    ~isa(i, EMB.Availability) && 
-    (
-        (hasproperty(i, :Rate_cap) && hasproperty(i, :Stor_cap))
-    )
+    has_investment(𝒩::Vector{<:EMB.Node})
+
+For a given `Vector{<:TransmissionMode}`, return all `TransmissionMode`s with investments.
+"""
+function has_investment(𝒩::Vector{<:EMB.Node})
+
+    return [n for n ∈ 𝒩 if has_investment(n)]
 end
 
-"""
-    has_investment(i)
-
-Check if node i should be used for investment analysis, i.e.
-    * is not Availability
-    * has investment data that contains at least:
-        *Capex_Cap
-        *Cap_max_inst
-        *Cap_max_add
-        *Cap_min_add
 
 """
-function has_investment(i)
-    ~isa(i, EMB.Availability) && 
-    (
-        hasproperty(i, :Data) && (
-            haskey(i.Data,"Investments") &&
-            (
-                hasproperty(i.Data["Investments"], :Capex_Cap) ||
-                hasproperty(i.Data["Investments"], :Cap_max_inst) ||
-                hasproperty(i.Data["Investments"], :Cap_max_add) ||
-                hasproperty(i.Data["Investments"], :Cap_min_add)
-            )
-        )
-    )
-end
+    investment_mode(type)
+
+Return the investment mode of the type `type`. By default, all investments are continuous.
+"""
+investment_mode(type) = type.Data["Investments"].Inv_mode
+
 
 """
-has_storage_investment(i)
+    lifetime_mode(type)
 
-Check if storage node i should be used for investment analysis, i.e.
-    * is not Availability
-    * has investment data that contains at least:
-        *Capex_stor
-        *Stor_max_inst
-        *Stor_max_add
-        *Stor_min_add
+Return the lifetime mode of the type `type`. By default, all investments are unlimited.
 """
-function has_storage_investment(i)
-    ~isa(i, EMB.Availability) && 
-    (
-        hasproperty(i, :Data) && (
-            haskey(i.Data,"Investments") &&
-            (
-                hasproperty(i.Data["Investments"], :Capex_stor) ||
-                hasproperty(i.Data["Investments"], :Stor_max_inst) ||
-                hasproperty(i.Data["Investments"], :Stor_max_add) ||
-                hasproperty(i.Data["Investments"], :Stor_min_add)
-            )
-        )
-    )
-end
+lifetime_mode(type) = type.Data["Investments"].Life_mode
+
+
+"""
+    get_start_cap(n, t, stcap)
+
+Returns the starting capacity of the storage in the first investment period. If no
+starting capacity is provided in `InvestmentData` (default = Nothing), then use the
+provided capacity from the field Cap.
+"""
+get_start_cap(n, t, stcap) = stcap
+get_start_cap(n::EMB.Node, t, stcap::Nothing) = n.Cap[t]
+
+get_start_cap_storage(n::Storage, t, stcap) = stcap
+get_start_cap_storage(n::Storage, t, stcap::Nothing) = n.Stor_cap[t]
+get_start_rate_storage(n::Storage, t, stcap) = stcap
+get_start_rate_storage(n::Storage, t, stcap::Nothing) = n.Rate_cap[t]
+
+"""
+    max_add(n::EMB.Node, t_inv)
+
+Returns the maximum added capacity in the investment period `t_inv`.
+"""
+max_add(n::EMB.Node, t_inv) = n.Data["Investments"].Cap_max_add[t_inv]
+"""
+    min_add(n::EMB.Node, t_inv)
+
+Returns the minimum added capacity in the investment period `t_inv`.
+"""
+min_add(n::EMB.Node, t_inv) = n.Data["Investments"].Cap_min_add[t_inv]

@@ -110,8 +110,8 @@ end
                         ≈ sink.Cap[t] - trans_mode.Trans_cap[t] for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that no investment variables are created
-    @test size(m[:trans_invest_b])[1] == 0
-    @test size(m[:trans_remove_b])[1] == 0
+    @test size(m[:trans_cap_invest_b])[1] == 0
+    @test size(m[:trans_cap_remove_b])[1] == 0
     @test size(m[:trans_cap_current])[1] == 0
     @test size(m[:trans_cap_add])[1] == 0
     @test size(m[:trans_cap_rem])[1] == 0
@@ -205,20 +205,20 @@ end
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
-                                            inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
                     end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
                                         ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]), 
-                                    inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
                     end
                 end
             end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_invest_b][trans_mode, t_inv]) == 0
+                if value.(m[:trans_cap_invest_b][trans_mode, t_inv]) == 0
                     @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
                 else
                     @test value.(m[:trans_cap_add][trans_mode, t_inv]) ⪆ 0
@@ -267,20 +267,20 @@ end
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
-                                            inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
                     end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
                                         ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]), 
-                                    inv_data.Trans_min_add[t] * value.(m[:trans_invest_b][trans_mode, t_inv])))
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
                     end
                 end
             end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_invest_b][trans_mode, t_inv]) == 0
+                if value.(m[:trans_cap_invest_b][trans_mode, t_inv]) == 0
                     @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
                 else
                     @test value.(m[:trans_cap_add][trans_mode, t_inv]) ⪆ 0
@@ -290,7 +290,7 @@ end
     end
     @testset "Investment costs" begin
         @test sum(value(m[:trans_cap_add][trans_mode, t_inv]) * inv_data.Capex_trans[t_inv] + 
-            inv_data.Capex_trans_offset[t_inv] * value(m[:trans_invest_b][trans_mode, t_inv]) ≈ 
+            inv_data.Capex_trans_offset[t_inv] * value(m[:trans_cap_invest_b][trans_mode, t_inv]) ≈ 
             value(m[:capex_trans][trans_mode, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, atol=TEST_ATOL) == length(𝒯ᴵⁿᵛ)
     end
 end
@@ -327,11 +327,11 @@ end
     # Test showing that the investments are as expected
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @testset "Invested capacity $(t_inv.sp)" begin
-            if value.(m[:trans_invest_b][trans_mode, t_inv]) == 0
+            if value.(m[:trans_cap_invest_b][trans_mode, t_inv]) == 0
                 @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
             else
                 @test value.(m[:trans_cap_add][trans_mode, t_inv]) ≈ 
-                    inv_data.Trans_increment[t_inv] * value.(m[:trans_invest_b][trans_mode, t_inv]) 
+                    inv_data.Trans_increment[t_inv] * value.(m[:trans_cap_invest_b][trans_mode, t_inv]) 
             end
         end
     end
