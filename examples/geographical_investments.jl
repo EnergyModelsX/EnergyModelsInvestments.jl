@@ -111,11 +111,11 @@ function generate_data()
     )
 
     # Create the TransmissionModes and the Transmission corridors
-    OverheadLine_50MW_12 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), 2, Dict("Investments" => inv_data_12))
-    OverheadLine_50MW_13 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), 2, Dict("Investments" => inv_data_13))
-    OverheadLine_50MW_23 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), 2, Dict("Investments" => inv_data_23))
-    OverheadLine_50MW_34 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), 2, Dict("Investments" => inv_data_34))
-    LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, FixedProfile(100.0), FixedProfile(0.05), 2, Dict("" => EMB.EmptyData()))
+    OverheadLine_50MW_12 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, Dict("Investments" => inv_data_12))
+    OverheadLine_50MW_13 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, Dict("Investments" => inv_data_13))
+    OverheadLine_50MW_23 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, Dict("Investments" => inv_data_23))
+    OverheadLine_50MW_34 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, Dict("Investments" => inv_data_34))
+    LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, FixedProfile(100.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, Dict("" => EMB.EmptyData()))
 
     transmission = [
         GEO.Transmission(

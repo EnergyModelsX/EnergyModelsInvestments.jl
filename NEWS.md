@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+Version 0.2.7 (2023-04-27)
+--------------------------
+* Requirements changed to ^0.5.0 for `EnergyModelsGeography`
+
 Version 0.2.6 (2023-04-24)
 --------------------------
  * Introduction of abstract type `InvestmentData` as subtype of `Data` to dispatch specifically on data related to investments
