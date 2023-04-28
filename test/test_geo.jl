@@ -48,7 +48,7 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
         inv_data = Dict("Investments" => inv_data)
     end
 
-    transmission_line = RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), 1, inv_data)
+    transmission_line = RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), FixedProfile(0.0), FixedProfile(0.0), 1, inv_data)
 
     transmissions = [
                     Transmission(areas[1], areas[2], [transmission_line]),
