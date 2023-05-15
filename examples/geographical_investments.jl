@@ -32,7 +32,7 @@ function generate_data()
     @info "Generate data coded dummy model for now (Investment Model)"
 
     # Retrieve the products
-    𝒫₀, 𝒫ᵉᵐ₀, products = GEO.get_resources()
+    𝒫₀, 𝒫ᵉᵐ₀, products = get_resources()
     NG = products[1]
     Power = products[3]
     CO2 = products[4]
