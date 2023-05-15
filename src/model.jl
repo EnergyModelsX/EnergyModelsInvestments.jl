@@ -46,6 +46,29 @@ end
 
 Create variables for the capital costs for the invesments in storage and 
 technology nodes.
+
+Additional variables for investment in capacity:
+    * `:capex_cap` - CAPEX costs for a technology
+    * `:cap_invest_b` - binary variable whether investments in capacity are happening
+    * `:cap_remove_b` - binary variable whether investments in capacity are removed
+    * `:cap_current` - installed capacity for storage in each strategic period
+    * `:cap_add` - added capacity
+    * `:cap_rem` - removed capacity
+    
+Additional variables for investment in storage:
+    * `:capex_stor` - CAPEX costs for increases in the capacity of a storage
+    * `:stor_cap_invest_b` - binary variable whether investments in capacity are happening
+    * `:stor_cap_remove_b` - binary variable whether investments in capacity are removed
+    * `:stor_cap_current` - installed capacity for storage in each strategic period
+    * `:stor_cap_add` - added capacity
+    * `:stor_cap_rem` - removed capacity
+  
+    * `:capex_rate` - CAPEX costs for increases in the rate of a storage
+    * `:stor_rate_invest_b` - binary variable whether investments in rate are happening
+    * `:stor_rate_remove_b` - binary variable whether investments in rate are removed
+    * `:stor_rate_current` - installed rate for storage in each strategic period
+    * `:stor_rate_add` - added rate
+    * `:stor_rate_rem` - removed rate
 """
 function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
     
@@ -55,142 +78,58 @@ function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    @variable(m,capex_cap[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
-    @variable(m,capex_stor[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
-    @variable(m,capex_rate[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
 
-end
-
-"""
-    EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
-
-Create variables to track how much of installed capacity is used in each node
-in terms of either `flow_in` or `flow_out` (depending on node `n ∈ 𝒩`) for all 
-time periods `t ∈ 𝒯`.
-
-Additional variables for investment in capacity:
-    * `:cap_invest_b` - binary variable whether investments in capacity are happening
-    * `:cap_remove_b` - binary variable whether investments in capacity are removed
-    * `:cap_current` - installed capacity for storage in each strategic period
-    * `:cap_add` - added capacity
-    * `:cap_rem` - removed capacity
-"""
-function EMB.variables_capacity(m, 𝒩, 𝒯, modeltype::InvestmentModel)
-    @debug "Create investment variables"
-
-    # Extract subsets for the variable declaration
-    𝒩ᶜᵃᵖ = EMB.node_not_sub(𝒩, Union{Storage, Availability})
-    𝒩ᴵⁿᵛ = has_investment(𝒩ᶜᵃᵖ)
-
-    # Original variables
-    @variable(m, cap_use[𝒩ᶜᵃᵖ, 𝒯] >= 0)    # Linking variables used in EMB
-    @variable(m, cap_inst[𝒩ᶜᵃᵖ, 𝒯] >= 0)    # Max capacity
-
-    # Add investment variables for each strategic period:
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-
+    # Add investment variables for reference nodes for each strategic period:
+    @variable(m, capex_cap[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
     @variable(m, cap_invest_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, cap_remove_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, cap_current[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)     # Installed capacity
     @variable(m, cap_add[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)        # Add capacity
     @variable(m, cap_rem[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)        # Remove capacity
     
-
-    # Additional constraints (e.g. for binary investments) are added per node depending on 
-    # investment mode on each node. (One alternative could be to build variables iteratively with 
-    # JuMPUtils.jl)
-    constraints_capacity_invest(m, 𝒩ᶜᵃᵖ, 𝒯, modeltype)
-end
-
-"""
-    EMB.variables_node(m, 𝒩ˢᵗᵒʳ::Vector{<:Storage}, 𝒯, modeltype::InvestmentModel)
-
-Declaration of different storage variables for `Storage` nodes `𝒩ˢᵗᵒʳ`. These variables are:
-  * `:stor_level` - storage level in each operational period
-  * `:stor_rate_use` - change of level in each operational period
-  * `:stor_cap_inst` - installed capacity for storage in each operational period
-  * `:stor_rate_inst` - installed rate for storage in each operational period
-
-Additional variables for investment in storage:
-  * `:stor_cap_invest_b` - binary variable whether investments in capacity are happening
-  * `:stor_cap_remove_b` - binary variable whether investments in capacity are removed
-  * `:stor_cap_current` - installed capacity for storage in each strategic period
-  * `:stor_cap_add` - added capacity
-  * `:stor_cap_rem` - removed capacity
-
-  * `:stor_rate_invest_b` - binary variable whether investments in rate are happening
-  * `:stor_rate_remove_b` - binary variable whether investments in rate are removed
-  * `:stor_rate_current` - installed rate for storage in each strategic period
-  * `:stor_rate_add` - added rate
-  * `:stor_rate_rem` - removed rate
-"""
-function EMB.variables_node(m, 𝒩ˢᵗᵒʳ::Vector{<:Storage}, 𝒯, modeltype::InvestmentModel)
-
-    # Original variables
-    @variable(m, stor_level[𝒩ˢᵗᵒʳ, 𝒯] >= 0)
-    @variable(m, stor_cap_inst[𝒩ˢᵗᵒʳ, 𝒯] >= 0)
-    @variable(m, stor_rate_use[𝒩ˢᵗᵒʳ, 𝒯] >= 0)
-    @variable(m, stor_rate_inst[𝒩ˢᵗᵒʳ, 𝒯] >= 0)
-
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    𝒩ˢᵗᵒʳᴵⁿᵛ = has_investment(𝒩ˢᵗᵒʳ)
-
     # Add storage specific investment variables for each strategic period:
+    @variable(m, capex_stor[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
     @variable(m, stor_cap_invest_b[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, stor_cap_remove_b[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, stor_cap_current[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)    # Installed capacity
     @variable(m, stor_cap_add[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)        # Add capacity
     @variable(m, stor_cap_rem[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)        # Remove capacity
 
+    @variable(m, capex_rate[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
     @variable(m, stor_rate_invest_b[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, stor_rate_remove_b[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
     @variable(m, stor_rate_current[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)   # Installed power/rate
     @variable(m, stor_rate_add[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)       # Add power
     @variable(m, stor_rate_rem[𝒩ˢᵗᵒʳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)       # Remove power
-
-    # Additional constraints (e.g. for binary investments) are added per node depending on 
-    # investment mode on each node. (One alternative could be to build variables iteratively with 
-    # JuMPUtils.jl)
-    constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype)
 end
 
 """
-    constraints_capacity_invest(m, 𝒩, 𝒯)
+    EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯, modeltype::InvestmentModel
+
 Set capacity-related constraints for nodes `𝒩` for investment time structure `𝒯`:
 * bounds
 * binary for BinaryInvestment
 * link capacity variables
 
 """
-function constraints_capacity_invest(m, 𝒩ᶜᵃᵖ, 𝒯, modeltype::InvestmentModel)
+function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure, modeltype::InvestmentModel)
 
     # Extraction of the required subsets
-    𝒩ᴵⁿᵛ = has_investment(𝒩ᶜᵃᵖ)
-    𝒩ⁿᵒᴵⁿᵛ = setdiff(𝒩ᶜᵃᵖ, 𝒩ᴵⁿᵛ)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    
-    # Constraints capex
-    for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ
-        set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
-    end 
-    
-    # Set investment properties based on investment mode of node `n`
-    for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ
-        set_investment_properties(n, m[:cap_invest_b][n, t_inv])  
-    end
 
-    # Link capacity usage to installed capacity 
-    for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ t_inv
-        @constraint(m, m[:cap_inst][n, t] == m[:cap_current][n, t_inv])
-    end
-    
-    for n ∈ 𝒩ⁿᵒᴵⁿᵛ, t ∈ 𝒯
-        @constraint(m, m[:cap_inst][n, t] == n.Cap[t])
-    end
-
-    # Capacity updating
-    for n ∈ 𝒩ᴵⁿᵛ
+    if has_investment(n)
         for t_inv ∈ 𝒯ᴵⁿᵛ
+            
+            # Constraints for the CAPEX calculation
+            set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
+
+            # Set investment properties based on investment mode of node `n`
+            set_investment_properties(n, m[:cap_invest_b][n, t_inv])  
+            
+            # Link capacity usage to installed capacity 
+            @constraint(m, [t ∈ t_inv], m[:cap_inst][n, t] == m[:cap_current][n, t_inv])
+
+            # Capacity updating
             @constraint(m, m[:cap_current][n, t_inv] <=
                                 n.Data["Investments"].Cap_max_inst[t_inv])
             if TS.isfirst(t_inv)
@@ -204,48 +143,37 @@ function constraints_capacity_invest(m, 𝒩ᶜᵃᵖ, 𝒯, modeltype::Investme
             end
         end
         set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
+
+    else
+        @constraint(m, [t ∈ 𝒯], m[:cap_inst][n, t] == n.Cap[t])
     end
 end
 
 """
-    constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯)
+    constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::InvestmentModel)
 Set storage-related constraints for nodes `𝒩ˢᵗᵒʳ` for investment time structure `𝒯`:
 * bounds
 * binary for BinaryInvestment
 * link storage variables
 
 """
-function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype::InvestmentModel)
-    
-    # Extraction of the required subsets
-    𝒩ᴵⁿᵛ = has_investment(𝒩ˢᵗᵒʳ)
-    𝒩ⁿᵒᴵⁿᵛ = setdiff(𝒩ˢᵗᵒʳ, 𝒩ᴵⁿᵛ)
+function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::InvestmentModel)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    # Constraints capex
-    for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ
-        set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
-    end 
-    
-    # Set investment properties based on investment mode of node n
-    for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ
-        set_investment_properties(n, m[:stor_cap_invest_b][n, t_inv])  
-        set_investment_properties(n, m[:stor_rate_invest_b][n, t_inv]) 
-    end
-
-    # Link capacity usage to installed capacity 
-    for n ∈ 𝒩ᴵⁿᵛ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ t_inv
-        @constraint(m, m[:stor_cap_inst][n, t] == m[:stor_cap_current][n,t_inv])
-        @constraint(m, m[:stor_rate_inst][n, t] == m[:stor_rate_current][n,t_inv])
-    end
-    for n ∈ 𝒩ⁿᵒᴵⁿᵛ, t ∈ 𝒯
-        @constraint(m, m[:stor_cap_inst][n, t] == n.Stor_cap[t])
-        @constraint(m, m[:stor_rate_inst][n, t] == n.Rate_cap[t])
-    end
-
-    # Capacity updating
-    for n ∈ 𝒩ᴵⁿᵛ
+    if has_investment(n)
         for t_inv ∈ 𝒯ᴵⁿᵛ
+            # Constraints for the CAPEX calculation
+            set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
+
+            # Set investment properties based on investment mode of node n
+            set_investment_properties(n, m[:stor_cap_invest_b][n, t_inv])
+            set_investment_properties(n, m[:stor_rate_invest_b][n, t_inv])
+
+            # Link capacity usage to installed capacity
+            @constraint(m, [t ∈ t_inv], m[:stor_cap_inst][n, t] == m[:stor_cap_current][n,t_inv])
+            @constraint(m, [t ∈ t_inv], m[:stor_rate_inst][n, t] == m[:stor_rate_current][n,t_inv])
+
+            # Capacity updating
             @constraint(m, m[:stor_cap_current][n, t_inv] <=
                                 n.Data["Investments"].Stor_max_inst[t_inv])
             @constraint(m, m[:stor_rate_current][n, t_inv] <=
@@ -267,9 +195,11 @@ function constraints_storage_invest(m, 𝒩ˢᵗᵒʳ, 𝒯, modeltype::Investme
                     m[:stor_rate_current][n, previous(t_inv,𝒯)]
                     + m[:stor_rate_add][n, t_inv] - m[:stor_rate_rem][n, previous(t_inv,𝒯)])
             end
-
         end
         set_storage_installation(m, n, 𝒯ᴵⁿᵛ)
+    else
+        @constraint(m, [t ∈ 𝒯], m[:stor_cap_inst][n, t] == n.Stor_cap[t])
+        @constraint(m, [t ∈ 𝒯], m[:stor_rate_inst][n, t] == n.Rate_cap[t])
     end
 end
 

@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+Version 0.2.8 (2023-05-15)
+--------------------------
+ * Fixed a bug that could lead to method ambiguity errors when a subtype of `Storage` required additional variables. This solution results in significant changes regarding where and how variables and constraints are declared.
+
 Version 0.2.7 (2023-04-27)
 --------------------------
 * Requirements changed to ^0.5.0 for `EnergyModelsGeography`
