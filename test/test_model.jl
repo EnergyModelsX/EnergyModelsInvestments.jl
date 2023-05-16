@@ -36,7 +36,7 @@ function small_graph(;
     if isnothing(source)
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
                                FixedProfile(5), Dict(Power => 1),
-                               Dict("Investments"=>investment_data_source))
+                               [investment_data_source])
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", demand_profile, 
@@ -107,11 +107,12 @@ end
         sink   = case[:nodes][3]
         𝒯    = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        inv_data = IM.investment_data(source)
 
         @testset "cap_inst" begin
             # Check that cap_inst is less than node.data.Cap_max_inst at all times.
             @test sum(value.(m[:cap_inst][source, t]) <= 
-                        source.Data["Investments"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
+                        inv_data.Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
@@ -125,7 +126,7 @@ end
                         >= sink.Cap[t] for t ∈ 𝒯) == length(𝒯)
         end
         @test sum(value.(m[:cap_add][source, t_inv]) >= 
-                    source.Data["Investments"].Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+                    inv_data.Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 
     end
 
@@ -149,7 +150,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1),
-                                Dict("Investments"=>investment_data_source))
+                                [investment_data_source])
         
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data)
@@ -190,7 +191,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1),
-                                Dict("Investments"=>investment_data_source))
+                                [investment_data_source])
         
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data, T=𝒯)
@@ -225,7 +226,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1),
-                                Dict("Investments"=>investment_data_source))
+                                [investment_data_source])
         
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data)

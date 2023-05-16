@@ -1,5 +1,9 @@
 Release Notes
 =============
+Version 0.2.9 (2023-05-xx)
+--------------------------
+ * Adjustment to changes in `EnergyModelsBase` v0.3.4 and `EnergyModelsGeography` v 0.5.2
+ * The new filter method for data can be used as example for subsequent usage of `Array{Data}`
 
 Version 0.2.8 (2023-05-15)
 --------------------------

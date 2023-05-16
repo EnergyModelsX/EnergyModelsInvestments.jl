@@ -20,7 +20,7 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
                     FixedProfile(10),
                     FixedProfile(5),
                     Dict(Power => 1),
-                    Dict("" => EmptyData())
+                    []
                 )
     end
 
@@ -43,9 +43,9 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
 
     # Check if investments are included
     if isnothing(inv_data)
-        inv_data = Dict("" => EMB.EmptyData())
+        inv_data = []
     else
-        inv_data = Dict("Investments" => inv_data)
+        inv_data = [inv_data]
     end
 
     transmission_line = RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), FixedProfile(0.0), FixedProfile(0.0), 1, inv_data)

@@ -8,8 +8,7 @@ For a given `TransmissionMode`, checks that it contains ithe required investment
 function has_investment(cm::GEO.TransmissionMode)
     (
         hasproperty(cm, :Data) && 
-        haskey(cm.Data, "Investments") && 
-        typeof(cm.Data["Investments"]) == TransInvData
+        !isempty(filter(data -> typeof(data) <: InvestmentData, cm.Data))
     )
 end
 
@@ -39,10 +38,10 @@ get_start_cap(cm::GEO.TransmissionMode, t, ::Nothing) = cm.Trans_cap[t]
 
 Returns the maximum added capacity in the investment period `t_inv`.
 """
-max_add(n::GEO.TransmissionMode, t_inv) = n.Data["Investments"].Trans_max_add[t_inv]
+max_add(cm::GEO.TransmissionMode, t_inv) = investment_data(cm).Trans_max_add[t_inv]
 """
     min_add(n::GEO.TransmissionMode, t_inv)
 
 Returns the minimum added capacity in the investment period `t_inv`.
 """
-min_add(n::GEO.TransmissionMode, t_inv) = n.Data["Investments"].Trans_min_add[t_inv]
+min_add(cm::GEO.TransmissionMode, t_inv) = investment_data(cm).Trans_min_add[t_inv]

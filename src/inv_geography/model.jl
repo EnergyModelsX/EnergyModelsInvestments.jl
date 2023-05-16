@@ -37,8 +37,8 @@ Create variables for the capital costs for the investments in transmission.
 """
 function GEO.variables_trans_capex(m, 𝒯, ℳ, modeltype::InvestmentModel)
 
-    ℳᴵⁿᵛ   = has_investment(ℳ)
-    𝒯ᴵⁿᵛ    = strategic_periods(𝒯)
+    ℳᴵⁿᵛ = has_investment(ℳ)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     @variable(m, capex_trans[ℳᴵⁿᵛ,  𝒯ᴵⁿᵛ] >= 0)
 end
@@ -116,10 +116,11 @@ function constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::Investment
 
     # Transmission capacity updating
     for cm ∈ 𝒞ℳᴵⁿᵛ
+        inv_data = investment_data(cm)
         for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap = get_start_cap(cm, t_inv, cm.Data["Investments"].Trans_start)
+            start_cap = get_start_cap(cm, t_inv, inv_data.Trans_start)
             @constraint(m, m[:trans_cap_current][cm, t_inv] <=
-                                cm.Data["Investments"].Trans_max_inst[t_inv])
+                                inv_data.Trans_max_inst[t_inv])
             @constraint(m, m[:trans_cap_current][cm, t_inv] ==
                 (TS.isfirst(t_inv) ? start_cap : m[:trans_cap_current][cm, previous(t_inv,𝒯)])
                 + m[:trans_cap_add][cm, t_inv] 
@@ -139,11 +140,15 @@ Add constraints related to capacity installation depending on investment mode of
 set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ) = 
     set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode(cm))
 function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode)
+    # Extract the investment data
+    inv_data = investment_data(cm)
+
+    # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:trans_cap_add][cm, t_inv] <= 
-                            cm.Data["Investments"].Trans_max_add[t_inv])
+                            inv_data.Trans_max_add[t_inv])
         @constraint(m, m[:trans_cap_add][cm, t_inv] >=
-                            cm.Data["Investments"].Trans_min_add[t_inv])
+                            inv_data.Trans_min_add[t_inv])
         @constraint(m, m[:trans_cap_rem][cm, t_inv] == 0)
     end
 end
@@ -156,25 +161,33 @@ function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::Binar
 end
 
 function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::DiscreteInvestment)
+    # Extract the investment data
+    inv_data = investment_data(cm)
+
+    # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties( cm, m[:trans_cap_remove_b][cm, t_inv])
         @constraint(m, m[:trans_cap_add][cm, t_inv] == 
-                            cm.Data["Investments"].Trans_increment[t_inv]
+                            inv_data.Trans_increment[t_inv]
                             * m[:trans_cap_invest_b][cm, t_inv])
         @constraint(m, m[:trans_cap_rem][cm, t_inv] == 
-                            cm.Data["Investments"].Trans_increment[t_inv]
+                            inv_data.Trans_increment[t_inv]
                             * m[:trans_cap_remove_b][cm, t_inv])
     end
 end
 
 function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode::SemiContiInvestment)
+    # Extract the investment data
+    inv_data = investment_data(cm)
+
+    # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Disjunctive constraints when investing
         @constraint(m, m[:trans_cap_add][cm, t_inv] <=
-                            cm.Data["Investments"].Trans_max_add[t_inv]
+                            inv_data.Trans_max_add[t_inv]
                             * m[:trans_cap_invest_b][cm, t_inv]) 
         @constraint(m, m[:trans_cap_add][cm, t_inv] >=
-                            cm.Data["Investments"].Trans_min_add[t_inv]
+                            inv_data.Trans_min_add[t_inv]
                             * m[:trans_cap_invest_b][cm, t_inv]) 
         @constraint(m, m[:trans_cap_rem][cm, t_inv] == 0)
     end
@@ -201,13 +214,21 @@ given offset
 set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype) = set_capacity_cost(m, cm, 𝒯, t_inv, modeltype, investment_mode(cm))
 
 function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, investment_mode::Investment)
+    # Extract the investment data
+    inv_data = investment_data(cm)
+
+    # Set the cost contribution
     @constraint(m, m[:capex_trans][cm, t_inv] ==
-                        cm.Data["Investments"].Capex_trans[t_inv]
+                        inv_data.Capex_trans[t_inv]
                         * m[:trans_cap_add][cm, t_inv])
 end
 
 function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, investment_mode::SemiContinuousOffsetInvestment)
+    # Extract the investment data
+    inv_data = investment_data(cm)
+
+    # Set the cost contribution
     @constraint(m, m[:capex_trans][cm, t_inv] ==
-                        cm.Data["Investments"].Capex_trans[t_inv] * m[:trans_cap_add][cm, t_inv] + 
-                        cm.Data["Investments"].Capex_trans_offset[t_inv] * m[:trans_cap_invest_b][cm, t_inv])
+                        inv_data.Capex_trans[t_inv] * m[:trans_cap_add][cm, t_inv] + 
+                        inv_data.Capex_trans_offset[t_inv] * m[:trans_cap_invest_b][cm, t_inv])
 end

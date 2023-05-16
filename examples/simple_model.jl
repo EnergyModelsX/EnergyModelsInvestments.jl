@@ -48,7 +48,7 @@ function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
         FixedProfile(10),
         FixedProfile(5),
         Dict(Power => 1),
-        Dict("Investments" => investment_data_source),
+        [investment_data_source],
     )
 
     sink = EMB.RefSink(
