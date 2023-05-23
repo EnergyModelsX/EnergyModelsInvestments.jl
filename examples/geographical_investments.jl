@@ -80,6 +80,7 @@ function generate_data()
         Trans_max_add = FixedProfile(100),
         Trans_min_add = FixedProfile(0),
         Inv_mode = BinaryInvestment(),
+        Trans_start = 0,
     )
 
     inv_data_13 = IM.TransInvData(
