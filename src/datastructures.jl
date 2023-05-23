@@ -187,7 +187,7 @@ Base.@kwdef struct TransInvData <: InvestmentData
     Trans_max_add::TimeProfile
     Trans_min_add::TimeProfile
     Inv_mode::EnergyModelsInvestments.Investment = ContinuousInvestment()
-    Trans_start::Union{Real, Nothing} = nothing
+    Trans_start::Union{Real, Nothing} = 0 # Nothing caused error in one of the examples
     Trans_increment::TimeProfile = FixedProfile(0)
     Capex_trans_offset::TimeProfile = FixedProfile(0)
 end
