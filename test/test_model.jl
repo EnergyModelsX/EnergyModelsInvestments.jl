@@ -19,12 +19,12 @@ function small_graph(;
     𝒫₀ = Dict(k => 0 for k ∈ products)
 
     if isnothing(inv_data)
-        investment_data_source = IM.extra_inv_data(
-            Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
+        investment_data_source = EMI.InvData(
+            Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = FixedProfile(20),         # max_add [kW]
             Cap_min_add     = FixedProfile(5),          # min_add [kW]
-            Inv_mode        = IM.ContinuousInvestment() # investment mode
+            Inv_mode        = EMI.ContinuousInvestment() # investment mode
         )
         demand_profile = FixedProfile(20)
     else
@@ -36,7 +36,7 @@ function small_graph(;
     if isnothing(source)
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
                                FixedProfile(5), Dict(Power => 1),
-                               Dict("Investments"=>investment_data_source))
+                               [investment_data_source])
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", demand_profile, 
@@ -107,11 +107,12 @@ end
         sink   = case[:nodes][3]
         𝒯    = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        inv_data = EMI.investment_data(source)
 
         @testset "cap_inst" begin
             # Check that cap_inst is less than node.data.Cap_max_inst at all times.
             @test sum(value.(m[:cap_inst][source, t]) <= 
-                        source.Data["Investments"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
+                        inv_data.Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
@@ -125,20 +126,20 @@ end
                         >= sink.Cap[t] for t ∈ 𝒯) == length(𝒯)
         end
         @test sum(value.(m[:cap_add][source, t_inv]) >= 
-                    source.Data["Investments"].Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+                    inv_data.Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 
     end
 
     @testset "Investment example - small_graph Discrete" begin
         
         # Variation in the test structure
-        investment_data_source = IM.extra_inv_data(
-            Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
+        investment_data_source = EMI.InvData(
+            Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = FixedProfile(20),         # max_add [kW]
             Cap_min_add     = FixedProfile(5),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
-            Inv_mode        = IM.BinaryInvestment()   # investment mode
+            Inv_mode        = EMI.BinaryInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 20, 0])
         inv_data = Dict(
@@ -149,7 +150,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1),
-                                Dict("Investments"=>investment_data_source))
+                                [investment_data_source])
         
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data)
@@ -173,13 +174,13 @@ end
         # Variation in the test structure
         𝒯 = UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1))
         sp1 = strategic_period(𝒯, 2)
-        investment_data_source = IM.extra_inv_data(
-            Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
+        investment_data_source = EMI.InvData(
+            Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = StrategicFixedProfile([0, 30, 0, 0]), # max_add [kW]
             Cap_min_add     = FixedProfile(0),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
-            Inv_mode        = IM.ContinuousInvestment()   # investment mode
+            Inv_mode        = EMI.ContinuousInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 25, 30])
         inv_data = Dict(
@@ -190,7 +191,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1),
-                                Dict("Investments"=>investment_data_source))
+                                [investment_data_source])
         
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data, T=𝒯)
@@ -208,13 +209,13 @@ end
     @testset "Investment example - small_graph Continuous fixed manually" begin
         
         # Variation in the test structure
-        investment_data_source = IM.extra_inv_data(
-            Capex_Cap       = FixedProfile(1000),       # capex [€/kW]
+        investment_data_source = EMI.InvData(
+            Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = StrategicFixedProfile([0, 30, 0, 0]),         # max_add [kW]
             Cap_min_add     = StrategicFixedProfile([0, 5, 0, 0]),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
-            Inv_mode        = IM.ContinuousInvestment()   # investment mode
+            Inv_mode        = EMI.ContinuousInvestment()   # investment mode
         )
         demand_profile = StrategicFixedProfile([0, 20, 25, 30])
         inv_data = Dict(
@@ -225,7 +226,7 @@ end
         
         source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
                                 FixedProfile(5), Dict(Power => 1),
-                                Dict("Investments"=>investment_data_source))
+                                [investment_data_source])
         
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data)

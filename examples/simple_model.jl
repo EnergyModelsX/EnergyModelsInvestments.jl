@@ -33,8 +33,8 @@ function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
     𝒫ᵉᵐ₀ = Dict(k => 0.0 for k ∈ products if typeof(k) == ResourceEmit{Float64})
     𝒫ᵉᵐ₀[CO2] = 0.0
 
-    investment_data_source = IM.extra_inv_data(
-        Capex_Cap = FixedProfile(1000), # capex [€/kW]
+    investment_data_source = IM.InvData(
+        Capex_cap = FixedProfile(1000), # capex [€/kW]
         Cap_max_inst = FixedProfile(30), #  max installed capacity [kW]
         Cap_max_add = FixedProfile(30), # max_add [kW]
         Cap_min_add = FixedProfile(0), # min_add [kW]
@@ -48,7 +48,7 @@ function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
         FixedProfile(10),
         FixedProfile(5),
         Dict(Power => 1),
-        Dict("Investments" => investment_data_source),
+        [investment_data_source],
     )
 
     sink = EMB.RefSink(

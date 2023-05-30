@@ -31,7 +31,7 @@ end
     scale_year   = UniformTwoLevel(1, 1, 1, uniform_day)
     scale_2years = UniformTwoLevel(0, 1, 2, uniform_day)
 
-    @test isapprox(IM.discount_mult_avg(r, scale_2years, first(strategic_periods(scale_2years))),
+    @test isapprox(EMI.discount_mult_avg(r, scale_2years, first(strategic_periods(scale_2years))),
                       1/(1+r), atol = 0.001)
 
     for n_periods ∈ (1, 10, 8760)

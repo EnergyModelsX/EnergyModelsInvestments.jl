@@ -11,17 +11,17 @@ function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount
     # Creation of a dictionary with entries of 0. for all resources
     𝒫₀ = Dict(k  => 0 for k ∈ products)
     if isnothing(source)
-        investment_data_source = IM.extra_inv_data(
-            Capex_Cap=FixedProfile(1000), # capex [€/kW]
+        investment_data_source = EMI.InvData(
+            Capex_cap=FixedProfile(1000), # capex [€/kW]
             Cap_max_inst=FixedProfile(30), #  max installed capacity [kW]
             Cap_max_add=FixedProfile(30), # max_add [kW]
             Cap_min_add=FixedProfile(0), # min_add [kW]
-            #IM.ContinuousInvestment() # investment mode
+            #EMI.ContinuousInvestment() # investment mode
             Life_mode= Lifemode,
             Lifetime=L,
         )
         source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
-            FixedProfile(5), Dict(Power => 1), Dict("Investments"=>investment_data_source))
+            FixedProfile(5), Dict(Power => 1), [investment_data_source])
     end
     if isnothing(sink)
         sink = EMB.RefSink("-snk", FixedProfile(20), 
@@ -66,7 +66,7 @@ resulting_obj = Dict()
         lifetime = 15
         for sp_dur ∈ [2,4,6,10,15,20]
             push!(resulting_obj, "$(sp_dur) years" => [])
-            for Lifemode ∈ [IM.UnlimitedLife(), IM.StudyLife(), IM.PeriodLife(),IM.RollingLife()]
+            for Lifemode ∈ [EMI.UnlimitedLife(), EMI.StudyLife(), EMI.PeriodLife(),EMI.RollingLife()]
                 @debug "~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~"
                 case, modeltype = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
                 m                = optimize(case, modeltype)
@@ -85,7 +85,7 @@ resulting_obj = Dict()
 
                 @testset "cap_inst" begin
                     # Check that cap_inst is less than node.data.Cap_max_inst at all times.
-                    @test sum(value.(m[:cap_inst][source, t]) <= source.Data["Investments"].Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
+                    @test sum(value.(m[:cap_inst][source, t]) <= EMI.investment_data(source).Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
                     for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                         # Check the initial installed capacity is correct set.

@@ -20,7 +20,7 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
                     FixedProfile(10),
                     FixedProfile(5),
                     Dict(Power => 1),
-                    Dict("" => EmptyData())
+                    []
                 )
     end
 
@@ -43,9 +43,9 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
 
     # Check if investments are included
     if isnothing(inv_data)
-        inv_data = Dict("" => EMB.EmptyData())
+        inv_data = []
     else
-        inv_data = Dict("Investments" => inv_data)
+        inv_data = [inv_data]
     end
 
     transmission_line = RefStatic("transline", Power, FixedProfile(10), FixedProfile(0.1), FixedProfile(0.0), FixedProfile(0.0), 1, inv_data)
@@ -83,7 +83,7 @@ end
 Optimize the `case`.
 """
 function optimize(case, modeltype)
-    m = GEO.create_model(case, modeltype)
+    m = EMG.create_model(case, modeltype)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m
@@ -122,12 +122,12 @@ end
 @testset "Unidirectional transmission with ContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = IM.TransInvData(
+    inv_data = EMI.TransInvData(
                 Capex_trans     = FixedProfile(10),     # capex [€/kW]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
                 Trans_min_add   = FixedProfile(0),      # min_add [kW]
-                Inv_mode        = IM.ContinuousInvestment(),
+                Inv_mode        = EMI.ContinuousInvestment(),
                 Trans_increment = FixedProfile(10),
                 Trans_start     = 0,
             )
@@ -172,12 +172,12 @@ end
 @testset "Unidirectional transmission with SemiContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = IM.TransInvData(
+    inv_data = EMI.TransInvData(
                 Capex_trans     = FixedProfile(10),     # capex [€/kW]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
                 Trans_min_add   = FixedProfile(10),     # min_add [kW]
-                Inv_mode        = IM.SemiContinuousInvestment(),
+                Inv_mode        = EMI.SemiContinuousInvestment(),
                 Trans_increment = FixedProfile(10),
                 Trans_start     = 0,
             )
@@ -233,13 +233,13 @@ end
 @testset "Unidirectional transmission with SemiContinuousOffsetInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = IM.TransInvData(
+    inv_data = EMI.TransInvData(
                 Capex_trans     = FixedProfile(1),     # capex [€/kW]
                 Capex_trans_offset = FixedProfile(10),    # capex [€]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
                 Trans_min_add   = FixedProfile(10),     # min_add [kW]
-                Inv_mode        = IM.SemiContinuousOffsetInvestment(),
+                Inv_mode        = EMI.SemiContinuousOffsetInvestment(),
                 Trans_increment = FixedProfile(10),
                 Trans_start     = 0,
             )
@@ -299,12 +299,12 @@ end
 @testset "Unidirectional transmission with DiscreteInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = IM.TransInvData(
+    inv_data = EMI.TransInvData(
                 Capex_trans     = FixedProfile(10),     # capex [€/kW]
                 Trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
                 Trans_max_add   = FixedProfile(30),     # max_add [kW]
                 Trans_min_add   = FixedProfile(10),     # min_add [kW]
-                Inv_mode        = IM.DiscreteInvestment(),
+                Inv_mode        = EMI.DiscreteInvestment(),
                 Trans_increment = FixedProfile(5),
                 Trans_start     = 5,
             )

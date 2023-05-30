@@ -1,5 +1,10 @@
 Release Notes
 =============
+Version 0.3.0 (2023-05-xx)
+--------------------------
+ * Adjustment to changes in `EnergyModelsBase` v0.4.0 and `EnergyModelsGeography` v 0.6.0 
+ * The new filter method for data can be used as example for subsequent usage of `Array{Data}`
+ * Migrate from Requires.jl to support for weak dependencies in julia v1.9.
 
 Version 0.2.8 (2023-05-15)
 --------------------------

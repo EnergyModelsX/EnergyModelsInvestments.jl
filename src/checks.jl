@@ -6,8 +6,11 @@ Performs various checks on investment data:
  - Existing capacity can not be larger than max installed capacity in the beginning.
 """
 function check_investment_data(n, 𝒯)
-    !haskey(n.Data, "Investments") && return
-    inv_data = n.Data["Investments"]
+    !has_investment(n) && return
+    inv_data = filter(data -> typeof(data) <: InvestmentData, n.Data)
+
+    @assert_or_log length(inv_data) <= 1 "Only one InvestmentData can be added to each node"
+    inv_data = inv_data[1]
  
     @assert_or_log sum(inv_data.Cap_min_add[t] ≤ inv_data.Cap_max_add[t] for t ∈ 𝒯) == length(𝒯) "min_add has to be less than max_add in investments data (Node.Data)."
 
@@ -37,9 +40,9 @@ end
 function EMB.check_node(n::Storage, 𝒯, modeltype::InvestmentModel)
 
     if has_investment(n)
-        inv_data = n.Data["Investments"]
+        inv_data = investment_data(n)
 
-        @assert_or_log typeof(inv_data) == extra_inv_data_storage "The investment data for a Storage must be of type `extra_inv_data_storage`."
+        @assert_or_log typeof(inv_data) == InvDataStorage "The investment data for a Storage must be of type `InvDataStorage`."
     
         @assert_or_log sum(inv_data.Stor_min_add[t] ≤ inv_data.Stor_max_add[t] for t ∈ 𝒯) == length(𝒯) "Stor_min_add has to be less than Stor_max_add in investments data (Node.Data)."
         @assert_or_log sum(inv_data.Rate_min_add[t] ≤ inv_data.Rate_max_add[t] for t ∈ 𝒯) == length(𝒯) "Rate_min_add has to be less than Rate_max_add in investments data (Node.Data)."

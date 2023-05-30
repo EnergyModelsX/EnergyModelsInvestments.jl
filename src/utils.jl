@@ -1,3 +1,11 @@
+
+"""
+    investment_data(type)
+
+Return the investment data of the type `type`.
+"""
+investment_data(type) = filter(data -> typeof(data) <: InvestmentData, type.Data)[1]
+
 """
     has_investment(n::EMB.Node)
 
@@ -6,8 +14,7 @@ For a given `Node`, checks that it contains the required investment data.
 function has_investment(n::EMB.Node)
     (
         hasproperty(n, :Data) && 
-        haskey(n.Data,"Investments") && 
-        typeof(n.Data["Investments"]) <: InvestmentData
+        !isempty(filter(data -> typeof(data) <: InvestmentData, n.Data))
     )
 end
 
@@ -28,7 +35,7 @@ end
 
 Return the investment mode of the type `type`. By default, all investments are continuous.
 """
-investment_mode(type) = type.Data["Investments"].Inv_mode
+investment_mode(type) = investment_data(type).Inv_mode
 
 
 """
@@ -36,7 +43,7 @@ investment_mode(type) = type.Data["Investments"].Inv_mode
 
 Return the lifetime mode of the type `type`. By default, all investments are unlimited.
 """
-lifetime_mode(type) = type.Data["Investments"].Life_mode
+lifetime_mode(type) = investment_data(type).Life_mode
 
 
 """
@@ -59,10 +66,10 @@ get_start_rate_storage(n::Storage, t, stcap::Nothing) = n.Rate_cap[t]
 
 Returns the maximum added capacity in the investment period `t_inv`.
 """
-max_add(n::EMB.Node, t_inv) = n.Data["Investments"].Cap_max_add[t_inv]
+max_add(n::EMB.Node, t_inv) = investment_data(n).Cap_max_add[t_inv]
 """
     min_add(n::EMB.Node, t_inv)
 
 Returns the minimum added capacity in the investment period `t_inv`.
 """
-min_add(n::EMB.Node, t_inv) = n.Data["Investments"].Cap_min_add[t_inv]
+min_add(n::EMB.Node, t_inv) = investment_data(n).Cap_min_add[t_inv]
