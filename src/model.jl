@@ -231,13 +231,13 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode)
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::BinaryInvestment)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:cap_current][n, t_inv] == n.Cap[t_inv] * m[:cap_invest_b][n, t_inv]) 
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::DiscreteInvestment)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     # Extract the investment data
     inv_data = investment_data(n)
 
@@ -253,7 +253,7 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::Discret
     end
 end
 
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::SemiContiInvestment)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
     # Extract the investment data
     inv_data = investment_data(n)
 
@@ -316,7 +316,7 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode)
     end
 end
 
-function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode::BinaryInvestment)
+function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:stor_cap_current][n, t_inv] <= 
                             n.Stor_cap[t_inv] * m[:stor_cap_invest_b][n, t_inv])
@@ -326,7 +326,7 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode:
     end
 end
 
-function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::DiscreteInvestment)
+function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     # Extract the investment data
     inv_data = investment_data(n)
 
@@ -350,7 +350,7 @@ function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode::Discrete
     end
 end
 
-function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode::SemiContiInvestment)
+function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
     # Extract the investment data
     inv_data = investment_data(n)
 
@@ -372,7 +372,7 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode:
     end
 end
 
-function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, investment_mode::FixedInvestment)
+function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::FixedInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:stor_cap_current][n, t_inv] == 
                             n.Stor_cap * m[:stor_cap_invest_b][n, t_inv])
@@ -390,23 +390,23 @@ Set investment properties for variable `var` for type `n`, e.g., set to binary f
 """
 set_investment_properties(n, var) = 
     set_investment_properties(var, investment_mode(n))
-function set_investment_properties(var, investment_mode::Investment)
+function set_investment_properties(var, ::Investment)
     JuMP.set_lower_bound(var, 0)
 end
 
-function set_investment_properties(var, investment_mode::BinaryInvestment)
+function set_investment_properties(var, ::BinaryInvestment)
     JuMP.set_binary(var)
 end
 
-function set_investment_properties(var, investment_mode::SemiContiInvestment)
+function set_investment_properties(var, ::SemiContiInvestment)
     JuMP.set_binary(var)
 end
 
-function set_investment_properties(var, investment_mode::FixedInvestment) # TO DO
+function set_investment_properties(var, ::FixedInvestment) # TO DO
     JuMP.fix(var, 1)
 end
 
-function set_investment_properties(var, investment_mode::DiscreteInvestment) # TO DO
+function set_investment_properties(var, ::DiscreteInvestment) # TO DO
     JuMP.set_integer(var)
     JuMP.set_lower_bound(var,0)
 end
@@ -426,7 +426,7 @@ set_capacity_cost(m, n, 𝒯, t_inv, modeltype) = set_capacity_cost(m, n, 𝒯, 
 function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::UnlimitedLife)
     # The capacity has an unlimited lifetime, one investment at the beginning of t_inv
     data = investment_data(n)
-    @constraint(m, m[:capex_cap][n, t_inv] == data.Capex_Cap[t_inv] * m[:cap_add][n, t_inv])
+    @constraint(m, m[:capex_cap][n, t_inv] == data.Capex_cap[t_inv] * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == 0)
 end
 
@@ -434,7 +434,7 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::EnergyModel, ::StudyLif
     # The capacity is limited to the end of the study. Reinvestments are included
     # No capacity removed as there are reinvestments according to the study length
     data = investment_data(n)
-    capex = data.Capex_Cap[t_inv] * set_capex_value(TS.remaining_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
+    capex = data.Capex_cap[t_inv] * set_capex_value(TS.remaining_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
     @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == 0)
 end
@@ -443,7 +443,7 @@ function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::PeriodL
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
     data = investment_data(n)
-    capex = data.Capex_Cap[t_inv] * set_capex_value(TS.duration_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
+    capex = data.Capex_cap[t_inv] * set_capex_value(TS.duration_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
     @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
 end
@@ -459,7 +459,7 @@ function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::Rolling
 
     # If Lifetime is equal to sp duration we only need to invest once and there is no rest value
     elseif Lifetime == TS.duration_years(𝒯, t_inv)
-        capex = data.Capex_Cap[t_inv]
+        capex = data.Capex_cap[t_inv]
         @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
         @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
 
@@ -483,7 +483,7 @@ function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::Rolling
         end
 
         # Calculation of cost and rest value
-        capex = data.Capex_Cap[t_inv] - ((remaining_lifetime/Lifetime) * data.Capex_Cap[t_inv] * (1+r)^(-(Lifetime - remaining_lifetime)))
+        capex = data.Capex_cap[t_inv] - ((remaining_lifetime/Lifetime) * data.Capex_cap[t_inv] * (1+r)^(-(Lifetime - remaining_lifetime)))
         @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
 
         # Capacity to be removed when remaining_lifetime < duration_years, i.e., in ante_sp

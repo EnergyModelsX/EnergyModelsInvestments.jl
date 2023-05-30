@@ -24,7 +24,7 @@ include("checks.jl")
 export InvestmentModel
 export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment, 
     FixedInvestment, ContinuousFixedInvestment
-export extra_inv_data, extra_inv_data_storage
+export InvData, InvDataStorage
 
 export obj_weight, obj_weight_inv, obj_weight_inv_end
 export discount_mult_avg

@@ -8,8 +8,8 @@ using EnergyModelsInvestments
 using TimeStructures
 
 const EMB = EnergyModelsBase
-const GEO = EnergyModelsGeography
-const IM = EnergyModelsInvestments
+const EMG = EnergyModelsGeography
+const EMI = EnergyModelsInvestments
 const TS = TimeStructures
 
 const TEST_ATOL = 1e-6

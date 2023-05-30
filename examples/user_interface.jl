@@ -72,8 +72,8 @@ function generate_data()
             FixedProfile(30),
             FixedProfile(100),
             Dict(NG => 1),
-            [extra_inv_data(
-                Capex_Cap = FixedProfile(1000),
+            [InvData(
+                Capex_cap = FixedProfile(1000),
                 Cap_max_inst = FixedProfile(200),
                 Cap_max_add = FixedProfile(200),
                 Cap_min_add = FixedProfile(10),
@@ -89,8 +89,8 @@ function generate_data()
             FixedProfile(9),
             FixedProfile(100),
             Dict(Coal => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(1000),
+            [InvData(
+                    Capex_cap = FixedProfile(1000),
                     Cap_max_inst = FixedProfile(200),
                     Cap_max_add = FixedProfile(200),
                     Cap_min_add = FixedProfile(0),
@@ -107,8 +107,8 @@ function generate_data()
             Dict(Power => 1, CO2 => 0),
             𝒫ᵉᵐ₀,
             0.9,
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(600),
+            [InvData(
+                    Capex_cap = FixedProfile(600),
                     Cap_max_inst = FixedProfile(25),
                     Cap_max_add = FixedProfile(25),
                     Cap_min_add = FixedProfile(0),
@@ -123,8 +123,8 @@ function generate_data()
             FixedProfile(100),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(800),
+            [InvData(
+                    Capex_cap = FixedProfile(800),
                     Cap_max_inst = FixedProfile(25),
                     Cap_max_add = FixedProfile(25),
                     Cap_min_add = FixedProfile(0),
@@ -141,7 +141,7 @@ function generate_data()
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [extra_inv_data_storage(
+            [InvDataStorage(
                     Capex_rate = FixedProfile(0),
                     Rate_max_inst = FixedProfile(600),
                     Rate_max_add = FixedProfile(600),
@@ -161,8 +161,8 @@ function generate_data()
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(0),
+            [InvData(
+                    Capex_cap = FixedProfile(0),
                     Cap_max_inst = FixedProfile(25),
                     Cap_max_add = FixedProfile(2),
                     Cap_min_add = FixedProfile(2),
@@ -179,7 +179,7 @@ function generate_data()
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [extra_inv_data_storage(
+            [InvDataStorage(
                     Capex_rate = FixedProfile(0),
                     Rate_max_inst = FixedProfile(30),
                     Rate_max_add = FixedProfile(3),
@@ -199,8 +199,8 @@ function generate_data()
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(10000),
+            [InvData(
+                    Capex_cap = FixedProfile(10000),
                     Cap_max_inst = FixedProfile(10000),
                     Cap_max_add = FixedProfile(10000),
                     Cap_min_add = FixedProfile(0),

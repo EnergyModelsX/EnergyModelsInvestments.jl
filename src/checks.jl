@@ -42,7 +42,7 @@ function EMB.check_node(n::Storage, 𝒯, modeltype::InvestmentModel)
     if has_investment(n)
         inv_data = investment_data(n)
 
-        @assert_or_log typeof(inv_data) == extra_inv_data_storage "The investment data for a Storage must be of type `extra_inv_data_storage`."
+        @assert_or_log typeof(inv_data) == InvDataStorage "The investment data for a Storage must be of type `InvDataStorage`."
     
         @assert_or_log sum(inv_data.Stor_min_add[t] ≤ inv_data.Stor_max_add[t] for t ∈ 𝒯) == length(𝒯) "Stor_min_add has to be less than Stor_max_add in investments data (Node.Data)."
         @assert_or_log sum(inv_data.Rate_min_add[t] ≤ inv_data.Rate_max_add[t] for t ∈ 𝒯) == length(𝒯) "Rate_min_add has to be less than Rate_max_add in investments data (Node.Data)."

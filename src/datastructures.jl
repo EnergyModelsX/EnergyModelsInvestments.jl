@@ -24,7 +24,7 @@ end
 """ Investment type traits for nodes. """
 abstract type Investment end 
 """ Binary investment in given capacity with binary variables. Requires specification
-of `Cap_start` in `extra_inv_data` for proper analyses."""
+of `Cap_start` in `InvData` for proper analyses."""
 struct BinaryInvestment <: Investment end
 """ Investment in fixed increments with integer variables. """
 struct DiscreteInvestment <: Investment end 
@@ -88,8 +88,8 @@ If nothing is given, it is set by `get_start_cap()` to the capacity `Cap` of the
 - **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested
 in each period.
 """
-Base.@kwdef struct extra_inv_data <: InvestmentData
-    Capex_Cap::TimeProfile
+Base.@kwdef struct InvData <: InvestmentData
+    Capex_cap::TimeProfile
     Cap_max_inst::TimeProfile
     Cap_max_add::TimeProfile
     Cap_min_add::TimeProfile
@@ -142,7 +142,7 @@ case of `DiscreteInvestment`\n
 - **`Lifetime::TimeProfile = FixedProfile(0)`** Duration/Lifetime of the technology invested
 in each period.
 """
-Base.@kwdef struct extra_inv_data_storage <: InvestmentData
+Base.@kwdef struct InvDataStorage <: InvestmentData
     #Investment data related to storage power
     Capex_rate::TimeProfile #capex of power
     Rate_max_inst::TimeProfile
@@ -162,10 +162,6 @@ Base.@kwdef struct extra_inv_data_storage <: InvestmentData
     Life_mode::LifetimeMode = UnlimitedLife()
     Lifetime::TimeProfile = FixedProfile(0)
  end
-# TODO: Consider package Parameters.jl to define struct with default values
-
-
-
 
 """ Extra data for investing in transmission.
 

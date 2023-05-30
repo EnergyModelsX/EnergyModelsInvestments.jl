@@ -12,14 +12,14 @@ using JuMP
 using TimeStructures
 
 const EMB = EnergyModelsBase
-const GEO = EnergyModelsGeography
+const EMG = EnergyModelsGeography
 const IM = EnergyModelsInvestments
 
 
 function run_model(case, model, optimizer = nothing)
     @info "Run model" model optimizer
 
-    m = GEO.create_model(case, model)
+    m = EMG.create_model(case, model)
 
     set_optimizer(m, optimizer)
     optimize!(m)
@@ -67,10 +67,10 @@ function generate_data()
 
     # Create the individual areas
     areas = [
-        GEO.RefArea(1, "Oslo", 10.751, 59.921, an[1]),
-        GEO.RefArea(2, "Bergen", 5.334, 60.389, an[2]),
-        GEO.RefArea(3, "Trondheim", 10.398, 63.437, an[3]),
-        GEO.RefArea(4, "Tromsø", 18.953, 69.669, an[4]),
+        EMG.RefArea(1, "Oslo", 10.751, 59.921, an[1]),
+        EMG.RefArea(2, "Bergen", 5.334, 60.389, an[2]),
+        EMG.RefArea(3, "Trondheim", 10.398, 63.437, an[3]),
+        EMG.RefArea(4, "Tromsø", 18.953, 69.669, an[4]),
     ]
 
     # Create the investment data for the different power line investment modes
@@ -112,34 +112,34 @@ function generate_data()
     )
 
     # Create the TransmissionModes and the Transmission corridors
-    OverheadLine_50MW_12 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_12])
-    OverheadLine_50MW_13 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_13])
-    OverheadLine_50MW_23 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_23])
-    OverheadLine_50MW_34 = GEO.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_34])
-    LNG_Ship_100MW = GEO.RefDynamic("LNG_100", NG, FixedProfile(100.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [])
+    OverheadLine_50MW_12 = EMG.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_12])
+    OverheadLine_50MW_13 = EMG.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_13])
+    OverheadLine_50MW_23 = EMG.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_23])
+    OverheadLine_50MW_34 = EMG.RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_34])
+    LNG_Ship_100MW = EMG.RefDynamic("LNG_100", NG, FixedProfile(100.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [])
 
     transmission = [
-        GEO.Transmission(
+        EMG.Transmission(
             areas[1],
             areas[2],
             [OverheadLine_50MW_12],
         ),
-        GEO.Transmission(
+        EMG.Transmission(
             areas[1],
             areas[3],
             [OverheadLine_50MW_13],
         ),
-        GEO.Transmission(
+        EMG.Transmission(
             areas[2],
             areas[3],
             [OverheadLine_50MW_23],
         ),
-        GEO.Transmission(
+        EMG.Transmission(
             areas[3],
             areas[4],
             [OverheadLine_50MW_34],
         ),
-        GEO.Transmission(areas[4], areas[2], [LNG_Ship_100MW]),
+        EMG.Transmission(areas[4], areas[2], [LNG_Ship_100MW]),
     ]
 
     # Creation of the time structure and global data
@@ -152,8 +152,8 @@ function generate_data()
 
     # WIP data structure
     case = Dict(
-        :areas => Array{GEO.Area}(areas),
-        :transmission => Array{GEO.Transmission}(transmission),
+        :areas => Array{EMG.Area}(areas),
+        :transmission => Array{EMG.Transmission}(transmission),
         :nodes => Array{EMB.Node}(nodes),
         :links => Array{EMB.Link}(links),
         :products => products,
@@ -208,7 +208,7 @@ function get_sub_system_data(
 
     j = (i - 1) * 100
     nodes = [
-        GEO.GeoAvailability(j + 1, 𝒫₀, 𝒫₀),
+        EMG.GeoAvailability(j + 1, 𝒫₀, 𝒫₀),
         EMB.RefSink(
             j + 2,
             DynamicProfile(demand),
@@ -222,8 +222,8 @@ function get_sub_system_data(
             FixedProfile(30 * mc_scale),
             FixedProfile(100),
             Dict(NG => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(1000),
+            [InvData(
+                    Capex_cap = FixedProfile(1000),
                     Cap_max_inst = FixedProfile(200),
                     Cap_max_add = FixedProfile(200),
                     Cap_min_add = FixedProfile(0),
@@ -239,8 +239,8 @@ function get_sub_system_data(
             FixedProfile(9 * mc_scale),
             FixedProfile(100),
             Dict(Coal => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(1000),
+            [InvData(
+                    Capex_cap = FixedProfile(1000),
                     Cap_max_inst = FixedProfile(200),
                     Cap_max_add = FixedProfile(200),
                     Cap_min_add = FixedProfile(0),
@@ -258,8 +258,8 @@ function get_sub_system_data(
             Dict(Power => 1, CO2 => 1),
             𝒫ᵉᵐ₀,
             0.9,
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(600),
+            [InvData(
+                    Capex_cap = FixedProfile(600),
                     Cap_max_inst = FixedProfile(25),
                     Cap_max_add = FixedProfile(25),
                     Cap_min_add = FixedProfile(0),
@@ -274,8 +274,8 @@ function get_sub_system_data(
             FixedProfile(100),
             Dict(Coal => 2.5),
             Dict(Power => 1, CO2 => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(800),
+            [InvData(
+                    Capex_cap = FixedProfile(800),
                     Cap_max_inst = FixedProfile(25),
                     Cap_max_add = FixedProfile(25),
                     Cap_min_add = FixedProfile(0),
@@ -292,7 +292,7 @@ function get_sub_system_data(
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [extra_inv_data_storage(
+            [InvDataStorage(
                     Capex_rate = FixedProfile(500),
                     Rate_max_inst = FixedProfile(600),
                     Rate_max_add = FixedProfile(600),
@@ -312,8 +312,8 @@ function get_sub_system_data(
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1, CO2 => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(1000),
+            [InvData(
+                    Capex_cap = FixedProfile(1000),
                     Cap_max_inst = FixedProfile(25),
                     Cap_max_add = FixedProfile(2),
                     Cap_min_add = FixedProfile(0),
@@ -330,7 +330,7 @@ function get_sub_system_data(
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [extra_inv_data_storage(
+            [InvDataStorage(
                     Capex_rate = FixedProfile(500),
                     Rate_max_inst = FixedProfile(30),
                     Rate_max_add = FixedProfile(3),
@@ -350,8 +350,8 @@ function get_sub_system_data(
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1, CO2 => 1),
-            [extra_inv_data(
-                    Capex_Cap = FixedProfile(10000),
+            [InvData(
+                    Capex_cap = FixedProfile(10000),
                     Cap_max_inst = FixedProfile(10000),
                     Cap_max_add = FixedProfile(10000),
                     Cap_min_add = FixedProfile(0),
