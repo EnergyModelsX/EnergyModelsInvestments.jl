@@ -6,7 +6,7 @@ abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 An concrete basic investment model type
 
 # Fields
-- **`Emission_limit::Dict{ResourceEmit, TimeProfile}`** are the caps for the different 
+- **`Emission_limit::Dict{ResourceEmit, TimeProfile}`** are the emission caps for the different 
 emissions types considered.\n
 - **`Emission_price::Dict{ResourceEmit, TimeProfile}`** are the prices for the different 
 emissions types considered.\n
@@ -51,10 +51,10 @@ end of the lifetime and considering the rest value. """
 struct StudyLife <: LifetimeMode end
 """ The investment is considered to last only for the strategic period. The excess 
 lifetime is considered in the rest value. If the lifetime is lower than the length 
-of the period, reivnvestment is considered as well. """
+of the period, reinvestment is considered as well. """
 struct PeriodLife <: LifetimeMode end
 """ The investment is rolling to the next strategic periods and it is retired at the 
-end of its lifetime or the the end of the previous startegic period if its lifetime 
+end of its lifetime or the end of the previous strategic period if its lifetime 
 ends between two periods."""
 struct RollingLife <: LifetimeMode end
 
