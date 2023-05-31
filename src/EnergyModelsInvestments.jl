@@ -23,7 +23,11 @@ include("checks.jl")
 
 export InvestmentModel
 export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment, 
-    FixedInvestment, ContinuousFixedInvestment
+    FixedInvestment
+
+export LifetimeMode
+export UnlimitedLife, StudyLife, PeriodLife, RollingLife
+
 export InvData, InvDataStorage
 
 export obj_weight, obj_weight_inv, obj_weight_inv_end

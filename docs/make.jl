@@ -8,11 +8,17 @@ news = "src/manual/NEWS.md"
 if isfile(news)
     rm(news)
 end
-cp("../NEWS.md", "src/manual/NEWS.md")
+cp(joinpath(@__DIR__,"..","NEWS.md"), joinpath(@__DIR__,"src/manual/NEWS.md"), force=true)
 
 makedocs(
-    sitename = "EnergyModelsInvestments",
-    format = Documenter.HTML(),
+    sitename = "EnergyModelsInvestments.jl",
+    repo="https://gitlab.sintef.no/clean_export/energymodelsinvestments.jl/blob/{commit}{path}#{line}",
+    format = Documenter.HTML(
+        prettyurls=get(ENV, "CI", "false") == "true",
+        canonical="https://clean_export.pages.sintef.no/energymodelsinvestments.jl/",
+        edit_link="main",
+        assets=String[],
+    ),
     modules = [EnergyModelsInvestments],
     pages = [
         "Home" => "index.md",
