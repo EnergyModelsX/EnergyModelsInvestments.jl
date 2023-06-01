@@ -15,7 +15,7 @@ function GEO.update_objective(m, 𝒯, ℳ, modeltype::InvestmentModel)
 
     # Extraction of data
     𝒯ᴵⁿᵛ    = strategic_periods(𝒯)
-    ℳᴵⁿᵛ   = has_investment(ℳ)
+    ℳᴵⁿᵛ   = EMI.has_investment(ℳ)
     r       = modeltype.r
     obj     = JuMP.objective_function(m)
 
@@ -37,7 +37,7 @@ Create variables for the capital costs for the investments in transmission.
 """
 function GEO.variables_trans_capex(m, 𝒯, ℳ, modeltype::InvestmentModel)
 
-    ℳᴵⁿᵛ = has_investment(ℳ)
+    ℳᴵⁿᵛ = EMI.has_investment(ℳ)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     @variable(m, capex_trans[ℳᴵⁿᵛ,  𝒯ᴵⁿᵛ] >= 0)
@@ -62,7 +62,7 @@ function GEO.variables_trans_capacity(m, 𝒯, 𝒞ℳ, modeltype::InvestmentMod
     @variable(m, trans_cap[𝒞ℳ, 𝒯] >= 0)
 
     𝒯ᴵⁿᵛ  = strategic_periods(𝒯)
-    𝒞ℳᴵⁿᵛ = has_investment(𝒞ℳ)
+    𝒞ℳᴵⁿᵛ = EMI.has_investment(𝒞ℳ)
 
     # Add transmission specific investment variables for each strategic period:
     @variable(m, trans_cap_invest_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
@@ -90,7 +90,7 @@ Set capacity-related constraints for `TransmissionMode`s `𝒞ℳ` for investmen
 function constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::InvestmentModel)
     
     𝒯ᴵⁿᵛ  = strategic_periods(𝒯)
-    𝒞ℳᴵⁿᵛ = has_investment(𝒞ℳ)
+    𝒞ℳᴵⁿᵛ = EMI.has_investment(𝒞ℳ)
     
     # Constraints capex
     for t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ 𝒞ℳᴵⁿᵛ 
