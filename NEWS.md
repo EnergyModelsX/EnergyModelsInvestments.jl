@@ -1,5 +1,9 @@
 Release Notes
 =============
+Version 0.3.1 (2023-06-01)
+--------------------------
+ * Added dispatch on `EMI.has_investment` in the extension instead of defining a new, local function
+
 Version 0.3.0 (2023-05-xx)
 --------------------------
  * Adjustment to changes in `EnergyModelsBase` v0.4.0 and `EnergyModelsGeography` v 0.6.0 
