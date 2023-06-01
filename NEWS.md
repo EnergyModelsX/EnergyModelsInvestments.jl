@@ -1,5 +1,9 @@
 Release Notes
 =============
+Version 0.3.2 (2023-06-01)
+--------------------------
+ * Bugfix related to `FixedInvestment`
+
 Version 0.3.1 (2023-06-01)
 --------------------------
  * Added dispatch on `EMI.has_investment` in the extension instead of defining a new, local function
