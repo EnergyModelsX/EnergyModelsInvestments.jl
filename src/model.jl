@@ -214,7 +214,7 @@ end
 Add constraints related to capacity installation depending on investment mode of node `n`
 """
 set_capacity_installation(m, n, 𝒯ᴵⁿᵛ) = set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode(n))
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode)
+function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::Investment)
     # Extract the investment data
     inv_data = investment_data(n)
 

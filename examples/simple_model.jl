@@ -14,7 +14,7 @@ using PrettyTables
 using TimeStructures
 
 const EMB = EnergyModelsBase
-const IM = EnergyModelsInvestments
+const EMI = EnergyModelsInvestments
 const TS = TimeStructures
 
 # Define the required resources
@@ -22,7 +22,7 @@ CO2 = ResourceEmit("CO2", 1.0)
 Power = ResourceCarrier("Power", 0.0)
 products = [Power, CO2]
 
-function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
+function demo_invest(lifemode = UnlimitedLife(); discount_rate = 0.05)
     lifetime = FixedProfile(15)
     sp_dur = 5
 
@@ -33,7 +33,7 @@ function demo_invest(lifemode = IM.UnlimitedLife(); discount_rate = 0.05)
     𝒫ᵉᵐ₀ = Dict(k => 0.0 for k ∈ products if typeof(k) == ResourceEmit{Float64})
     𝒫ᵉᵐ₀[CO2] = 0.0
 
-    investment_data_source = IM.InvData(
+    investment_data_source = InvData(
         Capex_cap = FixedProfile(1000), # capex [€/kW]
         Cap_max_inst = FixedProfile(30), #  max installed capacity [kW]
         Cap_max_add = FixedProfile(30), # max_add [kW]

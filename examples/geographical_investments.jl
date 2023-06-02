@@ -13,7 +13,7 @@ using TimeStructures
 
 const EMB = EnergyModelsBase
 const EMG = EnergyModelsGeography
-const IM = EnergyModelsInvestments
+const EMI = EnergyModelsInvestments
 
 
 function run_model(case, model, optimizer = nothing)
@@ -74,7 +74,7 @@ function generate_data()
     ]
 
     # Create the investment data for the different power line investment modes
-    inv_data_12 = IM.TransInvData(
+    inv_data_12 = TransInvData(
         Capex_trans = FixedProfile(500),
         Trans_max_inst = FixedProfile(50),
         Trans_max_add = FixedProfile(100),
@@ -83,7 +83,7 @@ function generate_data()
         Trans_start = 0,
     )
 
-    inv_data_13 = IM.TransInvData(
+    inv_data_13 = TransInvData(
         Capex_trans = FixedProfile(10),
         Trans_max_inst = FixedProfile(100),
         Trans_max_add = FixedProfile(100),
@@ -92,7 +92,7 @@ function generate_data()
         Trans_start = 0,
     )
 
-    inv_data_23 = IM.TransInvData(
+    inv_data_23 = TransInvData(
         Capex_trans = FixedProfile(10),
         Trans_max_inst = FixedProfile(50),
         Trans_max_add = FixedProfile(100),
@@ -102,7 +102,7 @@ function generate_data()
         Trans_start = 20,
     )
 
-    inv_data_34 = IM.TransInvData(
+    inv_data_34 = TransInvData(
         Capex_trans = FixedProfile(10),
         Trans_max_inst = FixedProfile(50),
         Trans_max_add = FixedProfile(100),

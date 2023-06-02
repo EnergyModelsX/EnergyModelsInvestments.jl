@@ -10,7 +10,7 @@ using JuMP
 using TimeStructures
 
 const EMB = EnergyModelsBase
-const IM = EnergyModelsInvestments
+const EMI = EnergyModelsInvestments
 
 
 """
