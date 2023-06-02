@@ -18,22 +18,22 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)#, sense=
     𝒩ˢᵗᵒʳᴵⁿᵛ = has_investment(𝒩ˢᵗᵒʳ)                # Storage nodes with investments
     𝒩ᴵⁿᵛ = setdiff(has_investment(𝒩), 𝒩ˢᵗᵒʳᴵⁿᵛ)     # Other nodes with investments
     𝒫ᵉᵐ  = EMB.res_sub(𝒫, ResourceEmit)             # Emissions resources
-    r = modeltype.r                                 # Discount rate
+    disc = Discounter(modeltype.r, 𝒯)               # Discount type decleration
     
     capexunit = 1 # TODO: Fix scaling if operational units are different form CAPEX
 
     obj = JuMP.AffExpr()
-    haskey(m, :revenue)     && (obj += sum(obj_weight(r, 𝒯, t_inv, t) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
-    haskey(m, :opex_var)    && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:opex_var][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :opex_fixed)  && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:opex_fixed][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :capex_cap)   && !isempty(𝒩ᴵⁿᵛ) && (obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:capex_cap][i, t_inv]  for i ∈ 𝒩ᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :revenue)     && (obj += sum(objective_weight(t, disc) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
+    haskey(m, :opex_var)    && (obj -= sum(objective_weight(t_inv, disc) * m[:opex_var][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :opex_fixed)  && (obj -= sum(objective_weight(t_inv, disc) * m[:opex_fixed][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :capex_cap)   && !isempty(𝒩ᴵⁿᵛ) && (obj -= sum(objective_weight(t_inv, disc) * m[:capex_cap][i, t_inv]  for i ∈ 𝒩ᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ))
     if haskey(m, :capex_stor) && !isempty(𝒩ˢᵗᵒʳᴵⁿᵛ)
-        obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:capex_stor][i, t_inv]  for i ∈ 𝒩ˢᵗᵒʳᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
-        obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:capex_rate][i, t_inv]  for i ∈ 𝒩ˢᵗᵒʳᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
+        obj -= sum(objective_weight(t_inv, disc) * m[:capex_stor][i, t_inv]  for i ∈ 𝒩ˢᵗᵒʳᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
+        obj -= sum(objective_weight(t_inv, disc) * m[:capex_rate][i, t_inv]  for i ∈ 𝒩ˢᵗᵒʳᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
     end
 
     em_price = modeltype.Emission_price
-    obj -= sum(obj_weight_inv(r, 𝒯, t_inv) * m[:emissions_strategic][t_inv, p_em] * em_price[p_em][t_inv] for p_em ∈ 𝒫ᵉᵐ, t_inv ∈ 𝒯ᴵⁿᵛ)
+    obj -= sum(objective_weight(t_inv, disc) * m[:emissions_strategic][t_inv, p_em] * em_price[p_em][t_inv] for p_em ∈ 𝒫ᵉᵐ, t_inv ∈ 𝒯ᴵⁿᵛ)
     
     # TODO: Maintentance cost
 
@@ -118,7 +118,7 @@ function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure,
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     if has_investment(n)
-        for t_inv ∈ 𝒯ᴵⁿᵛ
+        for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
             # Extract the investment data
             inv_data = investment_data(n)
             
@@ -134,14 +134,14 @@ function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure,
             # Capacity updating
             @constraint(m, m[:cap_current][n, t_inv] <=
                                 inv_data.Cap_max_inst[t_inv])
-            if TS.isfirst(t_inv)
-                start_cap = get_start_cap(n,t_inv, inv_data.Cap_start)
+            if isnothing(t_inv_prev)
+                start_cap = get_start_cap(n, t_inv, inv_data.Cap_start)
                 @constraint(m, m[:cap_current][n, t_inv] ==
                     start_cap + m[:cap_add][n, t_inv])
             else
                 @constraint(m, m[:cap_current][n, t_inv] ==
-                    m[:cap_current][n, previous(t_inv,𝒯)]
-                    + m[:cap_add][n, t_inv] - m[:cap_rem][n, previous(t_inv,𝒯)])
+                    m[:cap_current][n, t_inv_prev]
+                    + m[:cap_add][n, t_inv] - m[:cap_rem][n, t_inv_prev])
             end
         end
         set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
@@ -163,7 +163,7 @@ function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     if has_investment(n)
-        for t_inv ∈ 𝒯ᴵⁿᵛ
+        for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
             # Extract the investment data
             inv_data = investment_data(n)
             
@@ -183,7 +183,7 @@ function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, 
                                 inv_data.Stor_max_inst[t_inv])
             @constraint(m, m[:stor_rate_current][n, t_inv] <=
                                 inv_data.Rate_max_inst[t_inv])
-            if TS.isfirst(t_inv)
+            if isnothing(t_inv_prev)
                 start_cap = get_start_cap_storage(n, t_inv, inv_data.Stor_start)
                 @constraint(m, m[:stor_cap_current][n, t_inv] == 
                     start_cap + m[:stor_cap_add][n, t_inv])
@@ -193,12 +193,12 @@ function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, 
                     start_rate + m[:stor_rate_add][n, t_inv])
             else
                 @constraint(m, m[:stor_cap_current][n, t_inv] == 
-                    m[:stor_cap_current][n, previous(t_inv,𝒯)]
-                    + m[:stor_cap_add][n, t_inv] - m[:stor_cap_rem][n, previous(t_inv,𝒯)])
+                    m[:stor_cap_current][n, t_inv_prev]
+                    + m[:stor_cap_add][n, t_inv] - m[:stor_cap_rem][n, t_inv_prev])
 
                 @constraint(m, m[:stor_rate_current][n, t_inv] == 
-                    m[:stor_rate_current][n, previous(t_inv,𝒯)]
-                    + m[:stor_rate_add][n, t_inv] - m[:stor_rate_rem][n, previous(t_inv,𝒯)])
+                    m[:stor_rate_current][n, t_inv_prev]
+                    + m[:stor_rate_add][n, t_inv] - m[:stor_rate_rem][n, t_inv_prev])
             end
         end
         set_storage_installation(m, n, 𝒯ᴵⁿᵛ)
@@ -434,7 +434,7 @@ function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::EnergyModel, ::StudyLif
     # The capacity is limited to the end of the study. Reinvestments are included
     # No capacity removed as there are reinvestments according to the study length
     data = investment_data(n)
-    capex = data.Capex_cap[t_inv] * set_capex_value(TS.remaining_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
+    capex = data.Capex_cap[t_inv] * set_capex_value(remaining(t_inv, 𝒯), data.Lifetime[t_inv], modeltype.r)
     @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == 0)
 end
@@ -443,51 +443,53 @@ function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::PeriodL
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
     data = investment_data(n)
-    capex = data.Capex_cap[t_inv] * set_capex_value(TS.duration_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
+    capex = data.Capex_cap[t_inv] * set_capex_value(duration(t_inv), data.Lifetime[t_inv], modeltype.r)
     @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
 end
 
 function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::RollingLife)
     data = investment_data(n)
-    Lifetime = data.Lifetime[t_inv]
-    r = modeltype.r                     # discount rate
+    lifetime = data.Lifetime[t_inv]
+    r   = modeltype.r                     # discount rate
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-     # If Lifetime is shorer than the sp duration , we apply the method for PeriodLife
-    if Lifetime < TS.duration_years(𝒯, t_inv)
+     # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
+    if lifetime < duration(t_inv)
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, PeriodLife())
 
-    # If Lifetime is equal to sp duration we only need to invest once and there is no rest value
-    elseif Lifetime == TS.duration_years(𝒯, t_inv)
+    # If lifetime is equal to sp duration we only need to invest once and there is no rest value
+    elseif lifetime == duration(t_inv)
         capex = data.Capex_cap[t_inv]
         @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
         @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
 
-    # If Lifetime is longer than sp duration, the capacity can roll over to the next sp.
-    elseif Lifetime > TS.duration_years(𝒯, t_inv)
-        # Initialization of the last_sp, ante_sp (the sp before), and the remaining lifetime
-        # last_sp represents the sp in which the remaining Lifetime is not sufficient to cover the whole sp duration.
-        last_sp = t_inv
-        ante_sp = nothing
-        remaining_lifetime = Lifetime
+    # If lifetime is longer than sp duration, the capacity can roll over to the next sp.
+    elseif lifetime > duration(t_inv)
+        # Initialization of the ante_sp and the remaining lifetime
+        # ante_sp represents the last sp in which the remaining lifetime is  sufficient
+        # to cover the whole sp duration.
+        ante_sp = t_inv
+        remaining_lifetime = lifetime
 
         # Iteration to identify sp in which remaining_lifetime is smaller than sp duration
-        while remaining_lifetime >= TS.duration_years(𝒯, last_sp)
-            remaining_lifetime -= TS.duration_years(𝒯, last_sp)
-            ante_sp = last_sp
-            last_sp = TS.next(last_sp, 𝒯)
-            # If last_sp beyond the number of sps in the model, we stop the loop
-            if last_sp.sp > t_inv.sps
-                break
+        for sp ∈ 𝒯ᴵⁿᵛ
+            if sp >= t_inv
+                if remaining_lifetime < duration(sp)
+                    break 
+                end
+                remaining_lifetime -= duration(sp)
+                ante_sp = sp    
             end
         end
 
         # Calculation of cost and rest value
-        capex = data.Capex_cap[t_inv] - ((remaining_lifetime/Lifetime) * data.Capex_cap[t_inv] * (1+r)^(-(Lifetime - remaining_lifetime)))
-        @constraint(m, m[:capex_cap][n,t_inv] == capex * m[:cap_add][n, t_inv])
+        capex = data.Capex_cap[t_inv] * 
+                (1 - (remaining_lifetime/lifetime) * (1+r)^(-(lifetime - remaining_lifetime)))
+        @constraint(m, m[:capex_cap][n, t_inv] == capex * m[:cap_add][n, t_inv])
 
         # Capacity to be removed when remaining_lifetime < duration_years, i.e., in ante_sp
-        if ante_sp.sp < t_inv.sps
+        if ante_sp.sp < length(𝒯ᴵⁿᵛ)
             @constraint(m, m[:cap_rem][n, ante_sp] == m[:cap_add][n, t_inv])
         end
     end
@@ -507,8 +509,8 @@ function set_capacity_cost(m, n::Storage, 𝒯, t_inv,  modeltype::EnergyModel, 
     # The capacity is limited to the end of the study. Reinvestments are included
     # No capacity removed as there are reinvestments according to the study length
     data = investment_data(n)
-    stor_capex = data.Capex_stor[t_inv] * set_capex_value(TS.remaining_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
-    rate_capex = data.Capex_rate[t_inv] * set_capex_value(TS.remaining_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
+    stor_capex = data.Capex_stor[t_inv] * set_capex_value(remaining(t_inv, 𝒯), data.Lifetime[t_inv], modeltype.r)
+    rate_capex = data.Capex_rate[t_inv] * set_capex_value(remaining(t_inv, 𝒯), data.Lifetime[t_inv], modeltype.r)
     @constraint(m, m[:capex_stor][n, t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
     @constraint(m, m[:capex_rate][n, t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
     @constraint(m, m[:stor_cap_rem][n, t_inv] == 0)
@@ -519,8 +521,8 @@ function set_capacity_cost(m, n::Storage, 𝒯, t_inv,  modeltype::EnergyModel, 
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
     data = investment_data(n)
-    stor_capex = data.Capex_stor[t_inv] * set_capex_value(TS.duration_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
-    rate_capex = data.Capex_rate[t_inv] * set_capex_value(TS.duration_years(𝒯, t_inv), data.Lifetime[t_inv], modeltype.r)
+    stor_capex = data.Capex_stor[t_inv] * set_capex_value(duration(t_inv), data.Lifetime[t_inv], modeltype.r)
+    rate_capex = data.Capex_rate[t_inv] * set_capex_value(duration(t_inv), data.Lifetime[t_inv], modeltype.r)
     @constraint(m, m[:capex_stor][n, t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
     @constraint(m, m[:capex_rate][n, t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
     @constraint(m, m[:stor_cap_rem][n, t_inv] == m[:stor_cap_add][n, t_inv] )
@@ -529,15 +531,15 @@ end
 
 function set_capacity_cost(m, n::Storage, 𝒯, t_inv,  modeltype::EnergyModel, ::RollingLife)
     data = investment_data(n)
-    Lifetime = data.Lifetime[t_inv]
+    lifetime = data.Lifetime[t_inv]
     r = modeltype.r                     # discount rate
     
-    # If Lifetime is shorer than the sp duration , we apply the method for PeriodLife
-    if Lifetime < TS.duration_years(𝒯, t_inv)
+    # If lifetime is shorer than the sp duration , we apply the method for PeriodLife
+    if lifetime < duration(t_inv)
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, PeriodLife())
         
-    # If Lifetime is equal to sp duration we only need to invest once and there is no rest value
-    elseif Lifetime == TS.duration_years(𝒯, t_inv)
+    # If lifetime is equal to sp duration we only need to invest once and there is no rest value
+    elseif lifetime == duration(t_inv)
         stor_capex = data.Capex_stor[t_inv]
         rate_capex = data.Capex_rate[t_inv]
         @constraint(m, m[:capex_stor][n, t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
@@ -545,32 +547,35 @@ function set_capacity_cost(m, n::Storage, 𝒯, t_inv,  modeltype::EnergyModel, 
         @constraint(m, m[:stor_cap_rem][n, t_inv] == m[:stor_cap_add][n, t_inv])
         @constraint(m, m[:stor_rate_rem][n, t_inv] == m[:stor_rate_add][n, t_inv])
 
-    # If Lifetime is longer than sp duration, the capacity can roll over to the next sp.
-    elseif Lifetime > TS.duration_years(𝒯, t_inv)
-        # Initialization of the last_sp, ante_sp (the sp before), and the remaining lifetime
-        # last_sp represents the sp in which the remaining Lifetime is not sufficient to cover the whole sp duration.
-        last_sp = t_inv
-        ante_sp = nothing
-        remaining_lifetime = Lifetime
+    # If lifetime is longer than sp duration, the capacity can roll over to the next sp.
+    elseif lifetime > duration(t_inv)
+        # Initialization of the ante_sp and the remaining lifetime
+        # ante_sp represents the last sp in which the remaining lifetime is sufficient
+        # to cover the whole sp duration.
+        ante_sp = t_inv
+        remaining_lifetime = lifetime
 
         # Iteration to identify sp in which remaining_lifetime is smaller than sp duration
-        while remaining_lifetime >= TS.duration_years(𝒯, last_sp) 
-            remaining_lifetime -= TS.duration_years(𝒯, last_sp)
-            ante_sp = last_sp #register the sp before the last sp
-            last_sp = TS.next(last_sp, 𝒯)
-            if last_sp.sp > t_inv.sps #if last_sp is beyond the sps in the model, we stop the loop
-                break
+        for sp ∈ 𝒯ᴵⁿᵛ
+            if sp >= t_inv
+                if remaining_lifetime < duration(sp)
+                    break 
+                end
+                remaining_lifetime -= duration(sp)
+                ante_sp = sp    
             end
         end
 
         # Calculation of cost and rest value
-        stor_capex = data.Capex_stor[t_inv] - ((remaining_lifetime/Lifetime) * data.Capex_stor[t_inv] * (1+r)^(-(Lifetime - remaining_lifetime)))
-        rate_capex = data.Capex_rate[t_inv] - ((remaining_lifetime/Lifetime) * data.Capex_rate[t_inv] * (1+r)^(-(Lifetime - remaining_lifetime)))
+        stor_capex = data.Capex_stor[t_inv] *
+                    (1 - (remaining_lifetime/lifetime) * (1+r)^(-(lifetime - remaining_lifetime)))
+        rate_capex = data.Capex_rate[t_inv] * 
+                    (1 - (remaining_lifetime/lifetime) * (1+r)^(-(lifetime - remaining_lifetime)))
         @constraint(m, m[:capex_stor][n, t_inv] == stor_capex * m[:stor_cap_add][n, t_inv])
         @constraint(m, m[:capex_rate][n, t_inv] == rate_capex * m[:stor_rate_add][n, t_inv])
 
         # Capacity to be removed when remaining_lifetime < duration_years, i.e., in ante_sp
-        if ante_sp.sp < t_inv.sps
+        if ante_sp.sp < length(𝒯ᴵⁿᵛ)
             @constraint(m, m[:stor_cap_rem][n, ante_sp] == m[:stor_cap_add][n, t_inv])
             @constraint(m, m[:stor_rate_rem][n, ante_sp] == m[:stor_rate_add][n, t_inv])
         end
@@ -579,18 +584,18 @@ end
 
     
 """
-    set_capex_value(years, Capex, Lifetime, r)
+    set_capex_value(years, lifetime, r)
 Calculate the discounted values used in the lifetime calculations.
 The input to the function is given as:
-    years       Either TS.remaining_years(𝒯, t_inv) for Stud_inv or
-                TS.duration_years(𝒯, t_inv) for  Period_inv
+    years       Either remaining(t_inv, 𝒯) for StudyLife or
+                duration(t_inv) for  PeriodLife
                 the calculation of required investments
-    Lifetime    Lifetime of the node
+    lifetime    lifetime of the node
     r           Discount rate
 """
-function set_capex_value(years, Lifetime, r)
-    N_inv = ceil(years/Lifetime)
-    capex_disc = sum((1+r)^(-n_inv * Lifetime) for n_inv ∈ 0:N_inv-1) - 
-                 ((N_inv * Lifetime - years)/Lifetime) * (1+r)^(-years)
+function set_capex_value(years, lifetime, r)
+    N_inv = ceil(years/lifetime)
+    capex_disc = sum((1+r)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) - 
+                 ((N_inv * lifetime - years)/lifetime) * (1+r)^(-years)
     return capex_disc
 end

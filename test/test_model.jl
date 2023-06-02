@@ -11,7 +11,7 @@ function small_graph(;
                     source=nothing,
                     sink=nothing,
                     inv_data=nothing,
-                    T=UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1)),
+                    T=TwoLevel(4, 10, SimpleTimes(4, 1)),
                     discount_rate = 0.05,
                     )
 
@@ -47,7 +47,7 @@ function small_graph(;
     links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
              EMB.Direct(13, nodes[1], nodes[3], EMB.Linear())]
 
-    em_limits   = Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost     = Dict(CO2 => FixedProfile(0))
     modeltype  = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
@@ -141,7 +141,7 @@ end
             Cap_start       = 0,                        # Starting capacity 
             Inv_mode        = EMI.BinaryInvestment()   # investment mode
         )
-        demand_profile = StrategicFixedProfile([0, 20, 20, 0])
+        demand_profile = StrategicProfile([0, 20, 20, 0])
         inv_data = Dict(
                     "investment_data" => investment_data_source,
                     "profile"         => demand_profile
@@ -172,17 +172,16 @@ end
     @testset "Investment example - small_graph ContinuousFixed" begin
         
         # Variation in the test structure
-        𝒯 = UniformTwoLevel(1, 4, 10, UniformTimes(1, 4, 1))
-        sp1 = strategic_period(𝒯, 2)
+        𝒯 = TwoLevel(4, 10, SimpleTimes(4, 1))
         investment_data_source = EMI.InvData(
             Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-            Cap_max_add     = StrategicFixedProfile([0, 30, 0, 0]), # max_add [kW]
+            Cap_max_add     = StrategicProfile([0, 30, 0, 0]), # max_add [kW]
             Cap_min_add     = FixedProfile(0),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
             Inv_mode        = EMI.ContinuousInvestment()   # investment mode
         )
-        demand_profile = StrategicFixedProfile([0, 20, 25, 30])
+        demand_profile = StrategicProfile([0, 20, 25, 30])
         inv_data = Dict(
                     "investment_data" => investment_data_source,
                     "profile"         => demand_profile
@@ -212,12 +211,12 @@ end
         investment_data_source = EMI.InvData(
             Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-            Cap_max_add     = StrategicFixedProfile([0, 30, 0, 0]),         # max_add [kW]
-            Cap_min_add     = StrategicFixedProfile([0, 5, 0, 0]),          # min_add [kW]
+            Cap_max_add     = StrategicProfile([0, 30, 0, 0]),         # max_add [kW]
+            Cap_min_add     = StrategicProfile([0, 5, 0, 0]),          # min_add [kW]
             Cap_start       = 0,                        # Starting capacity 
             Inv_mode        = EMI.ContinuousInvestment()   # investment mode
         )
-        demand_profile = StrategicFixedProfile([0, 20, 25, 30])
+        demand_profile = StrategicProfile([0, 20, 25, 30])
         inv_data = Dict(
                     "investment_data" => investment_data_source,
                     "profile"         => demand_profile

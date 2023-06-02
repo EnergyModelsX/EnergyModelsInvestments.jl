@@ -11,11 +11,11 @@ using EnergyModelsInvestments
 using HiGHS
 using JuMP
 using PrettyTables
-using TimeStructures
+using TimeStruct
 
 const EMB = EnergyModelsBase
 const EMI = EnergyModelsInvestments
-const TS = TimeStructures
+const TS = TimeStruct
 
 # Define the required resources
 CO2 = ResourceEmit("CO2", 1.0)
@@ -64,9 +64,9 @@ function demo_invest(lifemode = UnlimitedLife(); discount_rate = 0.05)
         EMB.Direct(13, nodes[1], nodes[3], EMB.Linear())
     ]
 
-    T = UniformTwoLevel(1, 4, sp_dur, UniformTimes(1, 4, 1))
+    T = TwoLevel(4, sp_dur, SimpleTimes(4, 1))
     em_limits =
-        Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+        Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost = Dict(CO2 => FixedProfile(0))
     model = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
@@ -94,4 +94,4 @@ function demo_invest(lifemode = UnlimitedLife(); discount_rate = 0.05)
     return m
 end
 
-m = demo_invest()
+m = demo_invest();

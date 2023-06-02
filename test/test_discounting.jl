@@ -26,18 +26,18 @@ end
 
 @testset "Discounting tests" begin
     r = 0.07
-    uniform_day  = UniformTimes(1, 24, 1)
-    uniform_year = UniformTwoLevel(1, 365, 1//365, uniform_day)
-    scale_year   = UniformTwoLevel(1, 1, 1, uniform_day)
-    scale_2years = UniformTwoLevel(0, 1, 2, uniform_day)
+    uniform_day  = SimpleTimes(24, 1)
+    uniform_year = TwoLevel(365, 1//365, uniform_day)
+    scale_year   = TwoLevel(1, 1, uniform_day)
+    scale_2years = TwoLevel(1, 2, uniform_day)
 
     @test isapprox(EMI.discount_mult_avg(r, scale_2years, first(strategic_periods(scale_2years))),
                       1/(1+r), atol = 0.001)
 
     for n_periods ∈ (1, 10, 8760)
         for dur_y ∈ (1, 2, 10)
-            for ut ∈ [UniformTimes(1, 24 * 365 * dur_y, 1)]
-                ts = UniformTwoLevel(1, 1, dur_y, ut)
+            for ut ∈ [SimpleTimes(24 * 365 * dur_y, 1)]
+                ts = TwoLevel(1, dur_y, ut)
                 sp = first(strategic_periods(ts))
                 op = first(collect(sp))
                 for discount_rate ∈ (0, 0.07, 0.10)

@@ -12,16 +12,16 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 function EMG.update_objective(m, 𝒯, ℳ, modeltype::InvestmentModel)
 
     # Extraction of data
-    𝒯ᴵⁿᵛ    = strategic_periods(𝒯)
-    ℳᴵⁿᵛ   = EMI.has_investment(ℳ)
-    r       = modeltype.r
-    obj     = JuMP.objective_function(m)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    ℳᴵⁿᵛ = EMI.has_investment(ℳ)
+    obj  = JuMP.objective_function(m)
+    disc = Discounter(modeltype.r, 𝒯)               # Discount type decleration
 
     # Update of the cost function for modes with investments
-    for t ∈  𝒯ᴵⁿᵛ, tm ∈ ℳᴵⁿᵛ
-        obj -= obj_weight_inv(r, 𝒯, t) * m[:capex_trans][tm, t]
-        obj -= obj_weight_inv(r, 𝒯, t) * m[:trans_opex_fixed][tm, t]
-        obj -= obj_weight_inv(r, 𝒯, t) * m[:trans_opex_var][tm, t]
+    for t_inv ∈  𝒯ᴵⁿᵛ, tm ∈ ℳᴵⁿᵛ
+        obj -= objective_weight(t_inv, disc) * m[:capex_trans][tm, t_inv]
+        obj -= objective_weight(t_inv, disc) * m[:trans_opex_fixed][tm, t_inv]
+        obj -= objective_weight(t_inv, disc) * m[:trans_opex_var][tm, t_inv]
     end
 
     @objective(m, Max, obj)
@@ -115,14 +115,18 @@ function constraints_transmission_invest(m, 𝒯, ℳ, modeltype::InvestmentMode
     # Transmission capacity updating
     for tm ∈ ℳᴵⁿᵛ
         inv_data = EMI.investment_data(tm)
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap = EMI.get_start_cap(tm, t_inv, inv_data.Trans_start)
+        for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
             @constraint(m, m[:trans_cap_current][tm, t_inv] <=
-            inv_data.Trans_max_inst[t_inv])
-            @constraint(m, m[:trans_cap_current][tm, t_inv] ==
-            (isfirst(t_inv) ? start_cap : m[:trans_cap_current][tm, previous(t_inv,𝒯)])
-            + m[:trans_cap_add][tm, t_inv] 
-            - (isfirst(t_inv) ? 0 : m[:trans_cap_rem][tm, previous(t_inv,𝒯)]))
+                            inv_data.Trans_max_inst[t_inv])
+            if isnothing(t_inv_prev)
+                start_cap = EMI.get_start_cap(tm, t_inv, inv_data.Trans_start)
+                @constraint(m, m[:trans_cap_current][tm, t_inv] ==
+                    start_cap + m[:trans_cap_add][tm, t_inv])
+            else
+                @constraint(m, m[:trans_cap_current][tm, t_inv] ==
+                    m[:trans_cap_current][tm, t_inv_prev]
+                    + m[:trans_cap_add][tm, t_inv] - m[:trans_cap_rem][tm, t_inv_prev])
+            end
         end
         set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ)
     end
@@ -174,7 +178,7 @@ function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     end
 end
 
-function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
+function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::EMI.SemiContiInvestment)
     # Extract the investment data
     inv_data = EMI.investment_data(tm)
 

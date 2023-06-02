@@ -49,8 +49,8 @@ function EMB.check_node(n::Storage, 𝒯, modeltype::InvestmentModel)
 
         for t ∈ 𝒯
             # Check that the installed capacity at the start is below the lower bound.
-            @assert_or_log TimeStructures.getindex(n.Stor_cap,t) <= inv_data.Stor_max_inst[t] "Existing storage capacity can not be larger than max installed capacity in the beginning."
-            @assert_or_log TimeStructures.getindex(n.Rate_cap,t) <= inv_data.Rate_max_inst[t] "Existing storage rate can not be larger than max installed rate in the beginning."
+            @assert_or_log n.Stor_cap[t] <= inv_data.Stor_max_inst[t] "Existing storage capacity can not be larger than max installed capacity in the beginning."
+            @assert_or_log n.Rate_cap[t] <= inv_data.Rate_max_inst[t] "Existing storage rate can not be larger than max installed rate in the beginning."
             
             if !=(inv_data.Rate_start,nothing) && isfirst(t)
                 @assert_or_log n.Rate_start <= inv_data.Rate_max_inst[t] "Starting storage rate can not be larger than max installed rate."

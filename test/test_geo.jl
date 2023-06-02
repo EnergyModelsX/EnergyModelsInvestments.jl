@@ -27,7 +27,7 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
     if isnothing(sink)
         sink = RefSink(
                     "-snk",
-                    StrategicFixedProfile([20, 25, 30, 35]),
+                    StrategicProfile([20, 25, 30, 35]),
                     Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
                     Dict(Power => 1),
                 )
@@ -55,10 +55,10 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
                     ]
 
     # Creation of the time structure and the used global data
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 1, 1))
+    T = TwoLevel(4, 1, SimpleTimes(1, 1))
     modeltype = InvestmentModel(
-                            Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300])),
-                            Dict(CO2 => StrategicFixedProfile([0, 0, 0, 0])),
+                            Dict(CO2 => StrategicProfile([450, 400, 350, 300])),
+                            Dict(CO2 => StrategicProfile([0, 0, 0, 0])),
                             CO2,
                             0.07
                         )
@@ -148,8 +148,8 @@ end
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that the investments are as expected
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        if TS.isfirst(t_inv)
+    for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
+        if isnothing(t_inv_prev)
             @testset "First investment period" begin
                 for t ∈ t_inv
                     @test (value.(m[:trans_cap_add][tm, t_inv]) 
@@ -160,7 +160,7 @@ end
             @testset "Subsequent investment periods" begin
                 for t ∈ t_inv
                     @test (value.(m[:trans_cap_add][tm, t_inv]) 
-                            ≈ sink.Cap[t]-value.(m[:trans_cap_current][tm, previous(t_inv, 𝒯)]))
+                            ≈ sink.Cap[t]-value.(m[:trans_cap_current][tm, t_inv_prev]))
                 end
             end
         end
@@ -198,10 +198,10 @@ end
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that the investments are as expected
-    for t_inv ∈ 𝒯ᴵⁿᵛ
+    for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         @testset "Investment period $(t_inv.sp)" begin
             @testset "Invested capacity" begin
-                if TS.isfirst(t_inv)
+                if isnothing(t_inv_prev)
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
@@ -210,7 +210,7 @@ end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv]) 
-                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tm, previous(t_inv, 𝒯)]), 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tm, t_inv_prev]), 
                                     inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 end
@@ -260,10 +260,10 @@ end
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that the investments are as expected
-    for t_inv ∈ 𝒯ᴵⁿᵛ
+    for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         @testset "Investment period $(t_inv.sp)" begin
             @testset "Invested capacity" begin
-                if TS.isfirst(t_inv)
+                if isnothing(t_inv_prev)
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
@@ -272,7 +272,7 @@ end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv]) 
-                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tm, previous(t_inv, 𝒯)]), 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tm, t_inv_prev]), 
                                     inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 end

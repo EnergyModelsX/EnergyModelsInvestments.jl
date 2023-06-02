@@ -9,29 +9,26 @@ module EnergyModelsInvestments
 
 using EnergyModelsBase
 using JuMP
-using TimeStructures
+using TimeStruct
 
 const EMB = EnergyModelsBase
-const TS = TimeStructures
+const TS = TimeStruct
 
 include("datastructures.jl")
 include("model.jl")
-include("scaling_and_discounting.jl")
+# include("scaling_and_discounting.jl")
 include("utils.jl")
 include("checks.jl")
 
 
 export InvestmentModel
 export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment, 
-    FixedInvestment
+    SemiContinuousOffsetInvestment, FixedInvestment
 
 export LifetimeMode
 export UnlimitedLife, StudyLife, PeriodLife, RollingLife
 
 export InvData, InvDataStorage
-
-export obj_weight, obj_weight_inv, obj_weight_inv_end
-export discount_mult_avg
 
 export InvestmentData
 
