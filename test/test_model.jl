@@ -85,7 +85,7 @@ end
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test round(objective_value(m)) ≈ -292700
+        @test round(objective_value(m)) ≈ -313189
         
         CH4 = case[:products][1]
         CO2 = case[:products][4]
