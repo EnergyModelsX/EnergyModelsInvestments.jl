@@ -1,7 +1,7 @@
 """
-    EMB.objective(m, 𝒩, 𝒯, modeltype::InvestmentModel)
+    EMB.objective(m, 𝒩, 𝒯, modeltype::AbstractInvestmentModel)
 
-Create objective function overloading the default from EMB for InvestmentModel.
+Create objective function overloading the default from EMB for AbstractInvestmentModel.
 
 Maximize Net Present Value from revenues, investments (CAPEX) and operations (OPEX) 
 
@@ -10,7 +10,7 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 
 """
-function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)#, sense=Max)
+function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)#, sense=Max)
 
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     𝒩ᶜᵃᵖ = EMB.node_not_av(𝒩)                       # Nodes with capacity
@@ -42,7 +42,7 @@ end
 
 
 """
-    EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
+    EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)
 
 Create variables for the capital costs for the invesments in storage and 
 technology nodes.
@@ -70,7 +70,7 @@ Additional variables for investment in storage:
     * `:stor_rate_add` - added rate
     * `:stor_rate_rem` - removed rate
 """
-function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
+function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)
     
     𝒩ˢᵗᵒʳ = EMB.node_sub(𝒩, Storage)
     𝒩ˢᵗᵒʳᴵⁿᵛ = has_investment(𝒩ˢᵗᵒʳ)
@@ -104,7 +104,7 @@ function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::InvestmentModel)
 end
 
 """
-    EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯, modeltype::InvestmentModel
+    EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯, modeltype::AbstractInvestmentModel
 
 Set capacity-related constraints for nodes `𝒩` for investment time structure `𝒯`:
 * bounds
@@ -112,7 +112,7 @@ Set capacity-related constraints for nodes `𝒩` for investment time structure 
 * link capacity variables
 
 """
-function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure, modeltype::InvestmentModel)
+function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure, modeltype::AbstractInvestmentModel)
 
     # Extraction of the required subsets
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -152,14 +152,14 @@ function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure,
 end
 
 """
-    constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::InvestmentModel)
+    constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::AbstractInvestmentModel)
 Set storage-related constraints for nodes `𝒩ˢᵗᵒʳ` for investment time structure `𝒯`:
 * bounds
 * binary for BinaryInvestment
 * link storage variables
 
 """
-function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::InvestmentModel)
+function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::AbstractInvestmentModel)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     if has_investment(n)

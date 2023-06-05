@@ -1,7 +1,7 @@
 """
-    EMG.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+    EMG.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::EMI.AbstractInvestmentModel)
 
-Create objective function overloading the default from EMB for InvestmentModel.
+Create objective function overloading the default from EMB for EMI.AbstractInvestmentModel.
 
 Maximize Net Present Value from revenues, investments (CAPEX) and operations (OPEX) 
 
@@ -9,7 +9,7 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider passing expression around for updating
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 """
-function EMG.update_objective(m, 𝒯, ℳ, modeltype::InvestmentModel)
+function EMG.update_objective(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
     # Extraction of data
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -29,11 +29,11 @@ function EMG.update_objective(m, 𝒯, ℳ, modeltype::InvestmentModel)
 end
 
 """
-    EMG.variables_trans_capex(m, 𝒯, ℳ,, modeltype::InvestmentModel)
+    EMG.variables_trans_capex(m, 𝒯, ℳ,, modeltype::EMI.AbstractInvestmentModel)
 
 Create variables for the capital costs for the investments in transmission.
 """
-function EMG.variables_trans_capex(m, 𝒯, ℳ, modeltype::InvestmentModel)
+function EMG.variables_trans_capex(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
     ℳᴵⁿᵛ = EMI.has_investment(ℳ)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -42,7 +42,7 @@ function EMG.variables_trans_capex(m, 𝒯, ℳ, modeltype::InvestmentModel)
 end
 
 """
-    EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::InvestmentModel)
+    EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
 Create variables to track how much of installed transmision capacity is used for all 
 time periods `t ∈ 𝒯` and how much energy is lossed. Introduction of the additional
@@ -55,7 +55,7 @@ Additional variables for investment in capacity:
     * `:trans_cap_add` - added capacity
     * `:trans_cap_rem` - removed capacity
 """
-function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::InvestmentModel)
+function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
     @variable(m, trans_cap[ℳ, 𝒯] >= 0)
 
@@ -78,14 +78,14 @@ end
 
 
 """
-    constraints_transmission_invest(m, 𝒯, ℳ, modeltype::InvestmentModel)
+    constraints_transmission_invest(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 Set capacity-related constraints for `TransmissionMode`s `ℳ` for investment time structure `𝒯`:
 * bounds
 * binary for BinaryInvestment
 * link capacity variables
 
 """
-function constraints_transmission_invest(m, 𝒯, ℳ, modeltype::InvestmentModel)
+function constraints_transmission_invest(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
     
     𝒯ᴵⁿᵛ  = strategic_periods(𝒯)
     ℳᴵⁿᵛ = EMI.has_investment(ℳ)

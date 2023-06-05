@@ -1,6 +1,6 @@
 Release Notes
 =============
-Version 0.4.0 (2023-06-01)
+Version 0.4.0 (2023-06-06)
 --------------------------
 ### Switch to TimeStruct.jl
  * Switched the time structure representation to [TimeStruct.jl](https://gitlab.sintef.no/julia-one-sintef/timestruct.jl)
