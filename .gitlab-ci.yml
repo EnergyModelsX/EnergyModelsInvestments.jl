@@ -25,6 +25,7 @@ before_script:
 
   # Add the Clean Export internal registry and the public General registry.
   - julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "git@gitlab.sintef.no:clean_export/registrycleanexport.git"))'
+  - julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "git@gitlab.sintef.no:julia-one-sintef/onesintef.git"))'
   - julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "https://github.com/JuliaRegistries/General"))'
 
 
