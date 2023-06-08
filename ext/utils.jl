@@ -1,23 +1,23 @@
 """
-    EMI.has_investment(cm::EMG.TransmissionMode)
+    EMI.has_investment(tm::EMG.TransmissionMode)
 
 For a given `TransmissionMode`, checks that it contains ithe required investment data.
 """
-function EMI.has_investment(cm::EMG.TransmissionMode)
+function EMI.has_investment(tm::EMG.TransmissionMode)
     (
-        hasproperty(cm, :Data) && 
-        !isempty(filter(data -> typeof(data) <: InvestmentData, cm.Data))
+        hasproperty(tm, :Data) && 
+        !isempty(filter(data -> typeof(data) <: InvestmentData, tm.Data))
     )
 end
 
 """
-    EMI.has_investment(𝒞ℳ::Vector{<:EMG.TransmissionMode})
+    EMI.has_investment(ℳ::Vector{<:EMG.TransmissionMode})
 
 For a given `Vector{<:TransmissionMode}`, return all `TransmissionMode`s with investments.
 """
-function EMI.has_investment(𝒞ℳ::Vector{<:EMG.TransmissionMode})
+function EMI.has_investment(ℳ::Vector{<:EMG.TransmissionMode})
 
-    return [cm for cm ∈ 𝒞ℳ if EMI.has_investment(cm)]
+    return [tm for tm ∈ ℳ if EMI.has_investment(tm)]
 end
 
 
@@ -28,7 +28,7 @@ Returns the starting capacity of the `TransmissionMode` in the first investment 
 If no starting capacity is provided in `InvestmentData` (default = Nothing), then use the
 provided capacity from the field `Trans_Cap`.
 """
-EMI.get_start_cap(cm::EMG.TransmissionMode, t, ::Nothing) = cm.Trans_cap[t]
+EMI.get_start_cap(tm::EMG.TransmissionMode, t, ::Nothing) = tm.Trans_cap[t]
 
 
 """
@@ -36,10 +36,10 @@ EMI.get_start_cap(cm::EMG.TransmissionMode, t, ::Nothing) = cm.Trans_cap[t]
 
 Returns the maximum added capacity in the investment period `t_inv`.
 """
-EMI.max_add(cm::EMG.TransmissionMode, t_inv) = investment_data(cm).Trans_max_add[t_inv]
+EMI.max_add(tm::EMG.TransmissionMode, t_inv) = investment_data(tm).Trans_max_add[t_inv]
 """
     EMI.min_add(n::EMG.TransmissionMode, t_inv)
 
 Returns the minimum added capacity in the investment period `t_inv`.
 """
-EMI.min_add(cm::EMG.TransmissionMode, t_inv) = investment_data(cm).Trans_min_add[t_inv]
+EMI.min_add(tm::EMG.TransmissionMode, t_inv) = investment_data(tm).Trans_min_add[t_inv]

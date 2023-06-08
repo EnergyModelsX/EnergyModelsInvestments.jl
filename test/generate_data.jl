@@ -19,11 +19,12 @@ function generate_data()
 
     nodes = [
             EMB.GenAvailability(1, 𝒫₀, 𝒫₀),
-            EMB.RefSink(2, DynamicProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20;
-                                       20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20;
-                                       20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20;
-                                       20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-                    Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1)),
+            EMB.RefSink(2,
+                        StrategicProfile([OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+                                        OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+                                        OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+                                        OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])]
+                        ), Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1)),
             EMB.RefSource(3, FixedProfile(30), FixedProfile(30), FixedProfile(100), Dict(NG => 1), [InvData(Capex_cap=FixedProfile(1000),Cap_max_inst=FixedProfile(200),Cap_max_add=FixedProfile(200),Cap_min_add=FixedProfile(10),Inv_mode=ContinuousInvestment(), Cap_increment=FixedProfile(5), Cap_start=15)]),  
             EMB.RefSource(4, FixedProfile(9), FixedProfile(9), FixedProfile(100), Dict(Coal => 1), [InvData(Capex_cap=FixedProfile(1000),Cap_max_inst=FixedProfile(200),Cap_max_add=FixedProfile(200),Cap_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment())]),  
             EMB.RefNetworkEmissions(5, FixedProfile(0), FixedProfile(5.5), FixedProfile(100), Dict(NG => 2), Dict(Power => 1, CO2 => 0), 𝒫ᵉᵐ₀, 0.9, [InvData(Capex_cap=FixedProfile(600),Cap_max_inst=FixedProfile(25),Cap_max_add=FixedProfile(25),Cap_min_add=FixedProfile(0),Inv_mode=ContinuousInvestment())]),  
@@ -53,8 +54,8 @@ function generate_data()
             ]
 
     # Creation of the time structure and global data
-    T           = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
-    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+    T           = TwoLevel(4, 1, SimpleTimes(24, 1))
+    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
     modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 

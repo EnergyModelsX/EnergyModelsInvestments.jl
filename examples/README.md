@@ -1,6 +1,5 @@
 # Running the examples
 
-
 ## The package is installed with `] add`
 
 First, add the [*Clean Export* Julia packages repository](https://gitlab.sintef.no/clean_export/registrycleanexport). Then run 

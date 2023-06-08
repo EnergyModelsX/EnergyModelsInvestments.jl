@@ -5,12 +5,12 @@ using Test
 using EnergyModelsBase
 using EnergyModelsGeography
 using EnergyModelsInvestments
-using TimeStructures
+using TimeStruct
 
 const EMB = EnergyModelsBase
 const EMG = EnergyModelsGeography
 const EMI = EnergyModelsInvestments
-const TS = TimeStructures
+const TS = TimeStruct
 
 const TEST_ATOL = 1e-6
 ⪆(x,y) = x > y || isapprox(x,y;atol=TEST_ATOL)
@@ -35,7 +35,6 @@ end
 include("generate_data.jl")
 
 @testset "Investments" begin
-    include("test_discounting.jl")
     include("test_model.jl")
     include("test_lifetime.jl")
     include("test_examples.jl")

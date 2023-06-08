@@ -1,16 +1,19 @@
 using Pkg
+# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
 Pkg.activate(joinpath(@__DIR__, "../test"))
+# Install the dependencies.
 Pkg.instantiate()
+# Add the package EnergyModelsInvestments to the environment.
 Pkg.develop(path=joinpath(@__DIR__, ".."))
 
 using EnergyModelsBase
 using EnergyModelsInvestments
 using HiGHS
 using JuMP
-using TimeStructures
+using TimeStruct
 
 const EMB = EnergyModelsBase
-const IM = EnergyModelsInvestments
+const EMI = EnergyModelsInvestments
 
 
 """
@@ -55,13 +58,10 @@ function generate_data()
         EMB.GenAvailability(1, 𝒫₀, 𝒫₀),
         EMB.RefSink(
             2,
-            DynamicProfile(
-                [
-                    20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-                    20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-                    20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-                    20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-                ],
+            StrategicProfile([OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+                              OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+                              OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+                              OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])]
             ),
             Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
             Dict(Power => 1),
@@ -228,9 +228,9 @@ function generate_data()
     ]
 
     # Creation of the time structure and global data
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
+    T = TwoLevel(4, 1, SimpleTimes(24, 1))
     em_limits =
-        Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+        Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
     modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 

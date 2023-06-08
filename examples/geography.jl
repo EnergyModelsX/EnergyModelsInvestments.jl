@@ -1,19 +1,21 @@
 using Pkg
+# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
 Pkg.activate(joinpath(@__DIR__, "../test"))
+# Install the dependencies.
 Pkg.instantiate()
+# Add the package EnergyModelsInvestments to the environment.
 Pkg.develop(path=joinpath(@__DIR__, ".."))
-Pkg.status()
 
 using EnergyModelsBase
 using EnergyModelsGeography
 using EnergyModelsInvestments
 using HiGHS
 using JuMP
-using TimeStructures
+using TimeStruct
 
 const EMB = EnergyModelsBase
 const EMG = EnergyModelsGeography
-const IM = EnergyModelsInvestments
+const EMI = EnergyModelsInvestments
 
 
 function run_model(case, model, optimizer = nothing)
@@ -74,7 +76,7 @@ function generate_data()
     ]
 
     # Create the investment data for the different power line investment modes
-    inv_data_12 = IM.TransInvData(
+    inv_data_12 = TransInvData(
         Capex_trans = FixedProfile(500),
         Trans_max_inst = FixedProfile(50),
         Trans_max_add = FixedProfile(100),
@@ -83,7 +85,7 @@ function generate_data()
         Trans_start = 0,
     )
 
-    inv_data_13 = IM.TransInvData(
+    inv_data_13 = TransInvData(
         Capex_trans = FixedProfile(10),
         Trans_max_inst = FixedProfile(100),
         Trans_max_add = FixedProfile(100),
@@ -92,7 +94,7 @@ function generate_data()
         Trans_start = 0,
     )
 
-    inv_data_23 = IM.TransInvData(
+    inv_data_23 = TransInvData(
         Capex_trans = FixedProfile(10),
         Trans_max_inst = FixedProfile(50),
         Trans_max_add = FixedProfile(100),
@@ -102,7 +104,7 @@ function generate_data()
         Trans_start = 20,
     )
 
-    inv_data_34 = IM.TransInvData(
+    inv_data_34 = TransInvData(
         Capex_trans = FixedProfile(10),
         Trans_max_inst = FixedProfile(50),
         Trans_max_add = FixedProfile(100),
@@ -143,9 +145,9 @@ function generate_data()
     ]
 
     # Creation of the time structure and global data
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 24, 1))
+    T = TwoLevel(4, 1, SimpleTimes(24, 1))
     em_limits =
-        Dict(NG => FixedProfile(1e6), CO2 => StrategicFixedProfile([450, 400, 350, 300]))
+        Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
     modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 
@@ -198,10 +200,10 @@ function get_sub_system_data(
 
     if demand == false
         demand = [
-            20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-            20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-            20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
-            20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20
+            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
+            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])
         ]
         demand *= d_scale
     end
@@ -211,7 +213,7 @@ function get_sub_system_data(
         EMG.GeoAvailability(j + 1, 𝒫₀, 𝒫₀),
         EMB.RefSink(
             j + 2,
-            DynamicProfile(demand),
+            StrategicProfile(demand),
             Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
             Dict(Power => 1),
             𝒫ᵉᵐ₀,

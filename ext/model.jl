@@ -1,9 +1,7 @@
-const GEO = EnergyModelsGeography
-
 """
-    GEO.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::InvestmentModel)
+    EMG.update_objective(m, 𝒩, 𝒯, 𝒫, ℒᵗʳᵃⁿˢ, modeltype::EMI.AbstractInvestmentModel)
 
-Create objective function overloading the default from EMB for InvestmentModel.
+Create objective function overloading the default from EMB for EMI.AbstractInvestmentModel.
 
 Maximize Net Present Value from revenues, investments (CAPEX) and operations (OPEX) 
 
@@ -11,19 +9,19 @@ Maximize Net Present Value from revenues, investments (CAPEX) and operations (OP
 # * consider passing expression around for updating
 # * consider reading objective and adding terms/coefficients (from model object `m`)
 """
-function GEO.update_objective(m, 𝒯, ℳ, modeltype::InvestmentModel)
+function EMG.update_objective(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
     # Extraction of data
-    𝒯ᴵⁿᵛ    = strategic_periods(𝒯)
-    ℳᴵⁿᵛ   = EMI.has_investment(ℳ)
-    r       = modeltype.r
-    obj     = JuMP.objective_function(m)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    ℳᴵⁿᵛ = EMI.has_investment(ℳ)
+    obj  = JuMP.objective_function(m)
+    disc = Discounter(modeltype.r, 𝒯)               # Discount type decleration
 
     # Update of the cost function for modes with investments
-    for t ∈  𝒯ᴵⁿᵛ, tm ∈ ℳᴵⁿᵛ
-        obj -= obj_weight_inv(r, 𝒯, t) * m[:capex_trans][tm, t]
-        obj -= obj_weight_inv(r, 𝒯, t) * m[:trans_opex_fixed][tm, t]
-        obj -= obj_weight_inv(r, 𝒯, t) * m[:trans_opex_var][tm, t]
+    for t_inv ∈  𝒯ᴵⁿᵛ, tm ∈ ℳᴵⁿᵛ
+        obj -= objective_weight(t_inv, disc) * m[:capex_trans][tm, t_inv]
+        obj -= objective_weight(t_inv, disc) * m[:trans_opex_fixed][tm, t_inv]
+        obj -= objective_weight(t_inv, disc) * m[:trans_opex_var][tm, t_inv]
     end
 
     @objective(m, Max, obj)
@@ -31,11 +29,11 @@ function GEO.update_objective(m, 𝒯, ℳ, modeltype::InvestmentModel)
 end
 
 """
-    GEO.variables_trans_capex(m, 𝒯, ℳ,, modeltype::InvestmentModel)
+    EMG.variables_trans_capex(m, 𝒯, ℳ,, modeltype::EMI.AbstractInvestmentModel)
 
 Create variables for the capital costs for the investments in transmission.
 """
-function GEO.variables_trans_capex(m, 𝒯, ℳ, modeltype::InvestmentModel)
+function EMG.variables_trans_capex(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
     ℳᴵⁿᵛ = EMI.has_investment(ℳ)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -44,7 +42,7 @@ function GEO.variables_trans_capex(m, 𝒯, ℳ, modeltype::InvestmentModel)
 end
 
 """
-    GEO.variables_trans_capacity(m, 𝒯, 𝒞ℳ, modeltype::InvestmentModel)
+    EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
 Create variables to track how much of installed transmision capacity is used for all 
 time periods `t ∈ 𝒯` and how much energy is lossed. Introduction of the additional
@@ -57,152 +55,156 @@ Additional variables for investment in capacity:
     * `:trans_cap_add` - added capacity
     * `:trans_cap_rem` - removed capacity
 """
-function GEO.variables_trans_capacity(m, 𝒯, 𝒞ℳ, modeltype::InvestmentModel)
+function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
-    @variable(m, trans_cap[𝒞ℳ, 𝒯] >= 0)
+    @variable(m, trans_cap[ℳ, 𝒯] >= 0)
 
     𝒯ᴵⁿᵛ  = strategic_periods(𝒯)
-    𝒞ℳᴵⁿᵛ = EMI.has_investment(𝒞ℳ)
+    ℳᴵⁿᵛ = EMI.has_investment(ℳ)
 
     # Add transmission specific investment variables for each strategic period:
-    @variable(m, trans_cap_invest_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
-    @variable(m, trans_cap_remove_b[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
-    @variable(m, trans_cap_current[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)   # Installed capacity
-    @variable(m, trans_cap_add[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Add capacity
-    @variable(m, trans_cap_rem[𝒞ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Remove capacity
+    @variable(m, trans_cap_invest_b[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
+    @variable(m, trans_cap_remove_b[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ])
+    @variable(m, trans_cap_current[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)   # Installed capacity
+    @variable(m, trans_cap_add[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Add capacity
+    @variable(m, trans_cap_rem[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Remove capacity
     
 
     # Additional constraints (e.g. for binary investments) are added per node depending on 
     # investment mode on each node. (One alternative could be to build variables iteratively with 
     # JuMPUtils.jl)
-    constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype)
+    constraints_transmission_invest(m, 𝒯, ℳ, modeltype)
 end
 
 
 """
-    constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::InvestmentModel)
-Set capacity-related constraints for `TransmissionMode`s `𝒞ℳ` for investment time structure `𝒯`:
+    constraints_transmission_invest(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
+Set capacity-related constraints for `TransmissionMode`s `ℳ` for investment time structure `𝒯`:
 * bounds
 * binary for BinaryInvestment
 * link capacity variables
 
 """
-function constraints_transmission_invest(m, 𝒯, 𝒞ℳ, modeltype::InvestmentModel)
+function constraints_transmission_invest(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
     
     𝒯ᴵⁿᵛ  = strategic_periods(𝒯)
-    𝒞ℳᴵⁿᵛ = EMI.has_investment(𝒞ℳ)
+    ℳᴵⁿᵛ = EMI.has_investment(ℳ)
     
     # Constraints capex
-    for t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ 𝒞ℳᴵⁿᵛ 
-        set_capacity_cost(m, cm, 𝒯, t_inv, modeltype)
+    for t_inv ∈ 𝒯ᴵⁿᵛ, tm ∈ ℳᴵⁿᵛ 
+        set_capacity_cost(m, tm, 𝒯, t_inv, modeltype)
     end
 
-    # Set investment properties based on investment mode of `TransmissionMode` cm
-    for t_inv ∈ 𝒯ᴵⁿᵛ, cm ∈ 𝒞ℳᴵⁿᵛ 
-        EMI.set_investment_properties(cm, m[:trans_cap_invest_b][cm, t_inv])  
+    # Set investment properties based on investment mode of `TransmissionMode` tm
+    for t_inv ∈ 𝒯ᴵⁿᵛ, tm ∈ ℳᴵⁿᵛ 
+        EMI.set_investment_properties(tm, m[:trans_cap_invest_b][tm, t_inv])  
     end
 
     # Link capacity to installed capacity 
-    for cm ∈ 𝒞ℳᴵⁿᵛ
+    for tm ∈ ℳᴵⁿᵛ
         for t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ t_inv
-            @constraint(m, m[:trans_cap][cm, t] == m[:trans_cap_current][cm, t_inv])
+            @constraint(m, m[:trans_cap][tm, t] == m[:trans_cap_current][tm, t_inv])
         end
     end
-    for cm ∈ setdiff(𝒞ℳ, 𝒞ℳᴵⁿᵛ)
+    for tm ∈ setdiff(ℳ, ℳᴵⁿᵛ)
         for t ∈ 𝒯
-            @constraint(m, m[:trans_cap][cm, t] == cm.Trans_cap[t])
+            @constraint(m, m[:trans_cap][tm, t] == tm.Trans_cap[t])
         end
     end
 
     # Transmission capacity updating
-    for cm ∈ 𝒞ℳᴵⁿᵛ
-        inv_data = EMI.investment_data(cm)
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            start_cap = EMI.get_start_cap(cm, t_inv, inv_data.Trans_start)
-            @constraint(m, m[:trans_cap_current][cm, t_inv] <=
-            inv_data.Trans_max_inst[t_inv])
-            @constraint(m, m[:trans_cap_current][cm, t_inv] ==
-            (isfirst(t_inv) ? start_cap : m[:trans_cap_current][cm, previous(t_inv,𝒯)])
-            + m[:trans_cap_add][cm, t_inv] 
-            - (isfirst(t_inv) ? 0 : m[:trans_cap_rem][cm, previous(t_inv,𝒯)]))
+    for tm ∈ ℳᴵⁿᵛ
+        inv_data = EMI.investment_data(tm)
+        for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
+            @constraint(m, m[:trans_cap_current][tm, t_inv] <=
+                            inv_data.Trans_max_inst[t_inv])
+            if isnothing(t_inv_prev)
+                start_cap = EMI.get_start_cap(tm, t_inv, inv_data.Trans_start)
+                @constraint(m, m[:trans_cap_current][tm, t_inv] ==
+                    start_cap + m[:trans_cap_add][tm, t_inv])
+            else
+                @constraint(m, m[:trans_cap_current][tm, t_inv] ==
+                    m[:trans_cap_current][tm, t_inv_prev]
+                    + m[:trans_cap_add][tm, t_inv] - m[:trans_cap_rem][tm, t_inv_prev])
+            end
         end
-        set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ)
+        set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ)
     end
 end
 
 
 """
-    set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investment_mode)
+    set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, investment_mode)
 
 Add constraints related to capacity installation depending on investment mode of
-`TransmissionMode` cm.
+`TransmissionMode` tm.
 """
-set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ) = 
-    set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, EMI.investment_mode(cm))
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, investmentmode)
+set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ) = 
+    set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, EMI.investment_mode(tm))
+function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::EMI.Investment)
     # Extract the investment data
-    inv_data = EMI.investment_data(cm)
+    inv_data = EMI.investment_data(tm)
 
     # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_cap_add][cm, t_inv] <= 
+        @constraint(m, m[:trans_cap_add][tm, t_inv] <= 
                             inv_data.Trans_max_add[t_inv])
-        @constraint(m, m[:trans_cap_add][cm, t_inv] >=
+        @constraint(m, m[:trans_cap_add][tm, t_inv] >=
                             inv_data.Trans_min_add[t_inv])
-        @constraint(m, m[:trans_cap_rem][cm, t_inv] == 0)
+        @constraint(m, m[:trans_cap_rem][tm, t_inv] == 0)
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::EMI.BinaryInvestment)
+function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_cap_current][cm, t_inv] ==
-                            cm.Trans_cap[t_inv] * m[:trans_cap_invest_b][cm, t_inv]) 
+        @constraint(m, m[:trans_cap_current][tm, t_inv] ==
+                            tm.Trans_cap[t_inv] * m[:trans_cap_invest_b][tm, t_inv]) 
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::EMI.DiscreteInvestment)
+function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     # Extract the investment data
-    inv_data = EMI.investment_data(cm)
+    inv_data = EMI.investment_data(tm)
 
     # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        EMI.set_investment_properties( cm, m[:trans_cap_remove_b][cm, t_inv])
-        @constraint(m, m[:trans_cap_add][cm, t_inv] == 
+        EMI.set_investment_properties( tm, m[:trans_cap_remove_b][tm, t_inv])
+        @constraint(m, m[:trans_cap_add][tm, t_inv] == 
                             inv_data.Trans_increment[t_inv]
-                            * m[:trans_cap_invest_b][cm, t_inv])
-        @constraint(m, m[:trans_cap_rem][cm, t_inv] == 
+                            * m[:trans_cap_invest_b][tm, t_inv])
+        @constraint(m, m[:trans_cap_rem][tm, t_inv] == 
                             inv_data.Trans_increment[t_inv]
-                            * m[:trans_cap_remove_b][cm, t_inv])
+                            * m[:trans_cap_remove_b][tm, t_inv])
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::EMI.SemiContiInvestment)
+function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::EMI.SemiContiInvestment)
     # Extract the investment data
-    inv_data = EMI.investment_data(cm)
+    inv_data = EMI.investment_data(tm)
 
     # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Disjunctive constraints when investing
-        @constraint(m, m[:trans_cap_add][cm, t_inv] <=
+        @constraint(m, m[:trans_cap_add][tm, t_inv] <=
                             inv_data.Trans_max_add[t_inv]
-                            * m[:trans_cap_invest_b][cm, t_inv]) 
-        @constraint(m, m[:trans_cap_add][cm, t_inv] >=
+                            * m[:trans_cap_invest_b][tm, t_inv]) 
+        @constraint(m, m[:trans_cap_add][tm, t_inv] >=
                             inv_data.Trans_min_add[t_inv]
-                            * m[:trans_cap_invest_b][cm, t_inv]) 
-        @constraint(m, m[:trans_cap_rem][cm, t_inv] == 0)
+                            * m[:trans_cap_invest_b][tm, t_inv]) 
+        @constraint(m, m[:trans_cap_rem][tm, t_inv] == 0)
     end
 end
 
-function set_trans_cap_installation(m, cm, 𝒯ᴵⁿᵛ, ::EMI.FixedInvestment)
+function set_trans_cap_installation(m, tm, 𝒯ᴵⁿᵛ, ::FixedInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, m[:trans_cap_current][cm, t_inv] ==
-                            cm.Trans_cap[t_inv] * m[:trans_cap_invest_b][cm, t_inv])
+        @constraint(m, m[:trans_cap_current][tm, t_inv] ==
+                            tm.Trans_cap[t_inv] * m[:trans_cap_invest_b][tm, t_inv])
     end
 end
 
 
 """
-    set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype)
+    set_capacity_cost(m, tm::EMG.TransmissionMode, 𝒯, t_inv, modeltype)
 Set `capex_trans` based on the technology investment cost to include the potential for either
 semi continuous costs with offsets or piecewise linear costs. 
 It implements different versions of cost calculations:
@@ -211,24 +213,24 @@ for all invcestment options
 - `SemiContinuousOffsetInvestment`: The cost is linear dependent on the added capacity with a
 given offset
 """
-set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype) = set_capacity_cost(m, cm, 𝒯, t_inv, modeltype, EMI.investment_mode(cm))
+set_capacity_cost(m, tm::EMG.TransmissionMode, 𝒯, t_inv, modeltype) = set_capacity_cost(m, tm, 𝒯, t_inv, modeltype, EMI.investment_mode(tm))
 
-function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, ::EMI.Investment)
+function set_capacity_cost(m, tm::EMG.TransmissionMode, 𝒯, t_inv, modeltype, ::EMI.Investment)
     # Extract the investment data
-    inv_data = EMI.investment_data(cm)
+    inv_data = EMI.investment_data(tm)
 
     # Set the cost contribution
-    @constraint(m, m[:capex_trans][cm, t_inv] ==
+    @constraint(m, m[:capex_trans][tm, t_inv] ==
                         inv_data.Capex_trans[t_inv]
-                        * m[:trans_cap_add][cm, t_inv])
+                        * m[:trans_cap_add][tm, t_inv])
 end
 
-function set_capacity_cost(m, cm::GEO.TransmissionMode, 𝒯, t_inv, modeltype, ::EMI.SemiContinuousOffsetInvestment)
+function set_capacity_cost(m, tm::EMG.TransmissionMode, 𝒯, t_inv, modeltype, ::SemiContinuousOffsetInvestment)
     # Extract the investment data
-    inv_data = EMI.investment_data(cm)
+    inv_data = EMI.investment_data(tm)
 
     # Set the cost contribution
-    @constraint(m, m[:capex_trans][cm, t_inv] ==
-                        inv_data.Capex_trans[t_inv] * m[:trans_cap_add][cm, t_inv] + 
-                        inv_data.Capex_trans_offset[t_inv] * m[:trans_cap_invest_b][cm, t_inv])
+    @constraint(m, m[:capex_trans][tm, t_inv] ==
+                        inv_data.Capex_trans[t_inv] * m[:trans_cap_add][tm, t_inv] + 
+                        inv_data.Capex_trans_offset[t_inv] * m[:trans_cap_invest_b][tm, t_inv])
 end

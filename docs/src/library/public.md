@@ -41,6 +41,12 @@ The field `Cap_increment::TimeProfile` from [`extra_inv_data`](@ref), or `Rate_i
 !!! note
     This investment type leads to the addition of binary variables.
 
+### `SemiContinuousOffsetInvestment`
+[`SemiContinuousOffsetInvestment`](@ref) is a type of investment similar to [`SemiContinuousInvestment`](@ref) and implemented for investments in transmission infrastructure. It does  differ with respect to how the costs are calculated. A `SemiContinuousOffsetInvestment` has an offset in the cost implemented through the the field `Capex_trans_offset`. This offset corresponds to the theoretical cost at an invested capacity of 0.
+
+!!! note
+    This investment type leads to the addition of binary variables.
+
 
 ### `FixedInvestment`
 [`FixedInvestment`](@ref) is a type of investment where an investment in the given capacity is forced.
@@ -68,9 +74,9 @@ This `LifetimeMode` is used to define that the investment is only lasting for th
 This `LifetimeMode` is used to define that the investment rolls over to the next strategic periods as long as the lifetime is not reached. If the remaining lifetime falls between two strategic periods, the investment is not carried to the next period and a rest value is used t oaccount for the remaining lifetime.
 
 ## Additional Data for Investments
-Additional data for investment is specified when creating the nodes. Two struct are used to define the paramters necessary for production technologies ([`extra_inv_data`](@ref)) and storages ([`extra_inv_data_storage`](@ref))
+Additional data for investment is specified when creating the nodes. Two struct are used to define the paramters necessary for production technologies ([`InvData`](@ref)) and storages ([`InvDataStorage`](@ref))
 
-### `extra_inv_data`
+### `InvData`
 Define the structure for the additional parameters passed to the technology structures
 defined in other packages. It uses `Base.@kwdef` to use keyword arguments and default values.
 The name of the parameters have to be specified.
@@ -78,7 +84,7 @@ The name of the parameters have to be specified.
 !!!note 
     Depending on the type of investment mode chosen, not all parameters are necessary. It is however possible to set parameters even if they will not be used t obe able to change the investment type more easily.
 
-### `extra_inv_data_storage`
+### `InvDataStorage`
 Define the structure for the additional parameters passed to the technology
 structures defined in other packages. It uses `Base.@kwdef` to use keyword 
 arguments and default values. The name of the parameters have to be specified.
@@ -89,38 +95,8 @@ for instance storage capacity for a battery.
 
 !!!note 
     Depending on the type of investment mode chosen, not all parameters are necessary. It is however possible to set parameters even if they will not be used t obe able to change the investment type more easily.
-
-
-## Discounting Methods
-Several discounting methods are defined depending on when the discounting happens.
-
-### `obj_weight`
-
-[`obj_weight`](@ref) is a method that returns the weight used to discount costs inside the operational periods assuming the cost is spread evenly over the strategic period.
-
-
-### `obj_weight_inv`
-
-[`obj_weight`](@ref) is a method that returns the weight used to discount costs inside the operational periods assuming an investment at the beginning of the strategic period.
-
-
-### `obj_weight_inv_end`
-
-[`obj_weight`](@ref) is a method that returns the weight used to discount costs inside the operational periods assuming an investment at the end of the strategic period.
-
-
-### `discount_mult_avg`
-
-[`obj_weight`](@ref) is a method that returns the average weight to discount costs for the time period.
-This is a limit case n->infinity of dividing the time period into n pieces and discounting each separately
-
-``1 / (t_1 - t_0) * \\int_{t=t_0}^{t_1} (1 + r)^{-t} dt``
-
-The advantage of this way of calculating the discount rate is that the discounting does not change if we divide the period in two
-
-
-## `TransInvData`
-Similarly as for [`extra_inv_data`](@ref), this struct defines additional parameters necessary for handling the investment in transmission between geographical areas. This struct is used in addition to `EnergyModelsGeography` to add investment in transmission.
+### `TransInvData`
+Similarly as for [`InvData`](@ref), this struct defines additional parameters necessary for handling the investment in transmission between geographical areas. This struct is used in addition to `EnergyModelsGeography` to add investment in transmission.
 
 ## Index
 

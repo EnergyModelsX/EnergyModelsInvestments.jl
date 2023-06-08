@@ -27,7 +27,7 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
     if isnothing(sink)
         sink = RefSink(
                     "-snk",
-                    StrategicFixedProfile([20, 25, 30, 35]),
+                    StrategicProfile([20, 25, 30, 35]),
                     Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
                     Dict(Power => 1),
                 )
@@ -55,10 +55,10 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
                     ]
 
     # Creation of the time structure and the used global data
-    T = UniformTwoLevel(1, 4, 1, UniformTimes(1, 1, 1))
+    T = TwoLevel(4, 1, SimpleTimes(1, 1))
     modeltype = InvestmentModel(
-                            Dict(CO2 => StrategicFixedProfile([450, 400, 350, 300])),
-                            Dict(CO2 => StrategicFixedProfile([0, 0, 0, 0])),
+                            Dict(CO2 => StrategicProfile([450, 400, 350, 300])),
+                            Dict(CO2 => StrategicProfile([0, 0, 0, 0])),
                             CO2,
                             0.07
                         )
@@ -103,11 +103,11 @@ end
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
-    trans_mode  = tr_osl_trd.Modes[1]
+    tm  = tr_osl_trd.Modes[1]
 
     # Test identifying that the proper deficit is calculated
     @test sum(value.(m[:sink_deficit][sink, t])
-                        ≈ sink.Cap[t] - trans_mode.Trans_cap[t] for t ∈ 𝒯) == length(𝒯)
+                        ≈ sink.Cap[t] - tm.Trans_cap[t] for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that no investment variables are created
     @test size(m[:trans_cap_invest_b])[1] == 0
@@ -142,25 +142,25 @@ end
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
-    trans_mode  = tr_osl_trd.Modes[1]
+    tm  = tr_osl_trd.Modes[1]
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that the investments are as expected
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        if TS.isfirst(t_inv)
+    for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
+        if isnothing(t_inv_prev)
             @testset "First investment period" begin
                 for t ∈ t_inv
-                    @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                    @test (value.(m[:trans_cap_add][tm, t_inv]) 
                                     ≈ sink.Cap[t]-inv_data.Trans_start)
                 end
             end
         else
             @testset "Subsequent investment periods" begin
                 for t ∈ t_inv
-                    @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
-                            ≈ sink.Cap[t]-value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]))
+                    @test (value.(m[:trans_cap_add][tm, t_inv]) 
+                            ≈ sink.Cap[t]-value.(m[:trans_cap_current][tm, t_inv_prev]))
                 end
             end
         end
@@ -192,36 +192,36 @@ end
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
-    trans_mode  = tr_osl_trd.Modes[1]
+    tm  = tr_osl_trd.Modes[1]
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that the investments are as expected
-    for t_inv ∈ 𝒯ᴵⁿᵛ
+    for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         @testset "Investment period $(t_inv.sp)" begin
             @testset "Invested capacity" begin
-                if TS.isfirst(t_inv)
+                if isnothing(t_inv_prev)
                     for t ∈ t_inv
-                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                        @test (value.(m[:trans_cap_add][tm, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
-                                            inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 else
                     for t ∈ t_inv
-                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
-                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]), 
-                                    inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
+                        @test (value.(m[:trans_cap_add][tm, t_inv]) 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tm, t_inv_prev]), 
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 end
             end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_cap_invest_b][trans_mode, t_inv]) == 0
-                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
+                if value.(m[:trans_cap_invest_b][tm, t_inv]) == 0
+                    @test value.(m[:trans_cap_add][tm, t_inv]) == 0
                 else
-                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) ⪆ 0
+                    @test value.(m[:trans_cap_add][tm, t_inv]) ⪆ 0
                 end
             end
         end
@@ -254,44 +254,44 @@ end
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
-    trans_mode  = tr_osl_trd.Modes[1]
+    tm  = tr_osl_trd.Modes[1]
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
                         
     # Test showing that the investments are as expected
-    for t_inv ∈ 𝒯ᴵⁿᵛ
+    for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         @testset "Investment period $(t_inv.sp)" begin
             @testset "Invested capacity" begin
-                if TS.isfirst(t_inv)
+                if isnothing(t_inv_prev)
                     for t ∈ t_inv
-                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
+                        @test (value.(m[:trans_cap_add][tm, t_inv]) 
                                         >= max(sink.Cap[t] - inv_data.Trans_start, 
-                                            inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
+                                            inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 else
                     for t ∈ t_inv
-                        @test (value.(m[:trans_cap_add][trans_mode, t_inv]) 
-                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][trans_mode, previous(t_inv, 𝒯)]), 
-                                    inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][trans_mode, t_inv])))
+                        @test (value.(m[:trans_cap_add][tm, t_inv]) 
+                                        ⪆ max(sink.Cap[t] - value.(m[:trans_cap_current][tm, t_inv_prev]), 
+                                    inv_data.Trans_min_add[t] * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 end
             end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_cap_invest_b][trans_mode, t_inv]) == 0
-                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
+                if value.(m[:trans_cap_invest_b][tm, t_inv]) == 0
+                    @test value.(m[:trans_cap_add][tm, t_inv]) == 0
                 else
-                    @test value.(m[:trans_cap_add][trans_mode, t_inv]) ⪆ 0
+                    @test value.(m[:trans_cap_add][tm, t_inv]) ⪆ 0
                 end
             end
         end
     end
     @testset "Investment costs" begin
-        @test sum(value(m[:trans_cap_add][trans_mode, t_inv]) * inv_data.Capex_trans[t_inv] + 
-            inv_data.Capex_trans_offset[t_inv] * value(m[:trans_cap_invest_b][trans_mode, t_inv]) ≈ 
-            value(m[:capex_trans][trans_mode, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, atol=TEST_ATOL) == length(𝒯ᴵⁿᵛ)
+        @test sum(value(m[:trans_cap_add][tm, t_inv]) * inv_data.Capex_trans[t_inv] + 
+            inv_data.Capex_trans_offset[t_inv] * value(m[:trans_cap_invest_b][tm, t_inv]) ≈ 
+            value(m[:capex_trans][tm, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, atol=TEST_ATOL) == length(𝒯ᴵⁿᵛ)
     end
 end
 
@@ -319,7 +319,7 @@ end
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
-    trans_mode  = tr_osl_trd.Modes[1]
+    tm  = tr_osl_trd.Modes[1]
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
@@ -327,11 +327,11 @@ end
     # Test showing that the investments are as expected
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @testset "Invested capacity $(t_inv.sp)" begin
-            if value.(m[:trans_cap_invest_b][trans_mode, t_inv]) == 0
-                @test value.(m[:trans_cap_add][trans_mode, t_inv]) == 0
+            if value.(m[:trans_cap_invest_b][tm, t_inv]) == 0
+                @test value.(m[:trans_cap_add][tm, t_inv]) == 0
             else
-                @test value.(m[:trans_cap_add][trans_mode, t_inv]) ≈ 
-                    inv_data.Trans_increment[t_inv] * value.(m[:trans_cap_invest_b][trans_mode, t_inv]) 
+                @test value.(m[:trans_cap_add][tm, t_inv]) ≈ 
+                    inv_data.Trans_increment[t_inv] * value.(m[:trans_cap_invest_b][tm, t_inv]) 
             end
         end
     end
