@@ -23,9 +23,9 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)#
     capexunit = 1 # TODO: Fix scaling if operational units are different form CAPEX
 
     obj = JuMP.AffExpr()
-    haskey(m, :revenue)     && (obj += sum(objective_weight(t, disc) * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
-    haskey(m, :opex_var)    && (obj -= sum(objective_weight(t_inv, disc) * m[:opex_var][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
-    haskey(m, :opex_fixed)  && (obj -= sum(objective_weight(t_inv, disc) * m[:opex_fixed][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :revenue)     && (obj += sum(objective_weight(t, disc, type="avg") * m[:revenue][i, t] / capexunit for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈ 𝒯ᴵⁿᵛ, t ∈ 𝒯))
+    haskey(m, :opex_var)    && (obj -= sum(objective_weight(t_inv, disc, type="avg") * m[:opex_var][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
+    haskey(m, :opex_fixed)  && (obj -= sum(objective_weight(t_inv, disc, type="avg") * m[:opex_fixed][i, t_inv] * t_inv.duration  for i ∈ 𝒩ᶜᵃᵖ, t_inv ∈  𝒯ᴵⁿᵛ))
     haskey(m, :capex_cap)   && !isempty(𝒩ᴵⁿᵛ) && (obj -= sum(objective_weight(t_inv, disc) * m[:capex_cap][i, t_inv]  for i ∈ 𝒩ᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ))
     if haskey(m, :capex_stor) && !isempty(𝒩ˢᵗᵒʳᴵⁿᵛ)
         obj -= sum(objective_weight(t_inv, disc) * m[:capex_stor][i, t_inv]  for i ∈ 𝒩ˢᵗᵒʳᴵⁿᵛ, t_inv ∈  𝒯ᴵⁿᵛ) #capex of the capacity part ofthe storage (by opposition to the power part)
@@ -33,7 +33,7 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)#
     end
 
     em_price = modeltype.Emission_price
-    obj -= sum(objective_weight(t_inv, disc) * m[:emissions_strategic][t_inv, p_em] * em_price[p_em][t_inv] for p_em ∈ 𝒫ᵉᵐ, t_inv ∈ 𝒯ᴵⁿᵛ)
+    obj -= sum(objective_weight(t_inv, disc, type="avg") * m[:emissions_strategic][t_inv, p_em] * em_price[p_em][t_inv] for p_em ∈ 𝒫ᵉᵐ, t_inv ∈ 𝒯ᴵⁿᵛ)
 
     # TODO: Maintentance cost
 
@@ -533,7 +533,6 @@ function set_capacity_cost(m, n::Storage, 𝒯, t_inv,  modeltype::EnergyModel, 
     data = investment_data(n)
     lifetime = data.Lifetime[t_inv]
     r = modeltype.r                     # discount rate
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # If lifetime is shorer than the sp duration , we apply the method for PeriodLife
     if lifetime < duration(t_inv)

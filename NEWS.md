@@ -1,5 +1,11 @@
 Release Notes
 =============
+Version 0.4.2 (2023-08-24)
+--------------------------
+### Changes in discounting
+ * Previously, strategic periods were discounted using the start year for both OPEX and CAPEX
+ * This was changed for OPEX and emission cost calculations to account for longer strategic periods
+
 Version 0.4.1 (2023-08-02)
 --------------------------
 ### Bugfix
