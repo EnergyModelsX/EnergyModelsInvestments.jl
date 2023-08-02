@@ -1,5 +1,10 @@
 Release Notes
 =============
+Version 0.4.1 (2023-08-02)
+--------------------------
+### Bugfix
+ * Included calling of `strategic_periods` in `::RollingLife` which was missing
+ 
 Version 0.4.0 (2023-06-06)
 --------------------------
 ### Switch to TimeStruct.jl
