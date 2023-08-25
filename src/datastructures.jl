@@ -6,9 +6,9 @@ abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 An concrete basic investment model type
 
 # Fields
-- **`Emission_limit::Dict{ResourceEmit, TimeProfile}`** are the emission caps for the different 
+- **`Emission_limit::Dict{ResourceEmit, TimeProfile}`** are the emission caps for the different
 emissions types considered.\n
-- **`Emission_price::Dict{ResourceEmit, TimeProfile}`** are the prices for the different 
+- **`Emission_price::Dict{ResourceEmit, TimeProfile}`** are the prices for the different
 emissions types considered.\n
 - **`CO2_instance`** is a `ResourceEmit` and corresponds to the type used for CO2.\n
 - **`r`** is the discount rate in the investment optimization.
@@ -22,12 +22,12 @@ end
 
 
 """ Investment type traits for nodes. """
-abstract type Investment end 
+abstract type Investment end
 """ Binary investment in given capacity with binary variables. Requires specification
 of `Cap_start` in `InvData` for proper analyses."""
 struct BinaryInvestment <: Investment end
 """ Investment in fixed increments with integer variables. """
-struct DiscreteInvestment <: Investment end 
+struct DiscreteInvestment <: Investment end
 """ Continuous investment between zero and a maximum value. """
 struct ContinuousInvestment <: Investment end
 """ Forced investment in given capacity. """
@@ -43,18 +43,18 @@ struct SemiContinuousOffsetInvestment <: SemiContiInvestment end
 
 """ Abstract lifetime type """
 abstract type LifetimeMode end
-""" The investment's life is not limited. The investment costs do not consider any 
+""" The investment's life is not limited. The investment costs do not consider any
 reinvestment or rest value. """
 struct UnlimitedLife <: LifetimeMode end
-""" The investment lasts for the whole study period with adequate reinvestments at the 
+""" The investment lasts for the whole study period with adequate reinvestments at the
 end of the lifetime and considering the rest value. """
 struct StudyLife <: LifetimeMode end
-""" The investment is considered to last only for the strategic period. The excess 
-lifetime is considered in the rest value. If the lifetime is lower than the length 
+""" The investment is considered to last only for the strategic period. The excess
+lifetime is considered in the rest value. If the lifetime is lower than the length
 of the period, reinvestment is considered as well. """
 struct PeriodLife <: LifetimeMode end
-""" The investment is rolling to the next strategic periods and it is retired at the 
-end of its lifetime or the end of the previous strategic period if its lifetime 
+""" The investment is rolling to the next strategic periods and it is retired at the
+end of its lifetime or the end of the previous strategic period if its lifetime
 ends between two periods."""
 struct RollingLife <: LifetimeMode end
 
@@ -70,9 +70,9 @@ defined in other packages. It uses `Base.@kwdef` to use keyword arguments and de
 The name of the parameters have to be specified.
 
 # Fields
-- **`Capex_Cap::TimeProfile`** Capital Expenditure for the capacity, here investment costs of 
+- **`Capex_Cap::TimeProfile`** Capital Expenditure for the capacity, here investment costs of
 the technology in each period.\n
-- **`Cap_max_inst::TimeProfile`** Maximum possible installed capacity of the technology in 
+- **`Cap_max_inst::TimeProfile`** Maximum possible installed capacity of the technology in
 each period.\n
 - **`Cap_max_add::TimeProfile`** Maximum capacity addition in one period from the previous.\n
 - **`Cap_min_add::TimeProfile`** Minimum capacity addition in one period from the previous.\n
@@ -104,13 +104,13 @@ Base.@kwdef struct InvData <: InvestmentData
  """ Extra data for investing in storages.
 
 Define the structure for the additional parameters passed to the technology
-structures defined in other packages. It uses `Base.@kwdef` to use keyword 
+structures defined in other packages. It uses `Base.@kwdef` to use keyword
 arguments and default values. The name of the parameters have to be specified.
-The parameters are separated between Rate and Stor. The Rate refers to 
+The parameters are separated between Rate and Stor. The Rate refers to
 instantaneous component (Power, Flow, ...) for instance, charging and discharging power
 for batteries, while the Stor refers to a volumetric component (Energy, Volume, ...),
 for instance storage capacity for a battery.
- 
+
 # Fields
 - **`Capex_rate::TimeProfile`** Capital Expenditure for storage rate, here investment
 costs of the technology rate in each period.\n
@@ -118,22 +118,22 @@ costs of the technology rate in each period.\n
 each period.\n
 - **`Rate_max_add::TimeProfile`** Maximum rate addition in one period from the previous.\n
 - **`Rate_min_add::TimeProfile`** Minimum rate addition in one period from the previous.\n
-- **`Capex_stor::TimeProfile`** Capital Expenditure, here investment costs of the technology 
+- **`Capex_stor::TimeProfile`** Capital Expenditure, here investment costs of the technology
 storage volume in each period.\n
-- **`Stor_max_inst::TimeProfile`** Maximum possible installed storage volume of the technology 
+- **`Stor_max_inst::TimeProfile`** Maximum possible installed storage volume of the technology
 in each period.\n
-- **`Stor_max_add::TimeProfile`** Maximum storage volume addition in one period from the 
+- **`Stor_max_add::TimeProfile`** Maximum storage volume addition in one period from the
 previous.\n
-- **`Stor_min_add::TimeProfile`** Minimum storage volume addition in one period from the 
+- **`Stor_min_add::TimeProfile`** Minimum storage volume addition in one period from the
 previous.\n
 - **`Inv_mode::Investment = ContinuousInvestment()`** Type of the investment:
-`BinaryInvestment`, `DiscreteInvestment`, `ContinuousInvestment`, `SemiContinuousInvestment` 
+`BinaryInvestment`, `DiscreteInvestment`, `ContinuousInvestment`, `SemiContinuousInvestment`
 or `FixedInvestment`.\n
-- **`Rate_start::Union{Real, Nothing} = nothing`** Starting rate in first period. 
+- **`Rate_start::Union{Real, Nothing} = nothing`** Starting rate in first period.
 If nothing is given, it is set by `get_start_cap()` to the capacity `Rate_cap` of the node.\n
 - **`Stor_start::Union{Real, Nothing} = nothing`** Starting storage volume in first period.
 If nothing is given, it is set by `get_start_cap()` to the capacity `Stor_cap` of the node.\n
-- **`Rate_increment::TimeProfile = FixedProfile(0)`** Rate increment used in the case of 
+- **`Rate_increment::TimeProfile = FixedProfile(0)`** Rate increment used in the case of
 `DiscreteInvestment`\n
 - **`Stor_increment::TimeProfile = FixedProfile(0)`** Storage volume increment used in the
 case of `DiscreteInvestment`\n
@@ -147,7 +147,7 @@ Base.@kwdef struct InvDataStorage <: InvestmentData
     Capex_rate::TimeProfile #capex of power
     Rate_max_inst::TimeProfile
     Rate_max_add::TimeProfile
-    Rate_min_add::TimeProfile         
+    Rate_min_add::TimeProfile
     Capex_stor::TimeProfile #capex of capacity
     Stor_max_inst::TimeProfile
     Stor_max_add::TimeProfile
@@ -186,4 +186,16 @@ Base.@kwdef struct TransInvData <: InvestmentData
     Trans_start::Union{Real, Nothing} = 0 # Nothing caused error in one of the examples
     Trans_increment::TimeProfile = FixedProfile(0)
     Capex_trans_offset::TimeProfile = FixedProfile(0)
+end
+
+function objective_weight(p::TS.SimplePeriod, disc::Discounter; type = "start")
+    return discount(disc, p, type=type)
+end
+
+function objective_weight(op::TS.OperationalPeriod, disc::Discounter; type = "start")
+    return probability(op) * discount(disc, op, type=type) * multiple(op)
+end
+
+function objective_weight(sp::TS.StrategicPeriod, disc::Discounter; type = "start")
+    return discount(disc, sp, type=type)
 end

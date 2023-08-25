@@ -4,7 +4,7 @@ Power = ResourceCarrier("Power", 0.)
 products = [Power, CO2]
 
 """
-Creates a simple test case with the potential for investments in capacity 
+Creates a simple test case with the potential for investments in capacity
 if provided with investments through the argument `inv_data`.
 """
 function small_graph(;
@@ -34,13 +34,13 @@ function small_graph(;
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
-        source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
+        source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10),
                                FixedProfile(5), Dict(Power => 1),
                                [investment_data_source])
     end
     if isnothing(sink)
-        sink = EMB.RefSink("-snk", demand_profile, 
-            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), 
+        sink = EMB.RefSink("-snk", demand_profile,
+            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
             Dict(Power => 1))
     end
     nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
@@ -75,7 +75,7 @@ end
 @testset "Test investments" begin
 
     @testset "Investment example - user interface" begin
-        
+
         # Create simple model
         case, modeltype = generate_data()
         m                = optimize(case, modeltype)
@@ -85,8 +85,8 @@ end
 
         # Check results
         @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test round(objective_value(m)) ≈ -313189
-        
+        @test round(objective_value(m)) ≈ -307022
+
         CH4 = case[:products][1]
         CO2 = case[:products][4]
         𝒯    = case[:T]
@@ -97,7 +97,7 @@ end
     end
 
     @testset "Investment example - small_graph Continuous" begin
-    
+
         # Cration and solving of the model
         case, modeltype = small_graph()
         m                = optimize(case, modeltype)
@@ -111,34 +111,34 @@ end
 
         @testset "cap_inst" begin
             # Check that cap_inst is less than node.data.Cap_max_inst at all times.
-            @test sum(value.(m[:cap_inst][source, t]) <= 
+            @test sum(value.(m[:cap_inst][source, t]) <=
                         inv_data.Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
 
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Check the initial installed capacity is correct set.
-                @test value.(m[:cap_inst][source, t]) == 
+                @test value.(m[:cap_inst][source, t]) ==
                             source.Cap[t_inv] + value.(m[:cap_add][source, t_inv])
                 break
             end
 
             # Check that cap_inst is larger or equal to demand profile in sink and deficit
-            @test sum(value.(m[:cap_inst][source, t])+value.(m[:sink_deficit][sink, t]) 
+            @test sum(value.(m[:cap_inst][source, t])+value.(m[:sink_deficit][sink, t])
                         >= sink.Cap[t] for t ∈ 𝒯) == length(𝒯)
         end
-        @test sum(value.(m[:cap_add][source, t_inv]) >= 
+        @test sum(value.(m[:cap_add][source, t_inv]) >=
                     inv_data.Cap_min_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 
     end
 
     @testset "Investment example - small_graph Discrete" begin
-        
+
         # Variation in the test structure
         investment_data_source = EMI.InvData(
             Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = FixedProfile(20),         # max_add [kW]
             Cap_min_add     = FixedProfile(5),          # min_add [kW]
-            Cap_start       = 0,                        # Starting capacity 
+            Cap_start       = 0,                        # Starting capacity
             Inv_mode        = EMI.BinaryInvestment()   # investment mode
         )
         demand_profile = StrategicProfile([0, 20, 20, 0])
@@ -147,11 +147,11 @@ end
                     "profile"         => demand_profile
                     )
 
-        
-        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
+
+        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10),
                                 FixedProfile(5), Dict(Power => 1),
                                 [investment_data_source])
-        
+
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data)
         m                = optimize(case, modeltype)
@@ -161,16 +161,16 @@ end
         sink   = case[:nodes][3]
         𝒯    = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-        
+
         # Check the binary variables
         @test sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 1 for t_inv ∈ 𝒯ᴵⁿᵛ) +
                 sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
         @test sum(value.(m[:cap_inst][source, t]) <= source.Cap[t] for t ∈ 𝒯) == length(𝒯)
 
     end
-    
+
     @testset "Investment example - small_graph ContinuousFixed" begin
-        
+
         # Variation in the test structure
         𝒯 = TwoLevel(4, 10, SimpleTimes(4, 1))
         investment_data_source = EMI.InvData(
@@ -178,7 +178,7 @@ end
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = StrategicProfile([0, 30, 0, 0]), # max_add [kW]
             Cap_min_add     = FixedProfile(0),          # min_add [kW]
-            Cap_start       = 0,                        # Starting capacity 
+            Cap_start       = 0,                        # Starting capacity
             Inv_mode        = EMI.ContinuousInvestment()   # investment mode
         )
         demand_profile = StrategicProfile([0, 20, 25, 30])
@@ -187,11 +187,11 @@ end
                     "profile"         => demand_profile
                     )
 
-        
-        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
+
+        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10),
                                 FixedProfile(5), Dict(Power => 1),
                                 [investment_data_source])
-        
+
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data, T=𝒯)
         m                = optimize(case, modeltype)
@@ -200,20 +200,20 @@ end
         source = case[:nodes][2]
         sink   = case[:nodes][3]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-        
+
         # Check that the investment is only happening in one strategic period
         @test sum(value.(m[:cap_add][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
     end
 
     @testset "Investment example - small_graph Continuous fixed manually" begin
-        
+
         # Variation in the test structure
         investment_data_source = EMI.InvData(
             Capex_cap       = FixedProfile(1000),       # capex [€/kW]
             Cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             Cap_max_add     = StrategicProfile([0, 30, 0, 0]),         # max_add [kW]
             Cap_min_add     = StrategicProfile([0, 5, 0, 0]),          # min_add [kW]
-            Cap_start       = 0,                        # Starting capacity 
+            Cap_start       = 0,                        # Starting capacity
             Inv_mode        = EMI.ContinuousInvestment()   # investment mode
         )
         demand_profile = StrategicProfile([0, 20, 25, 30])
@@ -222,11 +222,11 @@ end
                     "profile"         => demand_profile
                     )
 
-        
-        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10), 
+
+        source = EMB.RefSource("-src", FixedProfile(20), FixedProfile(10),
                                 FixedProfile(5), Dict(Power => 1),
                                 [investment_data_source])
-        
+
         # Cration and solving of the model
         case, modeltype = small_graph(source=source, inv_data=inv_data)
         m                = optimize(case, modeltype)
@@ -236,7 +236,7 @@ end
         sink   = case[:nodes][3]
         𝒯    = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-        
+
         # Check that the investment is only happening in one strategic period
         @test sum(value.(m[:cap_add][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
     end
