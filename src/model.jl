@@ -533,6 +533,7 @@ function set_capacity_cost(m, n::Storage, 𝒯, t_inv,  modeltype::EnergyModel, 
     data = investment_data(n)
     lifetime = data.Lifetime[t_inv]
     r = modeltype.r                     # discount rate
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # If lifetime is shorer than the sp duration , we apply the method for PeriodLife
     if lifetime < duration(t_inv)
