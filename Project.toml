@@ -1,7 +1,7 @@
 name = "EnergyModelsInvestments"
 uuid = "fca3f8eb-b383-437d-8e7b-aac76bb2004f"
 authors = ["Lars Hellemo <Lars.Hellemo@sintef.no>, Dimitri Pinel <Dimitri.Pinel@sintef.no>"]
-version = "0.4.2"
+version = "0.4.3"
 
 [deps]
 EnergyModelsBase = "5d7e687e-f956-46f3-9045-6f5a5fd49f50"

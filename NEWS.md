@@ -1,5 +1,10 @@
 Release Notes
 =============
+Version 0.4.3 (2023-09-08)
+--------------------------
+### Bugfix
+ * Bugfix from v0.4.1 `RollingLife` was reverted due to rebasing in v0.4.2. This was fixed 
+ 
 Version 0.4.2 (2023-08-24)
 --------------------------
 ### Changes in discounting
