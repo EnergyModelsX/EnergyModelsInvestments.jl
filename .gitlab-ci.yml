@@ -58,7 +58,22 @@ test_examples:
   image: julia:1.9
   <<: *test_examples_definition
   
-
+# Test that the pages compile, without making it public. Only runs on merge requests.
+test:pages:
+  image: julia:1.9
+  stage: test
+  script:
+    - cd docs
+    - julia -e 'using Pkg; Pkg.Registry.status()'
+    - julia --project=. -e 'using Pkg; Pkg.add("Documenter")'   # install Documenter
+    - julia --project=. -e 'using Pkg; Pkg.develop(path="..")'  # install the version that is pushed
+    - julia --project=. --color=yes make.jl  # make documentation
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  
 # Deploy the documentation.
 pages:
   image: julia:1.9
@@ -67,6 +82,7 @@ pages:
     - cd docs
     - julia -e 'using Pkg; Pkg.Registry.status()'
     - julia --project=. -e 'using Pkg; Pkg.add("Documenter")'  # install Documenter
+    - julia --project=. -e 'using Pkg; Pkg.develop(path="..")'  # install the version that is pushed
     - julia --project=. --color=yes make.jl  # make documentation
     - cd ..
     - mv docs/build public  # move to the directory picked up by Gitlab pages
@@ -75,7 +91,6 @@ pages:
       - public
   rules:
     # Only execute this on the default branch and on merge requests.
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 
