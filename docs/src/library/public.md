@@ -11,7 +11,7 @@ The discout rate is an important element of investment analysis needed to repres
 
 ## Investment Types
 
-Different investment types are available to help represent different situations. The investment type is defined in `Inv_mode` in [`extra_inv_data`](@ref) and [`extra_inv_data_storage`](@ref). The other fields in those struct are used to define the relevant parameters of the different investment types.
+Different investment types are available to help represent different situations. The investment type is defined in `Inv_mode` in [`InvData`](@ref) and [`InvDataStorage`](@ref). The other fields in those struct are used to define the relevant parameters of the different investment types.
 
 ### `BinaryInvestment`
 
@@ -24,7 +24,7 @@ Different investment types are available to help represent different situations.
 ### `DiscreteInvestment`
 
 [`DiscreteInvestment`](@ref) is a type of investment where a technology can be invested in increments of a given size. It can for example be used to represent investment in modular technologies that can be scaled by adding several modules together.
-The field `Cap_increment::TimeProfile` from [`extra_inv_data`](@ref), or `Rate_increment::TimeProfile` and `Stor_increment::TimeProfile` from [`extra_inv_data_storage`](@ref) should be provided.
+The field `Cap_increment::TimeProfile` from [`InvData`](@ref), or `Rate_increment::TimeProfile` and `Stor_increment::TimeProfile` from [`InvDataStorage`](@ref) should be provided.
 
 !!! note
     This investment type leads to the addition of integer variables.

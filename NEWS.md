@@ -1,5 +1,11 @@
 Release Notes
 =============
+
+Version 0.4.4 (2023-09-15)
+--------------------------
+### Bugfix
+ * Use correct index on parameter values.
+
 Version 0.4.3 (2023-09-08)
 --------------------------
 ### Bugfix

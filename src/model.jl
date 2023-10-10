@@ -375,10 +375,10 @@ end
 function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::FixedInvestment)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @constraint(m, m[:stor_cap_current][n, t_inv] ==
-                            n.Stor_cap * m[:stor_cap_invest_b][n, t_inv])
+                            n.Stor_cap[t_inv] * m[:stor_cap_invest_b][n, t_inv])
 
         @constraint(m, m[:stor_rate_current][n, t_inv] ==
-                            n.Rate_cap * m[:stor_rate_invest_b][n, t_inv])
+                            n.Rate_cap[t_inv] * m[:stor_rate_invest_b][n, t_inv])
     end
 end
 
