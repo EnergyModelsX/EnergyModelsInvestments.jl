@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+Version 0.4.5 (2023-10-24)
+--------------------------
+### Bugfix
+ * Include opex for transmission modes without investments.
+
 Version 0.4.4 (2023-09-15)
 --------------------------
 ### Bugfix
