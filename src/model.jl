@@ -33,7 +33,7 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)#
     end
 
     em_price = modeltype.Emission_price
-    obj -= sum(objective_weight(t_inv, disc, type="avg") * m[:emissions_strategic][t_inv, p_em] * em_price[p_em][t_inv] for p_em ∈ 𝒫ᵉᵐ, t_inv ∈ 𝒯ᴵⁿᵛ)
+    obj -= sum(objective_weight(t_inv, disc, type="avg") * m[:emissions_strategic][t_inv, p_em] * em_price[p_em][t_inv] * t_inv.duration for p_em ∈ 𝒫ᵉᵐ, t_inv ∈ 𝒯ᴵⁿᵛ)
 
     # TODO: Maintentance cost
 
