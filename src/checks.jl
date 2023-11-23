@@ -11,7 +11,7 @@ function check_investment_data(n, 𝒯)
 
     @assert_or_log length(inv_data) <= 1 "Only one InvestmentData can be added to each node"
     inv_data = inv_data[1]
- 
+
     @assert_or_log sum(inv_data.Cap_min_add[t] ≤ inv_data.Cap_max_add[t] for t ∈ 𝒯) == length(𝒯) "min_add has to be less than max_add in investments data (Node.Data)."
 
     t_1 = collect(𝒯)[1]
@@ -28,13 +28,13 @@ function EMB.check_node(n::Source, 𝒯, modeltype::AbstractInvestmentModel)
 end
 
 
-function EMB.check_node(n::Network, 𝒯, modeltype::AbstractInvestmentModel)
-    hasfield(typeof(n), :Data) && check_investment_data(n, 𝒯)
+# function EMB.check_node(n::Network, 𝒯, modeltype::AbstractInvestmentModel)
+#     hasfield(typeof(n), :Data) && check_investment_data(n, 𝒯)
 
-    # Do other checks not related to investments.
-    operational_model = EMB.OperationalModel(modeltype.Emission_limit, modeltype.CO2_instance)
-    EMB.check_node(n, 𝒯, operational_model)
-end
+#     # Do other checks not related to investments.
+#     operational_model = EMB.OperationalModel(modeltype.Emission_limit, modeltype.CO2_instance)
+#     EMB.check_node(n, 𝒯, operational_model)
+# end
 
 
 function EMB.check_node(n::Storage, 𝒯, modeltype::AbstractInvestmentModel)
@@ -43,7 +43,7 @@ function EMB.check_node(n::Storage, 𝒯, modeltype::AbstractInvestmentModel)
         inv_data = investment_data(n)
 
         @assert_or_log typeof(inv_data) == InvDataStorage "The investment data for a Storage must be of type `InvDataStorage`."
-    
+
         @assert_or_log sum(inv_data.Stor_min_add[t] ≤ inv_data.Stor_max_add[t] for t ∈ 𝒯) == length(𝒯) "Stor_min_add has to be less than Stor_max_add in investments data (Node.Data)."
         @assert_or_log sum(inv_data.Rate_min_add[t] ≤ inv_data.Rate_max_add[t] for t ∈ 𝒯) == length(𝒯) "Rate_min_add has to be less than Rate_max_add in investments data (Node.Data)."
 
@@ -51,7 +51,7 @@ function EMB.check_node(n::Storage, 𝒯, modeltype::AbstractInvestmentModel)
             # Check that the installed capacity at the start is below the lower bound.
             @assert_or_log n.Stor_cap[t] <= inv_data.Stor_max_inst[t] "Existing storage capacity can not be larger than max installed capacity in the beginning."
             @assert_or_log n.Rate_cap[t] <= inv_data.Rate_max_inst[t] "Existing storage rate can not be larger than max installed rate in the beginning."
-            
+
             if !=(inv_data.Rate_start,nothing) && isfirst(t)
                 @assert_or_log n.Rate_start <= inv_data.Rate_max_inst[t] "Starting storage rate can not be larger than max installed rate."
             end
@@ -63,7 +63,7 @@ function EMB.check_node(n::Storage, 𝒯, modeltype::AbstractInvestmentModel)
             break
         end
     end
-    
+
     # Do other checks not related to investments.
     operational_model = EMB.OperationalModel(modeltype.Emission_limit, modeltype.CO2_instance)
     EMB.check_node(n, 𝒯, operational_model)
