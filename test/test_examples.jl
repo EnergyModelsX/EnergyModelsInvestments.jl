@@ -3,6 +3,9 @@ using Pkg
 @testset "Run examples" begin
     exdir = joinpath(@__DIR__, "../examples")
 
+    # Add the package EnergyModelsInvestments to the environment.
+    Pkg.develop(path=joinpath(@__DIR__, ".."))
+
     files = first(walkdir(exdir))[3]
     for file in files
         if splitext(file)[2] == ".jl"

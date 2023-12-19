@@ -16,13 +16,12 @@ const TS = TimeStruct
 
 include("datastructures.jl")
 include("model.jl")
-# include("scaling_and_discounting.jl")
 include("utils.jl")
 include("checks.jl")
 
 
 export InvestmentModel
-export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment, 
+export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment,
     SemiContinuousOffsetInvestment, FixedInvestment
 
 export LifetimeMode

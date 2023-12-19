@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+Version 0.5.0 (2023-12-19)
+--------------------------
+### Adjustment
+Adjusted to changes in `EnergyModelsBase` v0.6.
+These changes are mainly:
+
+* All fields of composite types are now lower case.
+* An extensive number of functions to access the individual fields were included, allowing for differing definitions of the individual nodes.
+
+In addition this version includes:
+
+* A rewriting of the calculation of the objective function.
+
 Version 0.4.6 (2023-11-23)
 --------------------------
 ### Bugfix

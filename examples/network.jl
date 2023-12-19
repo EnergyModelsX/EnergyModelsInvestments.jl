@@ -1,10 +1,12 @@
-using Pkg
-# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
-Pkg.activate(joinpath(@__DIR__, "../test"))
-# Install the dependencies.
-Pkg.instantiate()
-# Add the package EnergyModelsInvestments to the environment.
-Pkg.develop(path=joinpath(@__DIR__, ".."))
+if !isequal(splitpath(Base.active_project())[end-1], "test")
+    using Pkg
+    # Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
+    Pkg.activate(joinpath(@__DIR__, "../test"))
+    # Install the dependencies.
+    Pkg.instantiate()
+    # Add the package EnergyModelsInvestments to the environment.
+    Pkg.develop(path=joinpath(@__DIR__, ".."))
+end
 
 using EnergyModelsBase
 using EnergyModelsInvestments
@@ -19,13 +21,13 @@ const EMI = EnergyModelsInvestments
 """
     run_model(case, model, optimizer)
 
-Defines the necessary steps for running the model. 
+Defines the necessary steps for running the model.
 This is a temporary implementation before a separate package handles this.
 """
 function run_model(case, model, optimizer = nothing)
     @info "Run model" model optimizer
 
-    m = EMB.create_model(case, model)
+    m = create_model(case, model)
 
     set_optimizer(m, optimizer)
     optimize!(m)
@@ -48,91 +50,87 @@ function generate_data()
     CO2 = ResourceEmit("CO2", 1.0)
     products = [NG, Coal, Power, CO2]
 
-    # Creation of a dictionary with entries of 0. for all resources
-    𝒫₀ = Dict(k => 0 for k ∈ products)
-
-    # Creation of a dictionary with entries of 0. for all emission resources
-    𝒫ᵉᵐ₀ = Dict(k => 0.0 for k ∈ products if typeof(k) == ResourceEmit{Float64})
-
     nodes = [
-        EMB.GenAvailability(1, 𝒫₀, 𝒫₀),
-        EMB.RefSink(
+        GenAvailability(1, products),
+        RefSink(
             2,
             StrategicProfile([OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
                               OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
                               OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
                               OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])]
             ),
-            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)),
+            Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
             Dict(Power => 1),
         ),
-        EMB.RefSource(
+        RefSource(
             3,
             FixedProfile(30),
             FixedProfile(30),
             FixedProfile(100),
             Dict(NG => 1),
             [InvData(
-                Capex_cap = FixedProfile(1000),
-                Cap_max_inst = FixedProfile(200),
-                Cap_max_add = FixedProfile(200),
-                Cap_min_add = FixedProfile(10),
-                Inv_mode = ContinuousInvestment(),
-                Cap_increment = FixedProfile(5),
-                Cap_start = 15,
+                capex_cap = FixedProfile(1000),
+                cap_max_inst = FixedProfile(200),
+                cap_max_add = FixedProfile(200),
+                cap_min_add = FixedProfile(10),
+                inv_mode = ContinuousInvestment(),
+                cap_increment = FixedProfile(5),
+                cap_start = 15,
                 ),
             ],
         ),
-        EMB.RefSource(
+        RefSource(
             4,
             FixedProfile(9),
             FixedProfile(9),
             FixedProfile(100),
             Dict(Coal => 1),
             [InvData(
-                    Capex_cap = FixedProfile(1000),
-                    Cap_max_inst = FixedProfile(200),
-                    Cap_max_add = FixedProfile(200),
-                    Cap_min_add = FixedProfile(0),
-                    Inv_mode = ContinuousInvestment(),
+                    capex_cap = FixedProfile(1000),
+                    cap_max_inst = FixedProfile(200),
+                    cap_max_add = FixedProfile(200),
+                    cap_min_add = FixedProfile(0),
+                    inv_mode = ContinuousInvestment(),
                 ),
             ],
         ),
-        EMB.RefNetworkEmissions(
+        RefNetworkNode(
             5,
             FixedProfile(0),
             FixedProfile(5.5),
             FixedProfile(100),
             Dict(NG => 2),
             Dict(Power => 1, CO2 => 0),
-            𝒫ᵉᵐ₀,
-            0.9,
-            [InvData(
-                    Capex_cap = FixedProfile(600),
-                    Cap_max_inst = FixedProfile(25),
-                    Cap_max_add = FixedProfile(25),
-                    Cap_min_add = FixedProfile(0),
-                    Inv_mode = ContinuousInvestment(),
+            [
+                InvData(
+                    capex_cap = FixedProfile(600),
+                    cap_max_inst = FixedProfile(25),
+                    cap_max_add = FixedProfile(25),
+                    cap_min_add = FixedProfile(0),
+                    inv_mode = ContinuousInvestment(),
                 ),
+                CaptureEnergyEmissions(0.9),
             ],
         ),
-        EMB.RefNetwork(
+        RefNetworkNode(
             6,
             FixedProfile(0),
             FixedProfile(6),
             FixedProfile(100),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [InvData(
-                    Capex_cap = FixedProfile(800),
-                    Cap_max_inst = FixedProfile(25),
-                    Cap_max_add = FixedProfile(25),
-                    Cap_min_add = FixedProfile(0),
-                    Inv_mode = ContinuousInvestment(),
+            [
+                InvData(
+                    capex_cap = FixedProfile(800),
+                    cap_max_inst = FixedProfile(25),
+                    cap_max_add = FixedProfile(25),
+                    cap_min_add = FixedProfile(0),
+                    inv_mode = ContinuousInvestment(),
                 ),
+                EmissionsEnergy(),
             ],
         ),
-        EMB.RefStorageEmissions(
+        RefStorage(
             7,
             FixedProfile(0),
             FixedProfile(0),
@@ -142,35 +140,37 @@ function generate_data()
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
             [InvDataStorage(
-                    Capex_rate = FixedProfile(0),
-                    Rate_max_inst = FixedProfile(600),
-                    Rate_max_add = FixedProfile(600),
-                    Rate_min_add = FixedProfile(0),
-                    Capex_stor = FixedProfile(500),
-                    Stor_max_inst = FixedProfile(600),
-                    Stor_max_add = FixedProfile(600),
-                    Stor_min_add = FixedProfile(0),
-                    Inv_mode = ContinuousInvestment(),
+                    capex_rate = FixedProfile(0),
+                    rate_max_inst = FixedProfile(600),
+                    rate_max_add = FixedProfile(600),
+                    rate_min_add = FixedProfile(0),
+                    capex_stor = FixedProfile(500),
+                    stor_max_inst = FixedProfile(600),
+                    stor_max_add = FixedProfile(600),
+                    stor_min_add = FixedProfile(0),
+                    inv_mode = ContinuousInvestment(),
                 ),
             ],
         ),
-        EMB.RefNetwork(
+        RefNetworkNode(
             8,
             FixedProfile(2),
             FixedProfile(0),
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [InvData(
-                    Capex_cap = FixedProfile(0),
-                    Cap_max_inst = FixedProfile(25),
-                    Cap_max_add = FixedProfile(2),
-                    Cap_min_add = FixedProfile(2),
-                    Inv_mode = ContinuousInvestment(),
+            [
+                InvData(
+                    capex_cap = FixedProfile(0),
+                    cap_max_inst = FixedProfile(25),
+                    cap_max_add = FixedProfile(2),
+                    cap_min_add = FixedProfile(2),
+                    inv_mode = ContinuousInvestment(),
                 ),
+                EmissionsEnergy(),
             ],
         ),
-        EMB.RefStorageEmissions(
+        RefStorage(
             9,
             FixedProfile(3),
             FixedProfile(5),
@@ -180,51 +180,53 @@ function generate_data()
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
             [InvDataStorage(
-                    Capex_rate = FixedProfile(0),
-                    Rate_max_inst = FixedProfile(30),
-                    Rate_max_add = FixedProfile(3),
-                    Rate_min_add = FixedProfile(3),
-                    Capex_stor = FixedProfile(0),
-                    Stor_max_inst = FixedProfile(50),
-                    Stor_max_add = FixedProfile(5),
-                    Stor_min_add = FixedProfile(5),
-                    Inv_mode = ContinuousInvestment(),
+                    capex_rate = FixedProfile(0),
+                    rate_max_inst = FixedProfile(30),
+                    rate_max_add = FixedProfile(3),
+                    rate_min_add = FixedProfile(3),
+                    capex_stor = FixedProfile(0),
+                    stor_max_inst = FixedProfile(50),
+                    stor_max_add = FixedProfile(5),
+                    stor_min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
                 ),
             ],
         ),
-        EMB.RefNetwork(
+        RefNetworkNode(
             10,
             FixedProfile(0),
             FixedProfile(0),
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [InvData(
-                    Capex_cap = FixedProfile(10000),
-                    Cap_max_inst = FixedProfile(10000),
-                    Cap_max_add = FixedProfile(10000),
-                    Cap_min_add = FixedProfile(0),
-                    Inv_mode = ContinuousInvestment(),
+            [
+                InvData(
+                    capex_cap = FixedProfile(10000),
+                    cap_max_inst = FixedProfile(10000),
+                    cap_max_add = FixedProfile(10000),
+                    cap_min_add = FixedProfile(0),
+                    inv_mode = ContinuousInvestment(),
                 ),
+                EmissionsEnergy(),
             ],
         ),
     ]
     links = [
-        EMB.Direct(15, nodes[1], nodes[5], EMB.Linear())
-        EMB.Direct(16, nodes[1], nodes[6], EMB.Linear())
-        EMB.Direct(17, nodes[1], nodes[7], EMB.Linear())
-        EMB.Direct(18, nodes[1], nodes[8], EMB.Linear())
-        EMB.Direct(19, nodes[1], nodes[9], EMB.Linear())
-        EMB.Direct(110, nodes[1], nodes[10], EMB.Linear())
-        EMB.Direct(12, nodes[1], nodes[2], EMB.Linear())
-        EMB.Direct(31, nodes[3], nodes[1], EMB.Linear())
-        EMB.Direct(41, nodes[4], nodes[1], EMB.Linear())
-        EMB.Direct(51, nodes[5], nodes[1], EMB.Linear())
-        EMB.Direct(61, nodes[6], nodes[1], EMB.Linear())
-        EMB.Direct(71, nodes[7], nodes[1], EMB.Linear())
-        EMB.Direct(81, nodes[8], nodes[1], EMB.Linear())
-        EMB.Direct(91, nodes[9], nodes[1], EMB.Linear())
-        EMB.Direct(101, nodes[10], nodes[1], EMB.Linear())
+        Direct(15, nodes[1], nodes[5], Linear())
+        Direct(16, nodes[1], nodes[6], Linear())
+        Direct(17, nodes[1], nodes[7], Linear())
+        Direct(18, nodes[1], nodes[8], Linear())
+        Direct(19, nodes[1], nodes[9], Linear())
+        Direct(110, nodes[1], nodes[10], Linear())
+        Direct(12, nodes[1], nodes[2], Linear())
+        Direct(31, nodes[3], nodes[1], Linear())
+        Direct(41, nodes[4], nodes[1], Linear())
+        Direct(51, nodes[5], nodes[1], Linear())
+        Direct(61, nodes[6], nodes[1], Linear())
+        Direct(71, nodes[7], nodes[1], Linear())
+        Direct(81, nodes[8], nodes[1], Linear())
+        Direct(91, nodes[9], nodes[1], Linear())
+        Direct(101, nodes[10], nodes[1], Linear())
     ]
 
     # Creation of the time structure and global data
