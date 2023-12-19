@@ -6,30 +6,28 @@ products = [Power, CO2]
 """
 Creates a simple test case for testing the individual Life_mode in the model
 """
-function small_graph(sp_dur, Lifemode, L, source=nothing, sink=nothing; discount_rate=0.05)
+function small_graph(sp_dur, life_mode, lifetime, source=nothing, sink=nothing; discount_rate=0.05)
 
-    # Creation of a dictionary with entries of 0. for all resources
-    𝒫₀ = Dict(k  => 0 for k ∈ products)
     if isnothing(source)
-        investment_data_source = EMI.InvData(
-            Capex_cap = FixedProfile(1000), # capex [€/kW]
-            Cap_max_inst = FixedProfile(30), #  max installed capacity [kW]
-            Cap_max_add = FixedProfile(30), # max_add [kW]
-            Cap_min_add = FixedProfile(0), # min_add [kW]
+        investment_data_source = InvData(
+            capex_cap = FixedProfile(1000), # capex [€/kW]
+            cap_max_inst = FixedProfile(30), #  max installed capacity [kW]
+            cap_max_add = FixedProfile(30), # max_add [kW]
+            cap_min_add = FixedProfile(0), # min_add [kW]
             #EMI.ContinuousInvestment() # investment mode
-            Life_mode = Lifemode,
-            Lifetime = L,
+            life_mode = life_mode,
+            lifetime = lifetime,
         )
-        source = EMB.RefSource("-src", FixedProfile(0), FixedProfile(10), 
+        source = RefSource("-src", FixedProfile(0), FixedProfile(10),
             FixedProfile(5), Dict(Power => 1), [investment_data_source])
     end
     if isnothing(sink)
-        sink = EMB.RefSink("-snk", FixedProfile(20), 
-            Dict(:Surplus => FixedProfile(0), :Deficit => FixedProfile(1e6)), Dict(Power => 1))
+        sink = RefSink("-snk", FixedProfile(20),
+            Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)), Dict(Power => 1))
     end
-    nodes = [EMB.GenAvailability(1, 𝒫₀, 𝒫₀), source, sink]
-    links = [EMB.Direct(21, nodes[2], nodes[1], EMB.Linear())
-             EMB.Direct(13, nodes[1], nodes[3], EMB.Linear())]
+    nodes = [GenAvailability(1, products), source, sink]
+    links = [Direct(21, nodes[2], nodes[1], EMB.Linear())
+             Direct(13, nodes[1], nodes[3], EMB.Linear())]
 
     T = TwoLevel(4, sp_dur, SimpleTimes(4, 1))
 
@@ -66,10 +64,10 @@ resulting_obj = Dict()
     for sp_dur ∈ [2,4,6]#,10,15,20]
         push!(resulting_obj, "$(sp_dur) years" => [])
         @testset "Modes - $(sp_dur) years" begin
-            for Lifemode ∈ [EMI.UnlimitedLife(), EMI.StudyLife(), EMI.PeriodLife(),EMI.RollingLife()]
-                @testset "Mode $(Lifemode)" begin
-                    @debug "~~~~~~~~ $(Lifemode) - $(sp_dur) years ~~~~~~~~"
-                    case, modeltype = small_graph(sp_dur, Lifemode, FixedProfile(lifetime))
+            for life_mode ∈ [UnlimitedLife(), StudyLife(), PeriodLife(), RollingLife()]
+                @testset "Mode $(life_mode)" begin
+                    @debug "~~~~~~~~ $(life_mode) - $(sp_dur) years ~~~~~~~~"
+                    case, modeltype = small_graph(sp_dur, life_mode, FixedProfile(lifetime))
                     m               = optimize(case, modeltype)
 
                     general_tests(m)
@@ -86,13 +84,13 @@ resulting_obj = Dict()
 
                     @testset "cap_inst" begin
                         # Check that cap_inst is less than node.data.Cap_max_inst at all times.
-                        @test sum(value.(m[:cap_inst][source, t]) <= EMI.investment_data(source).Cap_max_inst[t] for t ∈ 𝒯) == length(𝒯)
+                        @test sum(value.(m[:cap_inst][source, t]) <= EMI.max_installed(source, t) for t ∈ 𝒯) == length(𝒯)
 
                         for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                             # Check the initial installed capacity is correct set.
-                            @test value.(m[:cap_inst][source, t]) == source.Cap[t_inv] + value.(m[:cap_add][source, t_inv])
+                            @test value.(m[:cap_inst][source, t]) == capacity(source, t_inv) + value.(m[:cap_add][source, t_inv])
                             break
-                        end        
+                        end
                     end
                 end
             end
