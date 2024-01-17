@@ -19,13 +19,13 @@ EMI.nodes_investment(ℳ::Vector{<:TransmissionMode}) = filter(EMI.has_investmen
 
 
 """
-    EMI.start_cap(tm, t, stcap)
+    EMI.start_cap(m, tm, t, stcap, modeltype)
 
 Returns the starting capacity of the `TransmissionMode` `tm` in the first investment period.
 If no starting capacity is provided in `InvestmentData` (default = Nothing), then use the
 provided capacity from the field `trans_Cap`.
 """
-EMI.start_cap(tm::TransmissionMode, t, ::Nothing) = tm.trans_cap[t]
+EMI.start_cap(m, tm::TransmissionMode, t, ::Nothing, modeltype) = tm.trans_cap[t]
 
 
 """

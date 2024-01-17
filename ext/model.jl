@@ -120,7 +120,7 @@ function constraints_transmission_invest(m, 𝒯, ℳ, modeltype::EMI.AbstractIn
         for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
             @constraint(m, m[:trans_cap_current][tm, t_inv] <= EMI.max_installed(tm, t_inv))
             if isnothing(t_inv_prev)
-                start_cap = EMI.start_cap(tm, t_inv, inv_data.trans_start)
+                start_cap = EMI.start_cap(m, tm, t_inv, inv_data.trans_start, modeltype)
                 @constraint(m, m[:trans_cap_current][tm, t_inv] ==
                     start_cap + m[:trans_cap_add][tm, t_inv])
             else

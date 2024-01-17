@@ -77,19 +77,19 @@ lifetime(type, t) = investment_data(type).lifetime[t]
 
 
 """
-    start_cap(n, t, stcap)
+    start_cap(m, n, t, stcap, modeltype)
 
 Returns the starting capacity of the node in the first investment period. If no
 starting capacity is provided in `InvestmentData` (default = Nothing), then use the
 provided capacity from the field Cap.
 """
-start_cap(n, t, stcap) = stcap
-start_cap(n::EMB.Node, t, stcap::Nothing) = n.cap[t]
+start_cap(m, n, t, stcap, modeltype::EMB.EnergyModel) = stcap
+start_cap(m, n::EMB.Node, t, stcap::Nothing, modeltype::EMB.EnergyModel) = n.cap[t]
 
-start_cap_storage(n::Storage, t, stcap) = stcap
-start_cap_storage(n::Storage, t, stcap::Nothing) = n.stor_cap[t]
-start_rate_storage(n::Storage, t, stcap) = stcap
-start_rate_storage(n::Storage, t, stcap::Nothing) = n.rate_cap[t]
+start_cap_storage(m, n::Storage, t, stcap, modeltype::EMB.EnergyModel) = stcap
+start_cap_storage(m, n::Storage, t, stcap::Nothing, modeltype::EMB.EnergyModel) = n.stor_cap[t]
+start_rate_storage(m, n::Storage, t, stcap, modeltype::EMB.EnergyModel) = stcap
+start_rate_storage(m, n::Storage, t, stcap::Nothing, modeltype::EMB.EnergyModel) = n.rate_cap[t]
 
 
 """

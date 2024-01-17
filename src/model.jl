@@ -150,7 +150,7 @@ function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure,
             # Capacity updating
             @constraint(m, m[:cap_current][n, t_inv] <= max_installed(n, t_inv))
             if isnothing(t_inv_prev)
-                start_cap_val = start_cap(n, t_inv, inv_data.cap_start)
+                start_cap_val = start_cap(m, n, t_inv, inv_data.cap_start, modeltype)
                 @constraint(m, m[:cap_current][n, t_inv] ==
                     start_cap_val + m[:cap_add][n, t_inv])
             else
@@ -197,11 +197,11 @@ function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, 
             @constraint(m, m[:stor_cap_current][n, t_inv] <= max_installed(n, t_inv).level)
             @constraint(m, m[:stor_rate_current][n, t_inv] <= max_installed(n, t_inv).rate)
             if isnothing(t_inv_prev)
-                start_cap_val = start_cap_storage(n, t_inv, inv_data.stor_start)
+                start_cap_val = start_cap_storage(m, n, t_inv, inv_data.stor_start, modeltype)
                 @constraint(m, m[:stor_cap_current][n, t_inv] ==
                     start_cap_val + m[:stor_cap_add][n, t_inv])
 
-                start_rate_val = start_rate_storage(n, t_inv, inv_data.rate_start)
+                start_rate_val = start_rate_storage(m, n, t_inv, inv_data.rate_start, modeltype)
                 @constraint(m, m[:stor_rate_current][n, t_inv] ==
                     start_rate_val + m[:stor_rate_add][n, t_inv])
             else
