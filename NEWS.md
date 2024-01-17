@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+Version 0.5.1 (2024-01-17)
+--------------------------
+### Feature
+ * Added the JuMP model `m` and `modeltype` as arguments to the start-capacity methods.
+
 Version 0.5.0 (2023-12-19)
 --------------------------
 ### Adjustment
@@ -32,8 +37,8 @@ Version 0.4.4 (2023-09-15)
 Version 0.4.3 (2023-09-08)
 --------------------------
 ### Bugfix
- * Bugfix from v0.4.1 `RollingLife` was reverted due to rebasing in v0.4.2. This was fixed 
- 
+ * Bugfix from v0.4.1 `RollingLife` was reverted due to rebasing in v0.4.2. This was fixed
+
 Version 0.4.2 (2023-08-24)
 --------------------------
 ### Changes in discounting
@@ -44,7 +49,7 @@ Version 0.4.1 (2023-08-02)
 --------------------------
 ### Bugfix
  * Included calling of `strategic_periods` in `::RollingLife` which was missing
- 
+
 Version 0.4.0 (2023-06-06)
 --------------------------
 ### Switch to TimeStruct.jl
@@ -61,7 +66,7 @@ Version 0.3.1 (2023-06-01)
 
 Version 0.3.0 (2023-05-xx)
 --------------------------
- * Adjustment to changes in `EnergyModelsBase` v0.4.0 and `EnergyModelsGeography` v 0.6.0 
+ * Adjustment to changes in `EnergyModelsBase` v0.4.0 and `EnergyModelsGeography` v 0.6.0
  * The new filter method for data can be used as example for subsequent usage of `Array{Data}`
  * Migrate from Requires.jl to support for weak dependencies in julia v1.9.
 
@@ -77,7 +82,7 @@ Version 0.2.6 (2023-04-24)
 --------------------------
  * Introduction of abstract type `InvestmentData` as subtype of `Data` to dispatch specifically on data related to investments
  * Changes in the individual utility functions for improved utilization of the multiple dispatch
- 
+
 Version 0.2.5 (2023-04-18)
 --------------------------
  * Bugfix related to constraint on `cap_use`,  `stor_rate_use`, and `stor_level`:
