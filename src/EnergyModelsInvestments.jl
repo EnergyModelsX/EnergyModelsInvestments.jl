@@ -2,8 +2,12 @@
 Main module for `EnergyModelsInvestments.jl`.
 
 This module implements functionalities allowing to run investment analysis.
-It also defines weighting and discounting options: obj_weight, obj_weight_inv, obj_weight_inv_end
-export discount_mult_avg.
+
+It is in its current version extending `EnergyModelsBase.jl` and cannot be used as a
+stand-alone module.
+
+The extension `EMIGeoExt.jl` includes furthermore the investment options for transmission
+modes as described in `EnergyModelsGeography.jl`.
 """
 module EnergyModelsInvestments
 
@@ -19,19 +23,23 @@ include("model.jl")
 include("utils.jl")
 include("checks.jl")
 
+# Export of the types for investment models
+export AbstractInvestmentModel, InvestmentModel
 
-export InvestmentModel
-export BinaryInvestment, DiscreteInvestment, ContinuousInvestment, SemiContinuousInvestment,
-    SemiContinuousOffsetInvestment, FixedInvestment
+# Export of the types for investment modes
+export Investment, BinaryInvestment, DiscreteInvestment, ContinuousInvestment,
+    SemiContiInvestment, SemiContinuousInvestment, SemiContinuousOffsetInvestment,
+    FixedInvestment
 
+# Export of the different lifetime modes
 export LifetimeMode
 export UnlimitedLife, StudyLife, PeriodLife, RollingLife
 
+# Export of the types for the additional investment data
+export InvestmentData
 export InvData, InvDataStorage
 
-export InvestmentData
-
-# Geographical investments
+# Geographical investment data
 export TransInvData
 
 end # module

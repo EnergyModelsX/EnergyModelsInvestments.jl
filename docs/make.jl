@@ -1,7 +1,8 @@
 using Documenter
 
+using EnergyModelsGeography
 using EnergyModelsInvestments
-const INV = EnergyModelsInvestments
+const EMI = EnergyModelsInvestments
 
 # Copy the NEWS.md file
 news = "src/manual/NEWS.md"
@@ -19,12 +20,18 @@ makedocs(
         edit_link="main",
         assets=String[],
     ),
-    modules = [EnergyModelsInvestments],
+    modules = [
+        EMI,
+        isdefined(Base, :get_extension) ?
+        Base.get_extension(EMI, :EMIGeoExt) :
+        EMI.EMIGeoExt,
+    ],
     pages = [
         "Home" => "index.md",
         "Manual" => Any[
             "Quick Start" => "manual/quick-start.md",
             "Philosophy" => "manual/philosophy.md",
+            "Optimization variables" => "manual/optimization-variables.md",
             "Example" => "manual/simple-example.md",
             "Release notes" => "manual/NEWS.md",
         ],
