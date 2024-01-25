@@ -29,13 +29,13 @@ EMI.start_cap(m, tm::TransmissionMode, t, ::Nothing, modeltype) = tm.trans_cap[t
 
 
 """
-   EMI.max_add(n::TransmissionMode)
+    EMI.max_add(n::TransmissionMode)
 
 Returns the maximum allowed added capacity of `TransmissionMode` `tm` as `TimeProfile`.
 """
 EMI.max_add(tm::TransmissionMode) = EMI.investment_data(tm).trans_max_add
 """
-   EMI.max_add(n::TransmissionMode, t_inv)
+    EMI.max_add(n::TransmissionMode, t_inv)
 
 Returns the maximum allowed added capacity of `TransmissionMode` `tm` in investment period
 `t_inv`.

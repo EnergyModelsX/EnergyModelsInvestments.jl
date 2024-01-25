@@ -64,27 +64,29 @@ Create variables for the capital costs for the invesments in storage and
 technology nodes.
 
 Additional variables for investment in capacity:
-    * `:capex_cap` - CAPEX costs for a technology
-    * `:cap_invest_b` - binary variable whether investments in capacity are happening
-    * `:cap_remove_b` - binary variable whether investments in capacity are removed
-    * `:cap_current` - installed capacity for storage in each strategic period
-    * `:cap_add` - added capacity
-    * `:cap_rem` - removed capacity
+ * `:capex_cap` - CAPEX costs for a technology
+ * `:cap_invest_b` - binary variable whether investments in capacity are happening
+ * `:cap_remove_b` - binary variable whether investments in capacity are removed
+ * `:cap_current` - installed capacity for storage in each strategic period
+ * `:cap_add` - added capacity
+ * `:cap_rem` - removed capacity
+
 
 Additional variables for investment in storage:
-    * `:capex_stor` - CAPEX costs for increases in the capacity of a storage
-    * `:stor_cap_invest_b` - binary variable whether investments in capacity are happening
-    * `:stor_cap_remove_b` - binary variable whether investments in capacity are removed
-    * `:stor_cap_current` - installed capacity for storage in each strategic period
-    * `:stor_cap_add` - added capacity
-    * `:stor_cap_rem` - removed capacity
+ * `:capex_stor` - CAPEX costs for increases in the capacity of a storage
+ * `:stor_cap_invest_b` - binary variable whether investments in capacity are happening
+ * `:stor_cap_remove_b` - binary variable whether investments in capacity are removed
+ * `:stor_cap_current` - installed capacity for storage in each strategic period
+ * `:stor_cap_add` - added capacity
+ * `:stor_cap_rem` - removed capacity
 
-    * `:capex_rate` - CAPEX costs for increases in the rate of a storage
-    * `:stor_rate_invest_b` - binary variable whether investments in rate are happening
-    * `:stor_rate_remove_b` - binary variable whether investments in rate are removed
-    * `:stor_rate_current` - installed rate for storage in each strategic period
-    * `:stor_rate_add` - added rate
-    * `:stor_rate_rem` - removed rate
+
+ * `:capex_rate` - CAPEX costs for increases in the rate of a storage
+ * `:stor_rate_invest_b` - binary variable whether investments in rate are happening
+ * `:stor_rate_remove_b` - binary variable whether investments in rate are removed
+ * `:stor_rate_current` - installed rate for storage in each strategic period
+ * `:stor_rate_add` - added rate
+ * `:stor_rate_rem` - removed rate
 """
 function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)
 

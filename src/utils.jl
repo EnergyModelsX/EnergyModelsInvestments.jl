@@ -33,10 +33,10 @@ is given by `PeriodLife` and `StudyLife`.
 
 # Arguments
 - `years:`: the remaining years for calculating the discounted value. The years are
-depending on the considered `LifetimeMode`, using `remaining(t_inv, 𝒯)` for `StudyLife` and
-`duration(t_inv)` for `PeriodLife`.
-- `lifetime`: the lifetime of the node
-- `r`: the discount rate
+depending on the considered `LifetimeMode`, using `remaining(t_inv, 𝒯)` for `StudyLife` \
+and `duration(t_inv)` for `PeriodLife`.
+- `lifetime`: the lifetime of the node.
+- `r`: the discount rate.
 """
 function set_capex_value(years, lifetime, r)
     N_inv = ceil(years/lifetime)
@@ -178,7 +178,7 @@ Returns the maximum allowed added capacity of Node `n` in investment period `t_i
 max_add(n::EMB.Node, t_inv) = investment_data(n).cap_max_add[t_inv]
 
 """
-max_add(n::Storage)
+    max_add(n::Storage)
 
 Returns the maximum allowed added capacity of Storage node `n` as `TimeProfile`.
 """
@@ -187,7 +187,7 @@ max_add(n::Storage) = (
     rate = investment_data(n).rate_max_add,
 )
 """
-max_add(n::Storage, t_inv)
+    max_add(n::Storage, t_inv)
 
 Returns the maximum allowed added capacity of Storage node `n` in investment period `t_inv`.
 """

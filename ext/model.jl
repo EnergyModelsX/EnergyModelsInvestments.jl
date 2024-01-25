@@ -51,11 +51,11 @@ time periods `t ∈ 𝒯` and how much energy is lossed. Introduction of the add
 constraints for investments.
 
 Additional variables for investment in capacity:
-    * `:trans_cap_invest_b` - binary variable whether investments in capacity are happening
-    * `:trans_cap_remove_b` - binary variable whether investments in capacity are removed
-    * `:trans_cap_current` - installed capacity for storage in each strategic period
-    * `:trans_cap_add` - added capacity
-    * `:trans_cap_rem` - removed capacity
+ * `:trans_cap_invest_b` - binary variable whether investments in capacity are happening
+ * `:trans_cap_remove_b` - binary variable whether investments in capacity are removed
+ * `:trans_cap_current` - installed capacity for storage in each strategic period
+ * `:trans_cap_add` - added capacity
+ * `:trans_cap_rem` - removed capacity
 """
 function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 

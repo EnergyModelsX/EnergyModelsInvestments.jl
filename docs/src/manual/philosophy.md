@@ -1,5 +1,41 @@
 # Philosophy
 
-This package aims at extending `EnergyModelsBase` with investment functionalities. To this end, multiple dispatch is used to redefine certain methods (creation of nodes, model building including objective function,...) and new ones are created. The package is intended to provide as much options as possible to represent investment options.
-This means defining a wide array of investment modes, lifetime mode and discounting methods.
-The model is also compatible with `EnergyModelsGeography` to extend its concept to investment in transmission.
+## General design philosophy
+
+`EnergyModelsInvestments` provides `EnergyModelsBase` with the potential for investments.
+The extension is achieved through providing a new [`InvestmentModel`](@ref) which is subsequently used for dispatching on several core functions within `EnergyModelsBase`.
+Hence, its application does not require any changes to the model itself.
+
+The aim in the package development is to provide maximum flexibility to the user, similarly to `EnergyModelsBase`.
+In the case of investments, the flexibility is required for selecting:
+
+1. the investment mode for a given technology in a given region and
+2. the lifetime description for a given technology in a given region.
+
+The model is also compatible with `EnergyModelsGeography` to extend its concept to investment in `TransmissionMode`s.
+
+## Investment modes
+
+Investment modes are different approaches for implementing investments in technologies.
+They are explained in detail in *[Investment Types](@ref sec_types_inv_mode)*.
+`EnergyModelsInvestments` allows for different investment modes for technologies, both for different technologies, but also for the same technology implemented through different instances.
+
+Different technologies require different descriptions of the investments.
+Consider as an example a wind turbine within a model describing a country as single region.
+An onshore wind turbine has a maximum capacity of around 6 MW, depending on the available infrastructure for transporting the blades.
+If the total investments in wind turbines are in the GW scale, it is possible to model the wind turbines as continuous investments.
+A natural gas reforming plant with CCS behaves in this situation differently.
+Chemical processes experience in practice significant economy of scales up to a maximum capacity.
+Hence, it is in this situation beneficial to use discrete or semi-continuous investments for a natural gas reforming plant.
+
+It can however be also useful to use differing investment modes for the same technology in different regions.
+Consider again the wind turbine.
+If a second region allows as well for wind turbine investments, however at significantly reduced size, it can be beneficial in this region to apply discrete investments or alternatively, if the region corresponds to an offshore field, semi-continuous investments to account for economy of scales and minimum invested capacities.
+
+Allowing for differing investment modes results in a reduction in the computational demand while simultaneously allowing for improved description of certain technologies.
+
+## Lifetime modes
+
+Lifetime modes can be used for describing how the lifetime of a technology should be handled.
+In practice, models either do not consider the lifetime, include annualized costs for each year, or use the total costs with a potential final value, if the technology still has a remaining lifetime at the end of the optimizaztion horizon.
+`EnergyModelsInvestments` allows to choose as well differing lifetime modes for the individual technologies.
