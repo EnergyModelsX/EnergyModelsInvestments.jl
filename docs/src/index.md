@@ -17,7 +17,6 @@ Pages = [
     "manual/philosophy.md",
     "manual/optimization-variables.md",
     "manual/simple-example.md",
-    "manual/NEWS.md"
 ]
 ```
 
