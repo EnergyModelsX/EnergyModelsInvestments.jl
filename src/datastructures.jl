@@ -2,7 +2,7 @@
 
 This abstract model type should be used when creating additional `EnergyModel` types that
 should utilize investments.
-An example for additional types is given by the inclusion of, *e.g.*, `SDDP.jl`.
+An example for additional types is given by the inclusion of, *e.g.*, `SDDP`.
 """
 abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 

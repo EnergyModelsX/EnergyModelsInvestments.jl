@@ -1,12 +1,10 @@
-if !isequal(splitpath(Base.active_project())[end-1], "test")
-    using Pkg
-    # Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
-    Pkg.activate(joinpath(@__DIR__, "../test"))
-    # Install the dependencies.
-    Pkg.instantiate()
-    # Add the package EnergyModelsInvestments to the environment.
-    Pkg.develop(path=joinpath(@__DIR__, ".."))
-end
+using Pkg
+# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
+Pkg.activate(joinpath(@__DIR__, "../test"))
+# Install the dependencies.
+Pkg.instantiate()
+# Add the package EnergyModelsInvestments to the environment.
+Pkg.develop(path=joinpath(@__DIR__, ".."))
 
 using EnergyModelsBase
 using EnergyModelsInvestments
@@ -19,52 +17,73 @@ const EMB = EnergyModelsBase
 const EMI = EnergyModelsInvestments
 const TS = TimeStruct
 
-# Define the required resources
-CO2 = ResourceEmit("CO2", 1.0)
-Power = ResourceCarrier("Power", 0.0)
-products = [Power, CO2]
+function demo_invest(lifemode = RollingLife(); discount_rate = 0.05)
+    @info "Generate case data and run the simple model"
 
-function demo_invest(lifemode = UnlimitedLife(); discount_rate = 0.05)
-    lifetime = FixedProfile(15)
-    sp_dur = 5
+    # Define the different resources and their emission intensity in tCO2/MWh
+    CO2 = ResourceEmit("CO2", 1.0)
+    Power = ResourceCarrier("Power", 0.0)
+    products = [Power, CO2]
 
-    investment_data_source = InvData(
-        capex_cap = FixedProfile(1000), # capex [€/kW]
-        cap_max_inst = FixedProfile(30), #  max installed capacity [kW]
-        cap_max_add = FixedProfile(30), # max_add [kW]
-        cap_min_add = FixedProfile(0), # min_add [kW]
-        life_mode = lifemode,
-        lifetime = lifetime,
-    )
+    # Variables for the individual entries of the time structure
+    op_duration = 2 # Each operational period has a duration of 2
+    op_number = 4   # There are in total 4 operational periods
+    operational_periods = SimpleTimes(op_number, op_duration)
 
-    source = RefSource(
-        "src",
-        FixedProfile(0),
-        FixedProfile(10),
-        FixedProfile(5),
-        Dict(Power => 1),
-        [investment_data_source],
-    )
+    # The duration of operational periods per duration of 1 of a strategic period of 8760
+    # implies that a duration of 1 of an operational period corresponds to an hour, while
+    # a duration of 1 of a strategic period corresponds to a year
+    op_per_strat = 8760
 
-    sink = RefSink(
-        "snk",
-        FixedProfile(20),
-        Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
-        Dict(Power => 1),
-    )
+    sp_duration = 5 # The duration of a strategic period is given as 5 years
 
-    nodes = [GenAvailability(1,products), source, sink]
-    links = [
-        Direct(21, nodes[2], nodes[1], Linear())
-        Direct(13, nodes[1], nodes[3], Linear())
-    ]
+    # Creation of the time structure and global data
+    T = TwoLevel(4, sp_duration, operational_periods; op_per_strat)
 
-    T = TwoLevel(4, sp_dur, SimpleTimes(4, 1))
-    em_limits =
-        Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
-    em_cost = Dict(CO2 => FixedProfile(0))
+    # Create the global data
+    em_limits = Dict(CO2 => FixedProfile(10))   # Emission cap for CO2 in t/8h
+    em_cost = Dict(CO2 => FixedProfile(0))      # Emission price for CO2 in EUR/t
     model = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
+    # The lifetime of the technology is 15 years, requiring reinvestment in the
+    # 5th strategic period
+    lifetime = FixedProfile(15)
+
+    # Create the investment data for the source node
+    investment_data_source = InvData(
+        capex_cap = FixedProfile(300*1e3),  # Capex [€/MW]
+        cap_max_inst = FixedProfile(30),    # Max installed capacity [MW]
+        cap_max_add = FixedProfile(30),     # Max added capactity per sp [MW]
+        cap_min_add = FixedProfile(0),      # Max added capactity per sp [MW]
+        life_mode = lifemode,               # Lifetime mode
+        lifetime = lifetime,                # Lifetime
+    )
+
+    # Create the individual test nodes, corresponding to a system with an electricity
+    # demand/sink and source
+    source = RefSource(
+        "source",                   # Node ID
+        FixedProfile(0),            # Capacity in MW
+        FixedProfile(10),           # Variable OPEX in EUR/MW
+        FixedProfile(5),            # Fixed OPEX in EUR/year
+        Dict(Power => 1),           # Output from the Node, in this gase, Power
+        [investment_data_source],   # Additional data used for adding the investment data
+    )
+    sink = RefSink(
+        "sink",                     # Node ID
+        FixedProfile(20),           # Demand in MW
+        Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
+        # Line above: Surplus and deficit penalty for the node in EUR/MWh
+        Dict(Power => 1),           # Power demand and corresponding ratio
+    )
+    nodes = [source, sink]
+
+    # Connect the two ndoes
+    links = [
+        Direct(12, nodes[1], nodes[2], Linear())
+    ]
+
+    # WIP data structure
     case = Dict(
         :nodes => nodes,
         :links => links,
@@ -72,18 +91,27 @@ function demo_invest(lifemode = UnlimitedLife(); discount_rate = 0.05)
         :T => T,
     )
 
-    # Create model and optimize
+    # Create the case and model data and run the model
     m = EMB.create_model(case, model)
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(m, optimizer)
     optimize!(m)
 
     # Display some results
+    @info "Invested capacity for the source in the beginning of the individual strategic periods"
     pretty_table(
         JuMP.Containers.rowtable(
             value,
-            m[:cap_add];
-            header = [:Source, :StrategicPeriod, :CapInvest],
+            m[:cap_add][source, :];
+            header = [:StrategicPeriod, :InvestCapacity],
+        ),
+    )
+    @info "Retired capacity of the source at the end of the individual strategic periods"
+    pretty_table(
+        JuMP.Containers.rowtable(
+            value,
+            m[:cap_rem][source, :];
+            header = [:StrategicPeriod, :InvestCapacity],
         ),
     )
     return m

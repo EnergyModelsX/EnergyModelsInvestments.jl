@@ -1,13 +1,13 @@
 """
-Main module for `EnergyModelsInvestments.jl`.
+Main module for `EnergyModelsInvestments`.
 
 This module implements functionalities allowing to run investment analysis.
 
-It is in its current version extending `EnergyModelsBase.jl` and cannot be used as a
+It is in its current version extending `EnergyModelsBase` and cannot be used as a
 stand-alone module.
 
-The extension `EMIGeoExt.jl` includes furthermore the investment options for transmission
-modes as described in `EnergyModelsGeography.jl`.
+The extension `EMIGeoExt` includes furthermore the investment options for transmission
+modes as described in `EnergyModelsGeography`.
 """
 module EnergyModelsInvestments
 
