@@ -1,6 +1,7 @@
 # EnergyModelsInvestments.jl
 
-This Julia package provides investments for the operational, multi carrier energy model [`EnergyModelsBase.jl`](https://clean_export.pages.sintef.no/energymodelsbase.jl).
+This Julia package provides investment options for the operational, multi carrier energy model [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/).
+It furthermore adds investment options for the transmission modes introduced in [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/), if the package is loaded.
 
 ```@docs
 EnergyModelsInvestments

@@ -9,7 +9,7 @@ Maximize Net Present Value from investments (CAPEX) and operations (OPEX and emi
 Consider adding contributions from
  - revenue (as positive variable, adding positive)
  - maintenance based on usage (as positive variable, adding negative)
-These variables would need to be introduced through the package `SparsVariables.jl`.
+These variables would need to be introduced through the package `SparsVariables`.
 
 Both are not necessary, as it is possible to include them through the OPEX values, but it
 would be beneficial for a better separation and simpler calculations from the results.

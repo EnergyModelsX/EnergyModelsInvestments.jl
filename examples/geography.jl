@@ -1,12 +1,10 @@
-if !isequal(splitpath(Base.active_project())[end-1], "test")
-    using Pkg
-    # Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
-    Pkg.activate(joinpath(@__DIR__, "../test"))
-    # Install the dependencies.
-    Pkg.instantiate()
-    # Add the package EnergyModelsInvestments to the environment.
-    Pkg.develop(path=joinpath(@__DIR__, ".."))
-end
+using Pkg
+# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
+Pkg.activate(joinpath(@__DIR__, "../test"))
+# Install the dependencies.
+Pkg.instantiate()
+# Add the package EnergyModelsInvestments to the environment.
+Pkg.develop(path=joinpath(@__DIR__, ".."))
 
 using EnergyModelsBase
 using EnergyModelsGeography
@@ -21,7 +19,7 @@ const EMI = EnergyModelsInvestments
 
 
 function run_model(case, model, optimizer = nothing)
-    @info "Run model" model optimizer
+    @info "Run model"
 
     m = EMG.create_model(case, model)
 
@@ -378,7 +376,11 @@ end
 case_data, modeltype = generate_data()
 
 # Run the optimization as an investment model.
-m = run_model(case_data, modeltype, HiGHS.Optimizer)
+m = run_model(
+    case_data,
+    modeltype,
+    optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true),
+)
 
 # Uncomment to print all the constraints set in the model.
 # print(m)
