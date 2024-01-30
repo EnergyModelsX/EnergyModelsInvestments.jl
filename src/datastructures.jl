@@ -15,8 +15,8 @@ investments and additional discounting of future years.
 # Fields
 - **`emission_limit::Dict{<:ResourceEmit, <:TimeProfile}`** are the emission caps for the \
 different emissions types considered.\n
-- **`emission_price::Dict{<:ResourceEmit, <:TimeProfile}`** are the prices for the different \
-emissions types considered.\n
+- **`emission_price::Dict{<:ResourceEmit, <:TimeProfile}`** are the prices for the \
+different emissions types considered.\n
 - **`co2_instance`** is a `ResourceEmit` and corresponds to the type used for CO₂.\n
 - **`r`** is the discount rate in the investment optimization.
 """
