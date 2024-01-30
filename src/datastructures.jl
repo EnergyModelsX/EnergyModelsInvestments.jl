@@ -8,21 +8,21 @@ abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 
 """
 A concrete basic investment model type based on the standard `OperationalModel` as declared
-in `EnergyModelsBase`.,
+in `EnergyModelsBase`.
 The concrete basic investment model is similar to an `OperationalModel`, but allows for
 investments and additional discounting of future years.
 
 # Fields
-- **`emission_limit::Dict{ResourceEmit, TimeProfile}`** are the emission caps for the \
+- **`emission_limit::Dict{<:ResourceEmit, <:TimeProfile}`** are the emission caps for the \
 different emissions types considered.\n
-- **`emission_price::Dict{ResourceEmit, TimeProfile}`** are the prices for the different \
+- **`emission_price::Dict{<:ResourceEmit, <:TimeProfile}`** are the prices for the different \
 emissions types considered.\n
 - **`co2_instance`** is a `ResourceEmit` and corresponds to the type used for CO₂.\n
 - **`r`** is the discount rate in the investment optimization.
 """
 struct InvestmentModel <: AbstractInvestmentModel
-    emission_limit::Dict{ResourceEmit, TimeProfile}
-    emission_price::Dict{ResourceEmit, TimeProfile}
+    emission_limit::Dict{<:ResourceEmit, <:TimeProfile}
+    emission_price::Dict{<:ResourceEmit, <:TimeProfile}
     co2_instance::ResourceEmit
     r       # Discount rate
 end

@@ -54,12 +54,13 @@ These investments are available at the beginning of a strategic period.
 
 The model can also choose to retire technologies at the end of each strategic period through removal variables given as:
 
-- ``\texttt{cap\_rem}[n_\texttt{inv}, t_\texttt{inv}]``: Added capacity of `Node` ``n_\texttt{inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_rate\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added rate capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_cap\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``, and
-- ``\texttt{trans\_cap\_rem}[m_\texttt{inv}, t_\texttt{inv}]``: Added capacity of `TransmissionMode` ``m_\texttt{inv}`` with investments at the end of strategic period ``t_\texttt{inv}``.
+- ``\texttt{cap\_rem}[n_\texttt{inv}, t_\texttt{inv}]``: Retired capacity of `Node` ``n_\texttt{inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_rate\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired rate capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_cap\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``, and
+- ``\texttt{trans\_cap\_rem}[m_\texttt{inv}, t_\texttt{inv}]``: Retired capacity of `TransmissionMode` ``m_\texttt{inv}`` with investments at the end of strategic period ``t_\texttt{inv}``.
 
-The removed capacity corresponds to removal of capacity, either due to the end of lifetime or due to lack of usage. Capacity removal only has a reduced impact on the objective function due to removal of the fixed OPEX.
+The retired capacity corresponds to removal of capacity, either due to the end of lifetime or due to lack of usage.
+Capacity removal only has a reduced impact on the objective function due to removal of the fixed OPEX.
 It can however be beneficial for the model to remove unused capacity to avoid fixed OPEX when the technology is not used in the future.
 Early removal of a technology, that is before the end of its lifetime, does not provide a rest value to the system.
 

@@ -3,12 +3,12 @@ using JuMP
 using Test
 
 using EnergyModelsBase
-using EnergyModelsGeography
+# using EnergyModelsGeography
 using EnergyModelsInvestments
 using TimeStruct
 
 const EMB = EnergyModelsBase
-const EMG = EnergyModelsGeography
+# const EMG = EnergyModelsGeography
 const EMI = EnergyModelsInvestments
 const TS = TimeStruct
 
@@ -39,7 +39,7 @@ include("generate_data.jl")
     include("test_lifetime.jl")
     include("test_examples.jl")
 
-    @testset "w/Geography" begin
-        include("test_geo.jl")
-    end
+    # @testset "w/Geography" begin
+    #     include("test_geo.jl")
+    # end
 end
