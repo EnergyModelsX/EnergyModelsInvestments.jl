@@ -8,7 +8,7 @@ abstract type AbstractInvestmentModel <: EMB.EnergyModel end
 
 """
 A concrete basic investment model type based on the standard `OperationalModel` as declared
-in `EnergyModelsBase`.,
+in `EnergyModelsBase`.
 The concrete basic investment model is similar to an `OperationalModel`, but allows for
 investments and additional discounting of future years.
 

@@ -5,6 +5,7 @@
 `EnergyModelsInvestments` provides `EnergyModelsBase` with the potential for investments.
 The extension is achieved through providing a new [`InvestmentModel`](@ref) which is subsequently used for dispatching on several core functions within `EnergyModelsBase`.
 Hence, its application does not require any changes to the model itself.
+This corresponds to the 3ʳᵈ bullet point in the list of *[Extensions to the model](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/manual/philosophy/#sec_phil_ext)*.
 
 The aim in the package development is to provide maximum flexibility to the user, similarly to `EnergyModelsBase`.
 In the case of investments, the flexibility is required for selecting:

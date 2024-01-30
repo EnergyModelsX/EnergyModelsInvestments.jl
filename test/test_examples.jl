@@ -8,6 +8,13 @@ using Pkg
 
     files = first(walkdir(exdir))[3]
     for file in files
+
+        # Removal of Geography example as EMG is not yet registered
+        if file == "geography.jl"
+            continue
+        end
+        # The section here has to be removed once EMG is registered
+
         if splitext(file)[2] == ".jl"
             @testset "Example $file" begin
                 @info "Run example $file"

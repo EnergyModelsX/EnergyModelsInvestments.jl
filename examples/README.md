@@ -23,8 +23,8 @@ It is hence not as commented as the other examples.
 
 > **Note**
 >
-> The example is not running yet, as the instantiation would require that the package [`EnergyModelsBase`](https://github.com/EnergyModelsX/EnergyModelsBase.jl) is registered.
-> It is however possible to run the code directly from a local project in which the packages `TimeStruct`, `EnergyModelsBase`, `EnergyModelsInvestments`, `JuMP`, and `HiGHS` are loaded.
+> The *[geography example](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/blob/main/examples/geography.jl)* is not running yet, as the instantiation would require that the package [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsBase.jl) is registered.
+> It is however possible to run the code directly from a local project in which the packages `TimeStruct`, `EnergyModelsBase`,`EnergyModelsGeography`, `EnergyModelsInvestments`, `JuMP`, and `HiGHS` are loaded.
 > In this case, you have to comment lines 2-7 out:
 >
 > ```julia
@@ -35,5 +35,3 @@ It is hence not as commented as the other examples.
 > # Add the package EnergyModelsInvestments to the environment.
 > Pkg.develop(path=joinpath(@__DIR__, ".."))
 > ```
->
-> If you want to run the *[geography example](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/blob/main/examples/geography.jl)*, you also have to add `EnergyModelsGeography`.
