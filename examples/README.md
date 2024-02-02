@@ -20,18 +20,3 @@ include(joinpath(exdir, "geography.jl"))
 The *[geography example](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/blob/main/examples/geography.jl)* will be simpliefied in a future version.
 It shows however how investments in transmission mdoes can be included.
 It is hence not as commented as the other examples.
-
-> **Note**
->
-> The *[geography example](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/blob/main/examples/geography.jl)* is not running yet, as the instantiation would require that the package [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsBase.jl) is registered.
-> It is however possible to run the code directly from a local project in which the packages `TimeStruct`, `EnergyModelsBase`,`EnergyModelsGeography`, `EnergyModelsInvestments`, `JuMP`, and `HiGHS` are loaded.
-> In this case, you have to comment lines 2-7 out:
->
-> ```julia
-> # Activate the test-environment, where HiGHS is added as dependency.
-> Pkg.activate(joinpath(@__DIR__, "../test"))
-> # Install the dependencies.
-> Pkg.instantiate()
-> # Add the package EnergyModelsInvestments to the environment.
-> Pkg.develop(path=joinpath(@__DIR__, ".."))
-> ```

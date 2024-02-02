@@ -72,9 +72,9 @@ function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInves
     @variable(m, trans_cap_rem[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Remove capacity
 
 
-    # Additional constraints (e.g. for binary investments) are added per node depending on
-    # investment mode on each node. (One alternative could be to build variables iteratively with
-    # JuMPUtils.jl)
+    # Additional constraints (e.g. for binary investments) are added per transmission mode
+    # depending on the investment mode on each transmission mode.
+    # (One alternative could be to build variables iteratively with JuMPUtils.jl)
     constraints_transmission_invest(m, 𝒯, ℳ, modeltype)
 end
 
