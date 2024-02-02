@@ -419,11 +419,15 @@ end
 Set the capex_cost based on the technology investment cost, and strategic period length
 to include the needs for reinvestments and the rest value.
 It implements different versions of the lifetime implementation:
-- UnlimitedLife:    The investment life is not limited. The investment costs do not consider any reinvestment or rest value.
-- StudyLife:        The investment last for the whole study period with adequate reinvestments at end of lifetime and rest value.
-- PeriodLife:       The investment is considered to last only for the strategic period. The excess lifetime is considered in the rest value.
-- RollingLife:      The investment is rolling to the next strategic periods and it is retired at the end of its lifetime or the end
-                    of the previous sp if its lifetime ends between two sp.
+- UnlimitedLife:    The investment life is not limited. The investment costs do not \
+                    consider any reinvestment or rest value.
+- StudyLife:        The investment last for the whole study period with adequate \
+                    reinvestments at end of lifetime and rest value.
+- PeriodLife:       The investment is considered to last only for the strategic period. \
+                    the excess lifetime is considered in the rest value.
+- RollingLife:      The investment is rolling to the next strategic periods and it is \
+                    retired at the end of its lifetime or the end of the previous sp if \
+                    its lifetime ends between two sp.
 """
 set_capacity_cost(m, n, 𝒯, t_inv, modeltype) = set_capacity_cost(m, n, 𝒯, t_inv, modeltype, lifetime_mode(n))
 function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::UnlimitedLife)
