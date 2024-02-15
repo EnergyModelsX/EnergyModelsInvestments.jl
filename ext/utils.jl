@@ -89,14 +89,14 @@ EMI.capex(tm::TransmissionMode, t_inv) = EMI.investment_data(tm).capex_trans[t_i
 
 Returns the offset of the CAPEX of `TransmissionMode` `tm` as `TimeProfile`.
 """
-EMI.capex_offset(tm::TransmissionMode) = EMI.investment_data(tm).capex_trans
+EMI.capex_offset(tm::TransmissionMode) = EMI.investment_data(tm).capex_trans_offset
 
 """
     capex_offset(n::TransmissionMode, t_inv)
 
 Returns the offset of the CAPEX of `TransmissionMode` `tm` in investment period `t_inv`.
 """
-EMI.capex_offset(tm::TransmissionMode, t_inv) = EMI.investment_data(tm).capex_trans[t_inv]
+EMI.capex_offset(tm::TransmissionMode, t_inv) = EMI.investment_data(tm).capex_trans_offset[t_inv]
 
 """
     EMI.increment(tm::TransmissionMode)

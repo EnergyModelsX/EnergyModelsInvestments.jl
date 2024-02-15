@@ -1,5 +1,10 @@
 Release Notes
+
 =============
+Version 0.5.2 (2024-02-15)
+--------------------------
+### Bugfix
+ * Fixed the function for extracting the field `capex_trans_offset` in `TransInvData`.
 
 Version 0.5.1 (2024-01-17)
 --------------------------
