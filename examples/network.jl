@@ -1,11 +1,10 @@
 using Pkg
-# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
-Pkg.activate(joinpath(@__DIR__, "../test"))
+# Activate the local environment including EnergyModelsInvestments, HiGHS, PrettyTables
+Pkg.activate(@__DIR__)
 # Install the dependencies.
 Pkg.instantiate()
-# Add the package EnergyModelsInvestments to the environment.
-Pkg.develop(path=joinpath(@__DIR__, ".."))
 
+# Import the required packages
 using EnergyModelsBase
 using EnergyModelsInvestments
 using HiGHS
@@ -17,13 +16,16 @@ const EMB = EnergyModelsBase
 const EMI = EnergyModelsInvestments
 
 """
-    generate_network_model()
+    generate_example_data()
 
-Generate the data for the case study.
+Generate the data for an example consisting of a simple electricity network.
+The more stringent CO₂ emission in latter investment periods force the investment into both
+the natural gas power plant with CCS and the CO₂ storage node.
+
 The example is partly based on the provided example `network.jl` in `EnergyModelsBase`.
 """
-function generate_network_model()
-    @info "Generate case data"
+function generate_example_data()
+    @info "Generate case data - Simple network example"
 
     # Define the different resources and their emission intensity in tCO2/MWh
     NG = ResourceCarrier("NG", 0.2)
@@ -60,15 +62,8 @@ function generate_network_model()
     op_profile = OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])
     nodes = [
         GenAvailability(1, products),   # Routing Node
-        RefSink(                        # Demand Node
-            2,                          # Node id
-            op_profile,                 # Used demand profile
-            Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
-            # Line above: Surplus and deficit penalty for the node in EUR/MWh
-            Dict(Power => 1),           # Power demand and corresponding ratio
-        ),
         RefSource(                      # Natural gas source
-            3,                          # Node id
+            "NG source",                # Node id
             FixedProfile(80),           # Capacity in MW
             FixedProfile(30),           # Variable OPEX in EUR/MWh
             FixedProfile(100),          # Fixed OPEX in EUR/year
@@ -76,15 +71,15 @@ function generate_network_model()
             [],                         # Potential additional data, no investment for the source
         ),
         RefSource(                      # Coal source
-            4,                          # Node id
-            FixedProfile(100),            # Capacity in MW
+            "coal source",              # Node id
+            FixedProfile(100),          # Capacity in MW
             FixedProfile(9),            # Variable OPEX in EUR/MWh
             FixedProfile(100),          # Fixed OPEX in EUR/year
             Dict(Coal => 1),            # Output from the Node, in this gase, coal
             [],                         # Potential additional data, no investment for the source
         ),
         RefNetworkNode(                 # Natural gas power plant with CCS
-            5,                          # Node id
+            "NG+CCS power plant",       # Node id
             FixedProfile(0),            # Capacity in MW, no initial capacity
             FixedProfile(5.5),          # Variable OPEX in EUR/MWh
             FixedProfile(1e5),          # Fixed OPEX in EUR/year
@@ -104,7 +99,7 @@ function generate_network_model()
             ],
         ),
         RefNetworkNode(                 # Coal power plant
-            6,                          # Node id
+            "coal power plant",         # Node id
             FixedProfile(40),           # Capacity in MW
             FixedProfile(6),            # Variable OPEX in EUR/MWh
             FixedProfile(0),            # Fixed OPEX in EUR/8h
@@ -113,7 +108,7 @@ function generate_network_model()
             [EmissionsEnergy()],        # Additonal data for emissions
         ),
         RefStorage(
-            7,                          # Node id
+            "CO2 storage",              # Node id
             FixedProfile(0),            # Rate capacity in t/h
             FixedProfile(1e8),          # Storage capacity in t
             FixedProfile(9.1),          # Storage variable OPEX for the rate in EUR/t
@@ -135,20 +130,27 @@ function generate_network_model()
                     inv_mode = ContinuousInvestment(),
                 ),
             ],
-        )
+        ),
+        RefSink(                        # Demand Node
+            "electricity demand",       # Node id
+            op_profile,                 # Used demand profile
+            Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
+            # Line above: Surplus and deficit penalty for the node in EUR/MWh
+            Dict(Power => 1),           # Power demand and corresponding ratio
+        ),
     ]
 
     # Connect all nodes with the availability node for the overall energy/mass balance
     links = [
-        Direct(12, nodes[1], nodes[2], Linear())
-        Direct(15, nodes[1], nodes[5], Linear())
-        Direct(16, nodes[1], nodes[6], Linear())
-        Direct(17, nodes[1], nodes[7], Linear())
-        Direct(31, nodes[3], nodes[1], Linear())
-        Direct(41, nodes[4], nodes[1], Linear())
-        Direct(51, nodes[5], nodes[1], Linear())
-        Direct(61, nodes[6], nodes[1], Linear())
-        Direct(71, nodes[7], nodes[1], Linear())
+        Direct("Av-NG_pp", nodes[1], nodes[4], Linear())
+        Direct("Av-coal_pp", nodes[1], nodes[5], Linear())
+        Direct("Av-CO2_stor", nodes[1], nodes[6], Linear())
+        Direct("Av-demand", nodes[1], nodes[7], Linear())
+        Direct("NG_src-av", nodes[2], nodes[1], Linear())
+        Direct("Coal_src-av", nodes[3], nodes[1], Linear())
+        Direct("NG_pp-av", nodes[4], nodes[1], Linear())
+        Direct("Coal_pp-av", nodes[5], nodes[1], Linear())
+        Direct("CO2_stor-av", nodes[6], nodes[1], Linear())
     ]
 
     # WIP case structure
@@ -161,29 +163,28 @@ function generate_network_model()
     return case, model
 end
 
-# Generate case data.
-case, model = generate_network_model()
-
-# Run the optimization as an investment model.
-m = EMB.create_model(case, model)
+# Generate the case and model data and run the model
+case, model = generate_example_data()
 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-set_optimizer(m, optimizer)
-optimize!(m)
+m = EMB.run_model(case, model, optimizer)
 
 # Display some results
-@info "Invested capacity for the natural gas plant in the beginning of the individual strategic periods"
+ng_ccs_pp, CO2_stor,  = case[:nodes][[4,6]]
+@info "Invested capacity for the natural gas plant in the beginning of the \
+individual strategic periods"
 pretty_table(
     JuMP.Containers.rowtable(
         value,
-        m[:cap_add][case[:nodes][5], :];
+        m[:cap_add][ng_ccs_pp, :];
         header = [:StrategicPeriod, :InvestCapacity],
     ),
 )
-@info "Invested capacity for the CO2 storage"
+@info "Invested capacity for the CO2 storage in the beginning of the
+individual strategic periods"
 pretty_table(
     JuMP.Containers.rowtable(
         value,
-        m[:stor_rate_add][case[:nodes][7], :];
+        m[:stor_rate_add][CO2_stor, :];
         header = [:StrategicPeriod, :InvestCapacity],
     ),
 )
