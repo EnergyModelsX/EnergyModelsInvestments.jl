@@ -1,6 +1,11 @@
-Release Notes
-
+# Release notes
 =============
+
+Unversioned
+--------------------------
+ * Fixed a bug when running the examples from a non-cloned version of `EnergyModelsInvestments`.
+ * This was achieved through a separate Project.toml in the examples.
+
 Version 0.5.2 (2024-02-15)
 --------------------------
 ### Bugfix

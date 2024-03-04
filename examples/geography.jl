@@ -1,11 +1,10 @@
 using Pkg
-# Activate the test-environment, where PrettyTables and HiGHS are added as dependencies.
-Pkg.activate(joinpath(@__DIR__, "../test"))
+# Activate the local environment including EnergyModelsInvestments, HiGHS, PrettyTables
+Pkg.activate(@__DIR__)
 # Install the dependencies.
 Pkg.instantiate()
-# Add the package EnergyModelsInvestments to the environment.
-Pkg.develop(path=joinpath(@__DIR__, ".."))
 
+# Import the required packages
 using EnergyModelsBase
 using EnergyModelsGeography
 using EnergyModelsInvestments
@@ -17,19 +16,18 @@ const EMB = EnergyModelsBase
 const EMG = EnergyModelsGeography
 const EMI = EnergyModelsInvestments
 
+"""
+    generate_example_data()
 
-function run_model(case, model, optimizer = nothing)
-    @info "Run model"
+Generate the data for an example consisting of a simple electricity network. The simple \
+network is existing within 5 regions with differing demand. Each region has the same \
+technologies.
 
-    m = EMG.create_model(case, model)
+The example is partly based on the provided example `network.jl` in `EnergyModelsGeography`.
+It will be repalced in the near future with a simplified example.
+"""
 
-    set_optimizer(m, optimizer)
-    optimize!(m)
-    return m
-end
-
-
-function generate_data()
+function generate_example_data()
     @debug "Generate case data"
     @info "Generate data coded dummy model for now (Investment Model)"
 
@@ -177,13 +175,13 @@ end
 
 
 function get_sub_system_data(
-    i,
-    products;
-    gen_scale::Float64 = 1.0,
-    mc_scale::Float64 = 1.0,
-    d_scale::Float64 = 1.0,
-    demand = false,
-)
+        i,
+        products;
+        gen_scale::Float64 = 1.0,
+        mc_scale::Float64 = 1.0,
+        d_scale::Float64 = 1.0,
+        demand = false,
+    )
 
     NG, Coal, Power, CO2 = products
 
@@ -373,14 +371,13 @@ end
 
 
 # Generate case data
-case_data, modeltype = generate_data()
+case, model = generate_example_data()
+optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+m = EMG.create_model(case, model)
+set_optimizer(m, optimizer)
+optimize!(m)
 
-# Run the optimization as an investment model.
-m = run_model(
-    case_data,
-    modeltype,
-    optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true),
-)
+solution_summary(m)
 
 # Uncomment to print all the constraints set in the model.
 # print(m)
