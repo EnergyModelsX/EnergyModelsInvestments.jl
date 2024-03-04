@@ -1,9 +1,174 @@
-"""
-    generate_data()
 
-Generate the data for the tests.
+const TEST_ATOL = 1e-6
+⪆(x,y) = x > y || isapprox(x,y;atol=TEST_ATOL)
+const OPTIMIZER = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+
 """
-function generate_data()
+    optimize(cases)
+
+Optimize the `case`.
+"""
+function optimize(case, modeltype)
+    m = EMB.create_model(case, modeltype)
+    set_optimizer(m, OPTIMIZER)
+    optimize!(m)
+    return m
+end
+
+"""
+    general_tests(m)
+
+Check if the solution is optimal.
+"""
+function general_tests(m)
+    @testset "Optimal solution" begin
+        @test termination_status(m) == MOI.OPTIMAL
+
+        if termination_status(m) != MOI.OPTIMAL
+            @show termination_status(m)
+        end
+    end
+end
+
+# Declaration of the required resources
+CO2 = ResourceEmit("CO2", 1.)
+Power = ResourceCarrier("Power", 0.)
+products = [Power, CO2]
+
+"""
+    small_graph()
+
+Creates a simple test case consisting of a sink and source with the potential for
+investments in capacity of the source if provided with investments through the
+argument `inv_data`.
+"""
+function small_graph(;
+                    source=nothing,
+                    sink=nothing,
+                    inv_data=nothing,
+                    T=TwoLevel(4, 10, SimpleTimes(4, 1)),
+                    discount_rate = 0.05,
+                    )
+
+    if isnothing(inv_data)
+        investment_data_source = InvData(
+            capex_cap       = FixedProfile(1000),       # capex [€/kW]
+            cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
+            cap_max_add     = FixedProfile(20),         # max_add [kW]
+            cap_min_add     = FixedProfile(5),          # min_add [kW]
+            inv_mode        = ContinuousInvestment() # investment mode
+        )
+        demand_profile = FixedProfile(20)
+    else
+        investment_data_source = inv_data["investment_data"]
+        demand_profile         = inv_data["profile"]
+    end
+
+    # Creation of the source and sink module as well as the arrays used for nodes and links
+    if isnothing(source)
+        source = RefSource("-src", FixedProfile(0), FixedProfile(10),
+                               FixedProfile(5), Dict(Power => 1),
+                               [investment_data_source])
+    end
+    if isnothing(sink)
+        sink = RefSink("-snk", demand_profile,
+            Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e4)),
+            Dict(Power => 1))
+    end
+    nodes = [GenAvailability(1, products), source, sink]
+    links = [Direct(21, nodes[2], nodes[1], Linear())
+             Direct(13, nodes[1], nodes[3], Linear())]
+
+    em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
+    em_cost     = Dict(CO2 => FixedProfile(0))
+    modeltype  = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
+
+    case = Dict(:nodes       => nodes,
+                :links       => links,
+                :products    => products,
+                :T           => T,
+                )
+    return case, modeltype
+end
+
+"""
+    small_graph_geo()
+
+Creates a simple geography test case with the potential for investments in transmission
+    infrastructure if provided with transmission investments through the argument `inv_data`.
+"""
+function small_graph_geo(; source=nothing, sink=nothing, inv_data=[])
+
+    # Creation of the source and sink module as well as the arrays used for nodes and links
+    if isnothing(source)
+        source = RefSource(
+                    "-src",
+                    FixedProfile(50),
+                    FixedProfile(10),
+                    FixedProfile(5),
+                    Dict(Power => 1),
+                    Array{Data}([]),
+                )
+    end
+
+    if isnothing(sink)
+        sink = RefSink(
+                    "-snk",
+                    StrategicProfile([20, 25, 30, 35]),
+                    Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
+                    Dict(Power => 1),
+                )
+    end
+
+    nodes = [GeoAvailability(1, products), GeoAvailability(2, products), source, sink]
+    links = [Direct(31, nodes[3], nodes[1], Linear())
+             Direct(24, nodes[2], nodes[4], Linear())]
+
+    # Creation of the two areas and potential transmission lines
+    areas = [RefArea(1, "Oslo", 10.751, 59.921, nodes[1]),
+             RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2])]
+
+    transmission_line = RefStatic(
+        "transline",
+        Power,
+        FixedProfile(10),
+        FixedProfile(0.1),
+        FixedProfile(0.0),
+        FixedProfile(0.0),
+        1,
+        inv_data,
+    )
+
+    transmissions = [Transmission(areas[1], areas[2], [transmission_line])]
+
+    # Creation of the time structure and the used global data
+    T = TwoLevel(4, 1, SimpleTimes(1, 1))
+    modeltype = InvestmentModel(
+                            Dict(CO2 => StrategicProfile([450, 400, 350, 300])),
+                            Dict(CO2 => StrategicProfile([0, 0, 0, 0])),
+                            CO2,
+                            0.07
+                        )
+
+    # Creation of the case dictionary
+    case = Dict(
+                :nodes          => nodes,
+                :links          => links,
+                :products       => products,
+                :areas          => areas,
+                :transmission   => transmissions,
+                :T              => T,
+                )
+
+    return case, modeltype
+end
+
+"""
+    network_graph()
+
+Creates a more complex case to test several potential errors
+"""
+function network_graph()
     # Define the different resources
     NG       = ResourceEmit("NG", 0.2)
     Coal     = ResourceCarrier("Coal", 0.35)
@@ -11,15 +176,13 @@ function generate_data()
     CO2      = ResourceEmit("CO2",1.)
     products = [NG, Coal, Power, CO2]
 
+    op_profile = OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])
+
     nodes = [
         GenAvailability(1, products),
         RefSink(
             2,
-            StrategicProfile([OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-                              OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-                              OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-                              OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])]
-            ),
+            op_profile,
             Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
             Dict(Power => 1),
         ),
