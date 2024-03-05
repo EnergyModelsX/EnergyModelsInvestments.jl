@@ -129,8 +129,8 @@ function small_graph_stor(;
                     inv_data=nothing,
                     rate_cap = FixedProfile(0),
                     stor_cap = FixedProfile(0),
-                    supply = OperationalProfile([10, 30, 5, 35]),
-                    demand = FixedProfile(20),
+                    rate_min_add = 5,
+                    stor_min_add = 5,
                     op_dur = 10
                     )
 
@@ -138,12 +138,12 @@ function small_graph_stor(;
         inv_data = [InvDataStorage(
             capex_rate = FixedProfile(20),
             rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(20),
-            rate_min_add = FixedProfile(5),
+            rate_max_add = FixedProfile(30),
+            rate_min_add = FixedProfile(rate_min_add),
             capex_stor = FixedProfile(500),
             stor_max_inst = FixedProfile(600),
             stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(5),
+            stor_min_add = FixedProfile(stor_min_add),
             inv_mode = ContinuousInvestment(),
         )]
     end
@@ -152,7 +152,7 @@ function small_graph_stor(;
     # Creation of the source and sink module as well as the arrays used for nodes and links
     source = RefSource(
         "src",
-        supply,
+        OperationalProfile([10, 30, 5, 35]),
         FixedProfile(10),
         FixedProfile(5),
         Dict(Power => 1),
@@ -170,7 +170,7 @@ function small_graph_stor(;
     )
     sink = RefSink(
         "snk",
-        demand,
+        FixedProfile(20),
         Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e5)),
         Dict(Power => 1),
         )
@@ -181,7 +181,7 @@ function small_graph_stor(;
         Direct("stor-snk", nodes[2], nodes[3], Linear())
     ]
 
-    em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
+    em_limits   = Dict(CO2 => StrategicProfile([450, 400]))
     em_cost     = Dict(CO2 => FixedProfile(0))
     modeltype  = InvestmentModel(em_limits, em_cost, CO2, 0.05)
 

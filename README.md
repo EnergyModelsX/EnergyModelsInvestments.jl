@@ -7,14 +7,6 @@
 `EnergyModelsInvestments` is a package to investment decisions to models designed using the [`EnergyModelsBase`](https://github.com/EnergyModelsX/EnergyModelsBase.jl) package.
 If the package [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsGeography.jl) is loaded, it will also provide investment options to transmission mode.
 
-> **Note:**
->
-> We migrated recently from an internal Git solution to GitHub, including the package [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsGeography.jl).
-> As `EnergyModelsGeography` is not yet registered, it is not possible to run all tests.
-> Hence, we plan to wait with creating a release to be certain that the tests are running.
-> As a result, the stable docs are not yet available.
-> This may impact as well some links.
-
 ## Usage
 
 The usage of the package is based illustrated through the commented [`examples`](examples).
