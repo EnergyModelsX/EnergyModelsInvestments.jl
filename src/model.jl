@@ -327,7 +327,7 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::BinaryInvestme
     )
 end
 
-function set_storage_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
+function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     # Set the limits
     for t_inv ∈ 𝒯ᴵⁿᵛ
         set_investment_properties(n, m[:stor_cap_remove_b][n, t_inv])

@@ -6,6 +6,7 @@ Unversioned
  * Fixed a bug when running the examples from a non-cloned version of `EnergyModelsInvestments`.
  * This was achieved through a separate Project.toml in the examples.
  * Fixed a bug for semi-continuous investments for `Storage` nodes.
+ * Fixed a bug for method ambiguity when `Storage` nodes use `DiscreteInvestment`.
 
 Version 0.5.2 (2024-02-15)
 --------------------------
