@@ -29,6 +29,35 @@ function general_tests(m)
     end
 end
 
+
+"""
+    general_tests_stor(m)
+
+Check if the solution is optimal.
+"""
+function general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
+    @testset "Optimal solution" begin
+        @test termination_status(m) == MOI.OPTIMAL
+
+        if termination_status(m) != MOI.OPTIMAL
+            @show termination_status(m)
+        end
+    end
+
+    @testset "cap_inst" begin
+        # Test that cap_inst is less than node.data.cap_max_inst at all times.
+        @test sum(value.(m[:stor_cap_inst][stor, t]) ≤
+                    EMI.max_installed(stor, t).level for t ∈ 𝒯) == length(𝒯)
+        @test sum(value.(m[:stor_rate_inst][stor, t]) ≤
+                    EMI.max_installed(stor, t).rate for t ∈ 𝒯) == length(𝒯)
+    end
+    @testset "cap_add" begin
+        # Test that the capacity is at least added once
+        @test sum(value.(m[:stor_cap_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:stor_rate_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+    end
+end
+
 # Declaration of the required resources
 CO2 = ResourceEmit("CO2", 1.)
 Power = ResourceCarrier("Power", 0.)
@@ -80,6 +109,83 @@ function small_graph(;
     em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost     = Dict(CO2 => FixedProfile(0))
     modeltype  = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
+
+    case = Dict(:nodes       => nodes,
+                :links       => links,
+                :products    => products,
+                :T           => T,
+                )
+    return case, modeltype
+end
+
+"""
+    small_graph_stor()
+
+Creates a simple test case consisting of a source, storage, and sink with the potential for
+investments in capacity of the storage if provided with investments through the
+argument `inv_data`.
+"""
+function small_graph_stor(;
+                    inv_data=nothing,
+                    rate_cap = FixedProfile(0),
+                    stor_cap = FixedProfile(0),
+                    supply = OperationalProfile([10, 30, 5, 35]),
+                    demand = FixedProfile(20),
+                    op_dur = 10
+                    )
+
+    if isnothing(inv_data)
+        inv_data = [InvDataStorage(
+            capex_rate = FixedProfile(20),
+            rate_max_inst = FixedProfile(30),
+            rate_max_add = FixedProfile(20),
+            rate_min_add = FixedProfile(5),
+            capex_stor = FixedProfile(500),
+            stor_max_inst = FixedProfile(600),
+            stor_max_add = FixedProfile(600),
+            stor_min_add = FixedProfile(5),
+            inv_mode = ContinuousInvestment(),
+        )]
+    end
+    StrategicProfile([20, 30])
+
+    # Creation of the source and sink module as well as the arrays used for nodes and links
+    source = RefSource(
+        "src",
+        supply,
+        FixedProfile(10),
+        FixedProfile(5),
+        Dict(Power => 1),
+    )
+    storage = RefStorage(
+        "stor",
+        rate_cap,
+        stor_cap,
+        FixedProfile(0),
+        FixedProfile(100),
+        Power,
+        Dict(Power => 1.0),
+        Dict(Power => 1.0),
+        inv_data,
+    )
+    sink = RefSink(
+        "snk",
+        demand,
+        Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e5)),
+        Dict(Power => 1),
+        )
+    nodes = [source, storage, sink]
+    links = [
+        Direct("src-stor", nodes[1], nodes[2], Linear())
+        Direct("src-snk", nodes[1], nodes[3], Linear())
+        Direct("stor-snk", nodes[2], nodes[3], Linear())
+    ]
+
+    em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
+    em_cost     = Dict(CO2 => FixedProfile(0))
+    modeltype  = InvestmentModel(em_limits, em_cost, CO2, 0.05)
+
+    T = TwoLevel(2, 5, SimpleTimes(4, op_dur))
 
     case = Dict(:nodes       => nodes,
                 :links       => links,
