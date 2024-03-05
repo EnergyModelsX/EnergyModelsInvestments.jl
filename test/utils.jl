@@ -1,4 +1,3 @@
-
 const TEST_ATOL = 1e-6
 ⪆(x,y) = x > y || isapprox(x,y;atol=TEST_ATOL)
 const OPTIMIZER = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
@@ -51,13 +50,13 @@ function small_graph(;
                     )
 
     if isnothing(inv_data)
-        investment_data_source = InvData(
+        investment_data_source = [InvData(
             capex_cap       = FixedProfile(1000),       # capex [€/kW]
             cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
             cap_max_add     = FixedProfile(20),         # max_add [kW]
             cap_min_add     = FixedProfile(5),          # min_add [kW]
             inv_mode        = ContinuousInvestment() # investment mode
-        )
+        )]
         demand_profile = FixedProfile(20)
     else
         investment_data_source = inv_data["investment_data"]
@@ -68,16 +67,15 @@ function small_graph(;
     if isnothing(source)
         source = RefSource("-src", FixedProfile(0), FixedProfile(10),
                                FixedProfile(5), Dict(Power => 1),
-                               [investment_data_source])
+                               investment_data_source)
     end
     if isnothing(sink)
         sink = RefSink("-snk", demand_profile,
             Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e4)),
             Dict(Power => 1))
     end
-    nodes = [GenAvailability(1, products), source, sink]
-    links = [Direct(21, nodes[2], nodes[1], Linear())
-             Direct(13, nodes[1], nodes[3], Linear())]
+    nodes = [source, sink]
+    links = [Direct("scr-sink", nodes[1], nodes[2], Linear())]
 
     em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost     = Dict(CO2 => FixedProfile(0))

@@ -10,14 +10,14 @@ resulting_obj = Dict()
                     @debug "~~~~~~~~ $(life_mode) - $(sp_dur) years ~~~~~~~~"
 
                     inv_data = Dict(
-                        "investment_data" => InvData(
+                        "investment_data" => [InvData(
                             capex_cap   = FixedProfile(1000),   # capex [€/kW]
                             cap_max_inst = FixedProfile(30),    # max installed capacity [kW]
                             cap_max_add = FixedProfile(30),     # max_add [kW]
                             cap_min_add = FixedProfile(0),      # min_add [kW]
                             life_mode   = life_mode,
                             lifetime    = FixedProfile(lifetime),
-                        ),
+                        )],
                         "profile" => FixedProfile(20),
                     )
                     T = TwoLevel(4, sp_dur, SimpleTimes(4, 1))
@@ -32,7 +32,7 @@ resulting_obj = Dict()
 
                     push!(resulting_obj["$(sp_dur) years"], objective_value(m))
 
-                    source = case[:nodes][2]
+                    source = case[:nodes][1]
                     𝒯 = case[:T]
                     𝒯ⁱⁿᵛ = strategic_periods(𝒯)
 
