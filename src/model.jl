@@ -361,11 +361,11 @@ function set_storage_installation(m, n::Storage, 𝒯ᴵⁿᵛ, ::SemiContiInves
 
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         m[:stor_rate_add][n, t_inv] <=
-            max_add(n, t_inv).rate * m[:stor_cap_invest_b][n, t_inv]
+            max_add(n, t_inv).rate * m[:stor_rate_invest_b][n, t_inv]
     )
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         m[:stor_rate_add][n, t_inv] >=
-            min_add(n, t_inv).rate * m[:stor_cap_invest_b][n, t_inv]
+            min_add(n, t_inv).rate * m[:stor_rate_invest_b][n, t_inv]
     )
 end
 

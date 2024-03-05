@@ -5,6 +5,7 @@ Unversioned
 --------------------------
  * Fixed a bug when running the examples from a non-cloned version of `EnergyModelsInvestments`.
  * This was achieved through a separate Project.toml in the examples.
+ * Fixed a bug for semi-continuous investments for `Storage` nodes.
 
 Version 0.5.2 (2024-02-15)
 --------------------------
