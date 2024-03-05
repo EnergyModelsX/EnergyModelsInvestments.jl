@@ -103,11 +103,11 @@ function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::
     )
 
     @assert_or_log(
-        isa(typeof(data), InvDataStorage),
+        isa(data, InvDataStorage),
         "The investment data for a Storage must be of type `InvDataStorage`."
     )
 
-    if !isa(typeof(data), InvDataStorage)
+    if !isa(data, InvDataStorage)
         return
     end
 

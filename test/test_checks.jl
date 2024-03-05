@@ -291,7 +291,7 @@ EMB.TEST_ENV = true
             stor_max_add = FixedProfile(600),
             stor_min_add = FixedProfile(5),
             inv_mode = ContinuousInvestment(),
-            stor_start = 40,
+            stor_start = 700,
         )]
         case, modeltype = small_graph_stor(;inv_data)
         @test_throws AssertionError optimize(case, modeltype)
