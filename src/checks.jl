@@ -1,5 +1,5 @@
 """
-   EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+    EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
 
 Performs various checks on investment data for standard nodes.
 
@@ -68,7 +68,7 @@ function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype:
 
 end
 """
-   EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+    EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
 
 Performs various checks on investment data for standard nodes. It is similar to the standard
 check nodes functions, but adds checks on
