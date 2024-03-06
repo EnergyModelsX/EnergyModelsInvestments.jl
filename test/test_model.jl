@@ -152,47 +152,47 @@ end
     #     @test sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 3 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
     # end
 
-    # @testset "FixedInvestment" begin
+    @testset "FixedInvestment" begin
 
-    #     # Variation in the test structure
-    #     inv_data = Dict(
-    #         "investment_data" => [InvData(
-    #             capex_cap       = FixedProfile(1000),   # capex [€/kW]
-    #             cap_max_inst    = FixedProfile(30),     # max installed capacity [kW]
-    #             cap_max_add     = FixedProfile(30),     # max_add [kW]
-    #             cap_min_add     = FixedProfile(0),      # min_add [kW]
-    #             cap_start       = 0,                    # Starting capacity
-    #             inv_mode        = FixedInvestment()     # investment mode
-    #         )],
-    #         "profile"         => StrategicProfile([0, 20, 25, 30]),
-    #     )
-    #     source = RefSource(
-    #         "-src",
-    #         StrategicProfile([0, 20, 25, 30]),
-    #         FixedProfile(10),
-    #         FixedProfile(5),
-    #         Dict(Power => 1),
-    #         inv_data["investment_data"],
-    #     )
+        # Variation in the test structure
+        inv_data = Dict(
+            "investment_data" => [InvData(
+                capex_cap       = FixedProfile(1000),   # capex [€/kW]
+                cap_max_inst    = FixedProfile(30),     # max installed capacity [kW]
+                cap_max_add     = FixedProfile(30),     # max_add [kW]
+                cap_min_add     = FixedProfile(0),      # min_add [kW]
+                cap_start       = 0,                    # Starting capacity
+                inv_mode        = FixedInvestment()     # investment mode
+            )],
+            "profile"         => StrategicProfile([0, 20, 25, 30]),
+        )
+        source = RefSource(
+            "-src",
+            StrategicProfile([0, 20, 25, 30]),
+            FixedProfile(10),
+            FixedProfile(5),
+            Dict(Power => 1),
+            inv_data["investment_data"],
+        )
 
-    #     # Creation and solving of the model
-    #     case, modeltype = small_graph(;source, inv_data)
-    #     m               = optimize(case, modeltype)
+        # Creation and solving of the model
+        case, modeltype = small_graph(;source, inv_data)
+        m               = optimize(case, modeltype)
 
-    #     # Extraction of required data
-    #     source = case[:nodes][1]
-    #     sink   = case[:nodes][2]
-    #     𝒯ᴵⁿᵛ = strategic_periods(case[:T])
-    #     inv_profile = StrategicProfile([0, 20, 5, 5])
+        # Extraction of required data
+        source = case[:nodes][1]
+        sink   = case[:nodes][2]
+        𝒯ᴵⁿᵛ = strategic_periods(case[:T])
+        inv_profile = StrategicProfile([0, 20, 5, 5])
 
-    #     # Test that the investments are happening based on the specified profile
-    #     @test sum(
-    #         value.(m[:cap_add][source, t_inv]) ≈ inv_profile[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
-    #         ) == length(𝒯ᴵⁿᵛ)
+        # Test that the investments are happening based on the specified profile
+        @test sum(
+            value.(m[:cap_add][source, t_inv]) ≈ inv_profile[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
+            ) == length(𝒯ᴵⁿᵛ)
 
-    #     # Test that the variable `cap_invest_b` is fixed
-    #     @test sum(is_fixed.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
-    # end
+        # Test that the variable `cap_invest_b` is fixed
+        @test sum(is_fixed.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
+    end
 
     # @testset "Continuous fixed manually" begin
 
@@ -367,53 +367,53 @@ end
     #         atol ∈ TEST_ATOL) == 1
     # end
 
-    # @testset "FixedInvestment" begin
+    @testset "FixedInvestment" begin
 
-    #     # Variation in the test structure
-    #     inv_data = [InvDataStorage(
-    #         capex_rate = FixedProfile(20),
-    #         rate_max_inst = FixedProfile(30),
-    #         rate_max_add = FixedProfile(30),
-    #         rate_min_add = FixedProfile(15),
-    #         rate_start = 0,
-    #         capex_stor = FixedProfile(500),
-    #         stor_max_inst = FixedProfile(600),
-    #         stor_max_add = FixedProfile(600),
-    #         stor_min_add = FixedProfile(150),
-    #         stor_start = 0,
-    #         inv_mode = FixedInvestment(),
-    #     )]
-    #     rate_cap = StrategicProfile([15, 20])
-    #     stor_cap = StrategicProfile([150, 200])
+        # Variation in the test structure
+        inv_data = [InvDataStorage(
+            capex_rate = FixedProfile(20),
+            rate_max_inst = FixedProfile(30),
+            rate_max_add = FixedProfile(30),
+            rate_min_add = FixedProfile(15),
+            rate_start = 0,
+            capex_stor = FixedProfile(500),
+            stor_max_inst = FixedProfile(600),
+            stor_max_add = FixedProfile(600),
+            stor_min_add = FixedProfile(150),
+            stor_start = 0,
+            inv_mode = FixedInvestment(),
+        )]
+        rate_cap = StrategicProfile([15, 20])
+        stor_cap = StrategicProfile([150, 200])
 
-    #     # Creation and solving of the model
-    #     case, modeltype = small_graph_stor(;inv_data, rate_cap, stor_cap)
-    #     m               = optimize(case, modeltype)
+        # Creation and solving of the model
+        case, modeltype = small_graph_stor(;inv_data, rate_cap, stor_cap)
+        m               = optimize(case, modeltype)
 
-    #     # Extraction of required data
-    #     source = case[:nodes][1]
-    #     stor   = case[:nodes][2]
-    #     sink   = case[:nodes][3]
-    #     𝒯    = case[:T]
-    #     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    #     inv_data = EMI.investment_data(stor)
+        # Extraction of required data
+        source = case[:nodes][1]
+        stor   = case[:nodes][2]
+        sink   = case[:nodes][3]
+        𝒯    = case[:T]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        inv_data = EMI.investment_data(stor)
 
-    #     # General tests for installed capacity
-    #     general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
+        # General tests for installed capacity
+        general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
-    #     inv_profile_rate = StrategicProfile([15, 5, 0, 0])
-    #     inv_profile_stor = StrategicProfile([150, 50, 0, 0])
+        inv_profile_rate = StrategicProfile([15, 5, 0, 0])
+        inv_profile_stor = StrategicProfile([150, 50, 0, 0])
 
-    #     # Test that the investments are happening based on the specified profile
-    #     @test sum(
-    #         value.(m[:stor_rate_add][stor, t_inv]) ≈ inv_profile_rate[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
-    #         ) == length(𝒯ᴵⁿᵛ)
-    #     @test sum(
-    #         value.(m[:stor_cap_add][stor, t_inv]) ≈ inv_profile_stor[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
-    #         ) == length(𝒯ᴵⁿᵛ)
+        # Test that the investments are happening based on the specified profile
+        @test sum(
+            value.(m[:stor_rate_add][stor, t_inv]) ≈ inv_profile_rate[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
+            ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            value.(m[:stor_cap_add][stor, t_inv]) ≈ inv_profile_stor[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
+            ) == length(𝒯ᴵⁿᵛ)
 
-    #     # Test that the variables `stor_cap_invest_b` and `stor_rate_invest_b` are fixed
-    #     @test sum(is_fixed.(m[:stor_cap_invest_b])) == length(𝒯ᴵⁿᵛ)
-    #     @test sum(is_fixed.(m[:stor_rate_invest_b])) == length(𝒯ᴵⁿᵛ)
-    # end
+        # Test that the variables `stor_cap_invest_b` and `stor_rate_invest_b` are fixed
+        @test sum(is_fixed.(m[:stor_cap_invest_b])) == length(𝒯ᴵⁿᵛ)
+        @test sum(is_fixed.(m[:stor_rate_invest_b])) == length(𝒯ᴵⁿᵛ)
+    end
 end
