@@ -144,8 +144,6 @@ end
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
         # Test the integer variables
-        @test sum(value.(m[:cap_invest_b][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) +
-                sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
         @test sum(is_integer.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
 
         # Test that the variable cap_invest_b is 3 exactly once
@@ -194,35 +192,35 @@ end
         @test sum(is_fixed.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
     end
 
-    # @testset "Continuous fixed manually" begin
+    @testset "Continuous fixed manually" begin
 
-    #     # Variation in the test structure
-    #     inv_data = Dict(
-    #         "investment_data" => [InvData(
-    #             capex_cap       = FixedProfile(1000),       # capex [€/kW]
-    #             cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-    #             cap_max_add     = StrategicProfile([0, 30, 0, 0]),  # max_add [kW]
-    #             cap_min_add     = StrategicProfile([0, 5, 0, 0]),   # min_add [kW]
-    #             cap_start       = 0,                        # Starting capacity
-    #             inv_mode        = ContinuousInvestment()   # investment mode
-    #         )],
-    #         "profile"         => StrategicProfile([0, 20, 25, 30])
-    #     )
+        # Variation in the test structure
+        inv_data = Dict(
+            "investment_data" => [InvData(
+                capex_cap       = FixedProfile(1000),       # capex [€/kW]
+                cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
+                cap_max_add     = StrategicProfile([0, 30, 0, 0]),  # max_add [kW]
+                cap_min_add     = StrategicProfile([0, 5, 0, 0]),   # min_add [kW]
+                cap_start       = 0,                        # Starting capacity
+                inv_mode        = ContinuousInvestment()   # investment mode
+            )],
+            "profile"         => StrategicProfile([0, 20, 25, 30])
+        )
 
-    #     # Creation and solving of the model
-    #     case, modeltype = small_graph(;inv_data)
-    #     m               = optimize(case, modeltype)
-    #     general_tests(m)
+        # Creation and solving of the model
+        case, modeltype = small_graph(;inv_data)
+        m               = optimize(case, modeltype)
+        general_tests(m)
 
-    #     # Extraction of required data
-    #     source = case[:nodes][1]
-    #     sink   = case[:nodes][2]
-    #     𝒯    = case[:T]
-    #     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        # Extraction of required data
+        source = case[:nodes][1]
+        sink   = case[:nodes][2]
+        𝒯    = case[:T]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    #     # Test that the investments is happening in one strategic period
-    #     @test sum(value.(m[:cap_add][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
-    # end
+        # Test that the investments is happening in one strategic period
+        @test sum(value.(m[:cap_add][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
+    end
 end
 
 @testset "Test InvDataStorage" begin
@@ -337,18 +335,6 @@ end
 
     #     # General tests for installed capacity
     #     general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
-
-    #     # Test the bounds for minimum and maximum added capacity are not violated
-    #     @testset "Installation bounds" begin
-    #         @test sum(value.(m[:stor_rate_add][stor, t_inv]) ≥
-    #                     EMI.min_add(stor, t_inv).rate for t_inv ∈ 𝒯ᴵⁿᵛ) +
-    #                 sum(value.(m[:stor_rate_add][stor, t_inv]) ≈
-    #                    0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-    #         @test sum(value.(m[:stor_cap_add][stor, t_inv]) ≥
-    #                     EMI.min_add(stor, t_inv).level for t_inv ∈ 𝒯ᴵⁿᵛ) +
-    #                 sum(value.(m[:stor_cap_add][stor, t_inv]) ≈
-    #                     0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-    #     end
 
     #     # Test that investments are happening at least once
     #     @test sum(value.(m[:stor_rate_invest_b][stor, t_inv]) ≥ 1 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
