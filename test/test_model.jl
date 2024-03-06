@@ -115,42 +115,42 @@ end
         @test sum(is_binary.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
     end
 
-    # @testset "DiscreteInvestment" begin
+    @testset "DiscreteInvestment" begin
 
-    #     # Variation in the test structure
-    #     investment_data_source = [InvData(
-    #         capex_cap       = FixedProfile(1000),   # capex [€/kW]
-    #         cap_max_inst    = FixedProfile(30),     # max installed capacity [kW]
-    #         cap_max_add     = FixedProfile(10),     # max_add [kW]
-    #         cap_min_add     = FixedProfile(5),      # min_add [kW]
-    #         cap_start       = 0,                    # Starting capacity
-    #         inv_mode        = DiscreteInvestment(),    # investment mode
-    #         cap_increment   = FixedProfile(8)    # investment mode
-    #     )]
-    #     inv_data = Dict(
-    #         "investment_data" => investment_data_source,
-    #         "profile"         => StrategicProfile([0, 20, 20, 0]),
-    #     )
+        # Variation in the test structure
+        investment_data_source = [InvData(
+            capex_cap       = FixedProfile(1000),   # capex [€/kW]
+            cap_max_inst    = FixedProfile(30),     # max installed capacity [kW]
+            cap_max_add     = FixedProfile(10),     # max_add [kW]
+            cap_min_add     = FixedProfile(5),      # min_add [kW]
+            cap_start       = 0,                    # Starting capacity
+            inv_mode        = DiscreteInvestment(),    # investment mode
+            cap_increment   = FixedProfile(8)    # investment mode
+        )]
+        inv_data = Dict(
+            "investment_data" => investment_data_source,
+            "profile"         => StrategicProfile([20, 20, 20, 20]),
+        )
 
-    #     # Creation and solving of the model
-    #     case, modeltype = small_graph(;inv_data)
-    #     m               = optimize(case, modeltype)
-    #     general_tests(m)
+        # Creation and solving of the model
+        case, modeltype = small_graph(;inv_data)
+        m               = optimize(case, modeltype)
+        general_tests(m)
 
-    #     # Extraction of required data
-    #     source = case[:nodes][1]
-    #     sink   = case[:nodes][2]
-    #     𝒯    = case[:T]
-    #     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        # Extraction of required data
+        source = case[:nodes][1]
+        sink   = case[:nodes][2]
+        𝒯    = case[:T]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    #     # Test the integer variables
-    #     @test sum(value.(m[:cap_invest_b][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) +
-    #             sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-    #     @test sum(is_integer.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
+        # Test the integer variables
+        @test sum(value.(m[:cap_invest_b][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) +
+                sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        @test sum(is_integer.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
 
-    #     # Test that the variable cap_invest_b is 3 exactly once
-    #     @test sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 3 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
-    # end
+        # Test that the variable cap_invest_b is 3 exactly once
+        @test sum(value.(m[:cap_invest_b][source, t_inv]) ≈ 3 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
+    end
 
     @testset "FixedInvestment" begin
 
