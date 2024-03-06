@@ -20,7 +20,7 @@ include("utils.jl")
     # include("test_checks.jl")
     # include("test_examples.jl")
 
-    # @testset "w/Geography" begin
-    #     include("test_geo.jl")
-    # end
+    @testset "w/Geography" begin
+        include("test_geo.jl")
+    end
 end
