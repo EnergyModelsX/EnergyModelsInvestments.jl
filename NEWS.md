@@ -22,6 +22,10 @@
 * Restructured the test folder and the individual tests.
 * Added tests for `Storage` investment.
 
+### Minor changes
+
+* Moved `EMIGeoExt` to a separate folder within the extension folder.
+
 ## Version 0.5.2 (2024-02-15)
 
 ### Bugfix
