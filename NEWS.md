@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.5.3 (2024-03-XX)
+## Version 0.5.3 (2024-03-06)
 
 ### Examples
 
