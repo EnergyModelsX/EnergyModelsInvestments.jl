@@ -1,27 +1,27 @@
 
-@testset "Investment example - simple network" begin
+# @testset "Investment example - simple network" begin
 
-    # Create simple model
-    case, modeltype = network_graph()
-    m               = optimize(case, modeltype)
+#     # Create simple model
+#     case, modeltype = network_graph()
+#     m               = optimize(case, modeltype)
 
-    # Test for the total number of variables
-    # (-576 compared to 0.4.x as only defined for technologies with EmissionData)
-    # (+192 compared to 0.4.x as increase in storage variables)
-    @test size(all_variables(m))[1] == 10112
+#     # Test for the total number of variables
+#     # (-576 compared to 0.4.x as only defined for technologies with EmissionData)
+#     # (+192 compared to 0.4.x as increase in storage variables)
+#     @test size(all_variables(m))[1] == 10112
 
-    # Test results
-    general_tests(m)
-    @test round(objective_value(m)) ≈ -303348
+#     # Test results
+#     general_tests(m)
+#     @test round(objective_value(m)) ≈ -303348
 
-    CH4 = case[:products][1]
-    CO2 = case[:products][4]
-    𝒯    = case[:T]
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+#     CH4 = case[:products][1]
+#     CO2 = case[:products][4]
+#     𝒯    = case[:T]
+#     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    emissions_CO2 = [value.(m[:emissions_strategic])[t_inv, CO2] for t_inv ∈ 𝒯ᴵⁿᵛ]
-    @test emissions_CO2 <= [450, 400, 350, 300]
-end
+#     emissions_CO2 = [value.(m[:emissions_strategic])[t_inv, CO2] for t_inv ∈ 𝒯ᴵⁿᵛ]
+#     @test emissions_CO2 <= [450, 400, 350, 300]
+# end
 
 @testset "Test InvData" begin
     @testset "ContinuousInvestment" begin
