@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.5.3 (2024-03-XX)
+## Version 0.5.3 (2024-03-06)
 
 ### Examples
 
@@ -21,6 +21,10 @@
 
 * Restructured the test folder and the individual tests.
 * Added tests for `Storage` investment.
+
+### Minor changes
+
+* Moved `EMIGeoExt` to a separate folder within the extension folder.
 
 ## Version 0.5.2 (2024-02-15)
 
