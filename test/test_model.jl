@@ -59,61 +59,61 @@ end
 
     end
 
-    # @testset "SemiContinuousInvestment" begin
+    @testset "SemiContinuousInvestment" begin
 
-    #     inv_data = Dict(
-    #         "investment_data" => [InvData(
-    #             capex_cap       = FixedProfile(1000),       # capex [€/kW]
-    #             cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-    #             cap_max_add     = FixedProfile(30),         # max_add [kW]
-    #             cap_min_add     = FixedProfile(10),         # min_add [kW]
-    #             cap_start       = 0,                        # Starting capacity
-    #             inv_mode        = SemiContinuousInvestment()   # investment mode
-    #         )],
-    #         "profile"         => StrategicProfile([0, 20, 25, 30]),
-    #     )
+        inv_data = Dict(
+            "investment_data" => [InvData(
+                capex_cap       = FixedProfile(1000),       # capex [€/kW]
+                cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
+                cap_max_add     = FixedProfile(30),         # max_add [kW]
+                cap_min_add     = FixedProfile(10),         # min_add [kW]
+                cap_start       = 0,                        # Starting capacity
+                inv_mode        = SemiContinuousInvestment()   # investment mode
+            )],
+            "profile"         => StrategicProfile([0, 20, 25, 30]),
+        )
 
-    #     # Creation and solving of the model
-    #     case, modeltype = small_graph(;inv_data)
-    #     m               = optimize(case, modeltype)
-    #     general_tests(m)
+        # Creation and solving of the model
+        case, modeltype = small_graph(;inv_data)
+        m               = optimize(case, modeltype)
+        general_tests(m)
 
-    #     # Extraction of required data
-    #     source = case[:nodes][1]
-    #     sink   = case[:nodes][2]
-    #     𝒯    = case[:T]
-    #     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    #     inv_data = EMI.investment_data(source)
+        # Extraction of required data
+        source = case[:nodes][1]
+        sink   = case[:nodes][2]
+        𝒯    = case[:T]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        inv_data = EMI.investment_data(source)
 
-    #     @testset "cap_inst" begin
-    #         # Test that cap_inst is less than node.data.cap_max_inst at all times.
-    #         @test sum(value.(m[:cap_inst][source, t]) <=
-    #                     EMI.max_installed(source, t) for t ∈ 𝒯) == length(𝒯)
+        @testset "cap_inst" begin
+            # Test that cap_inst is less than node.data.cap_max_inst at all times.
+            @test sum(value.(m[:cap_inst][source, t]) <=
+                        EMI.max_installed(source, t) for t ∈ 𝒯) == length(𝒯)
 
-    #         for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
-    #             # Test the initial installed capacity is correct set.
-    #             @test value.(m[:cap_inst][source, t]) ==
-    #                         capacity(source, t) + value.(m[:cap_add][source, t_inv])
-    #             break
-    #         end
+            for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
+                # Test the initial installed capacity is correct set.
+                @test value.(m[:cap_inst][source, t]) ==
+                            capacity(source, t) + value.(m[:cap_add][source, t_inv])
+                break
+            end
 
-    #         # Test that cap_inst is larger or equal to demand profile in sink and deficit
-    #         @test sum(value.(m[:cap_inst][source, t])+value.(m[:sink_deficit][sink, t])
-    #                     ≥ capacity(sink, t) for t ∈ 𝒯) == length(𝒯)
-    #     end
+            # Test that cap_inst is larger or equal to demand profile in sink and deficit
+            @test sum(value.(m[:cap_inst][source, t])+value.(m[:sink_deficit][sink, t])
+                        ≥ capacity(sink, t) for t ∈ 𝒯) == length(𝒯)
+        end
 
-    #     # Test that the semi continuous bound is always followed
-    #     @test sum(value.(m[:cap_add][source, t_inv]) ≥
-    #                 EMI.min_add(source, t_inv) for t_inv ∈ 𝒯ᴵⁿᵛ) +
-    #             sum(value.(m[:cap_add][source, t_inv]) ≈
-    #                0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-    #     @test sum(value.(m[:cap_add][source, t_inv]) ≥
-    #                 EMI.min_add(source, t_inv) for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
-    #     @test sum(value.(m[:cap_add][source, t_inv]) ≈0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        # Test that the semi continuous bound is always followed
+        @test sum(value.(m[:cap_add][source, t_inv]) ≥
+                    EMI.min_add(source, t_inv) for t_inv ∈ 𝒯ᴵⁿᵛ) +
+                sum(value.(m[:cap_add][source, t_inv]) ≈
+                   0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        @test sum(value.(m[:cap_add][source, t_inv]) ≥
+                    EMI.min_add(source, t_inv) for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:cap_add][source, t_inv]) ≈0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
 
-    #     # Test that the variable cap_invest_b is a binary
-    #     @test sum(is_binary.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
-    # end
+        # Test that the variable cap_invest_b is a binary
+        @test sum(is_binary.(m[:cap_invest_b])) == length(𝒯ᴵⁿᵛ)
+    end
 
     # @testset "DiscreteInvestment" begin
 
