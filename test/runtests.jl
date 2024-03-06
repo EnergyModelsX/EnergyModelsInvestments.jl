@@ -15,7 +15,7 @@ const TS = TimeStruct
 include("utils.jl")
 
 @testset "Investments" begin
-    # include("test_model.jl")
+    include("test_model.jl")
     include("test_lifetime.jl")
     include("test_checks.jl")
     include("test_examples.jl")
