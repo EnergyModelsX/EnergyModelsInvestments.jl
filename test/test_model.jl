@@ -304,54 +304,54 @@ end
         @test sum(is_binary.(m[:stor_cap_invest_b])) == length(𝒯ᴵⁿᵛ)
     end
 
-    # @testset "DiscreteInvestment" begin
+    @testset "DiscreteInvestment" begin
 
-    #     # Variation in the test structure
-    #     inv_data = [InvDataStorage(
-    #         capex_rate = FixedProfile(20),
-    #         rate_max_inst = FixedProfile(30),
-    #         rate_max_add = FixedProfile(30),
-    #         rate_min_add = FixedProfile(15),
-    #         capex_stor = FixedProfile(500),
-    #         stor_max_inst = FixedProfile(600),
-    #         stor_max_add = FixedProfile(600),
-    #         stor_min_add = FixedProfile(150),
-    #         inv_mode = DiscreteInvestment(),
-    #         rate_increment = FixedProfile(5),
-    #         stor_increment = FixedProfile(150),
-    #     )]
+        # Variation in the test structure
+        inv_data = [InvDataStorage(
+            capex_rate = FixedProfile(20),
+            rate_max_inst = FixedProfile(30),
+            rate_max_add = FixedProfile(30),
+            rate_min_add = FixedProfile(15),
+            capex_stor = FixedProfile(500),
+            stor_max_inst = FixedProfile(600),
+            stor_max_add = FixedProfile(600),
+            stor_min_add = FixedProfile(150),
+            inv_mode = DiscreteInvestment(),
+            rate_increment = FixedProfile(5),
+            stor_increment = FixedProfile(150),
+        )]
 
-    #     # Creation and solving of the model
-    #     case, modeltype = small_graph_stor(;inv_data)
-    #     m               = optimize(case, modeltype)
+        # Creation and solving of the model
+        case, modeltype = small_graph_stor(;inv_data)
+        m               = optimize(case, modeltype)
 
-    #     # Extraction of required data
-    #     source = case[:nodes][1]
-    #     stor   = case[:nodes][2]
-    #     sink   = case[:nodes][3]
-    #     𝒯    = case[:T]
-    #     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    #     inv_data = EMI.investment_data(stor)
+        # Extraction of required data
+        source = case[:nodes][1]
+        stor   = case[:nodes][2]
+        sink   = case[:nodes][3]
+        𝒯    = case[:T]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        inv_data = EMI.investment_data(stor)
 
-    #     # General tests for installed capacity
-    #     general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
+        # General tests for installed capacity
+        general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
-    #     # Test that investments are happening at least once
-    #     @test sum(value.(m[:stor_rate_invest_b][stor, t_inv]) ≥ 1 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
-    #     @test sum(value.(m[:stor_cap_invest_b][stor, t_inv]) ≥ 1 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        # Test that investments are happening at least once
+        @test sum(value.(m[:stor_rate_invest_b][stor, t_inv]) ≥ 1 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:stor_cap_invest_b][stor, t_inv]) ≥ 1 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
 
-    #     # Test that the variable stor_rate_invest_b and stor_cap_invest_b are binaries
-    #     @test sum(is_integer.(m[:stor_rate_invest_b])) == length(𝒯ᴵⁿᵛ)
-    #     @test sum(is_integer.(m[:stor_cap_invest_b])) == length(𝒯ᴵⁿᵛ)
+        # Test that the variable stor_rate_invest_b and stor_cap_invest_b are integers
+        @test sum(is_integer.(m[:stor_rate_invest_b])) == length(𝒯ᴵⁿᵛ)
+        @test sum(is_integer.(m[:stor_cap_invest_b])) == length(𝒯ᴵⁿᵛ)
 
-    #     # Test that the variable cap_invest_b is 3 exactly once
-    #     @test sum(
-    #         value.(m[:stor_rate_invest_b][stor, t_inv]) ≈ 3 for t_inv ∈ 𝒯ᴵⁿᵛ,
-    #         atol ∈ TEST_ATOL) == 1
-    #     @test sum(
-    #         value.(m[:stor_cap_invest_b][stor, t_inv]) ≈ 1 for t_inv ∈ 𝒯ᴵⁿᵛ,
-    #         atol ∈ TEST_ATOL) == 1
-    # end
+        # Test that the variable cap_invest_b is 3 exactly once
+        @test sum(
+            value.(m[:stor_rate_invest_b][stor, t_inv]) ≈ 3 for t_inv ∈ 𝒯ᴵⁿᵛ,
+            atol ∈ TEST_ATOL) == 1
+        @test sum(
+            value.(m[:stor_cap_invest_b][stor, t_inv]) ≈ 1 for t_inv ∈ 𝒯ᴵⁿᵛ,
+            atol ∈ TEST_ATOL) == 1
+    end
 
     @testset "FixedInvestment" begin
 
