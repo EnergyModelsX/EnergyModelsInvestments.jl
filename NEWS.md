@@ -1,5 +1,10 @@
 # Release notes
 
+## Version 0.5.4 (2024-03-11)
+
+* Adjusted function `EMB.check_node_data` to changed method call in `EnergyModelsBase`.
+* Allow for jumping over the check regarding the `StrategicProfile` structure in `InvData` and `InvDataStorage` with a conditional argument. The other checks regarding the profiles remain unchanged as a wrong `TimeProfile` there would lead to an error within `TimeStruct`.
+
 ## Version 0.5.3 (2024-03-06)
 
 ### Bugfix

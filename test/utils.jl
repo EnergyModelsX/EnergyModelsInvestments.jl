@@ -7,8 +7,8 @@ const OPTIMIZER = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => tru
 
 Optimize the `case`.
 """
-function optimize(case, modeltype)
-    m = EMB.create_model(case, modeltype)
+function optimize(case, modeltype; check_timeprofiles=true)
+    m = EMB.create_model(case, modeltype; check_timeprofiles)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
     return m

@@ -1,5 +1,5 @@
 """
-    EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+    EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
 
 Performs various checks on investment data for standard nodes.
 
@@ -16,7 +16,7 @@ Performs various checks on investment data for standard nodes.
 If `cap_start` is `nothing`, it also checks that the the field `:cap` of the node `n` \
 is not including `OperationalProfile`, `RepresentativeProfile`, or `ScenarioProfile`.
 """
-function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
 
     inv_data = filter(data -> typeof(data) <: InvestmentData, node_data(n))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -33,7 +33,7 @@ function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype:
         isa(time_profile, FixedProfile) && continue
         message = "are not allowed for the field: "*String(field_name)
 
-        if isa(time_profile, StrategicProfile)
+        if isa(time_profile, StrategicProfile) && check_timeprofiles
             @assert_or_log(
                 length(time_profile.vals) == length(𝒯ᴵⁿᵛ),
                 "Field '" * string(field_name) * "' does not match the strategic structure."
@@ -68,7 +68,7 @@ function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype:
 
 end
 """
-    EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+    EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
 
 Performs various checks on investment data for standard nodes. It is similar to the standard
 check nodes functions, but adds checks on
@@ -91,7 +91,7 @@ If `rate_start` is `nothing`, it also checks that the the field `:stor_rate` of 
 If `stor_start` is `nothing`, it also checks that the the field `:stor_cap` of the node \
 `n` is not including `OperationalProfile`, `RepresentativeProfile`, or `ScenarioProfile`.
 """
-function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
 
     inv_data = filter(data -> typeof(data) <: InvestmentData, node_data(n))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -117,7 +117,7 @@ function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::
         isa(time_profile, FixedProfile) && continue
         message = "are not allowed for the field: "*String(field_name)
 
-        if isa(time_profile, StrategicProfile)
+        if isa(time_profile, StrategicProfile) && check_timeprofiles
             @assert_or_log(
                 length(time_profile.vals) == length(𝒯ᴵⁿᵛ),
                 "Field '" * string(field_name) * "' does not match the strategic structure."
