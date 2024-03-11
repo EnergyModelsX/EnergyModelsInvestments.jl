@@ -1,5 +1,5 @@
 """
-    EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
+    EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles::Bool)
 
 Performs various checks on investment data for standard nodes.
 
@@ -16,7 +16,7 @@ Performs various checks on investment data for standard nodes.
 If `cap_start` is `nothing`, it also checks that the the field `:cap` of the node `n` \
 is not including `OperationalProfile`, `RepresentativeProfile`, or `ScenarioProfile`.
 """
-function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
+function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles::Bool)
 
     inv_data = filter(data -> typeof(data) <: InvestmentData, node_data(n))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -31,22 +31,22 @@ function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype:
         time_profile = getfield(data, field_name)
         !isa(time_profile, TimeProfile) && continue
         isa(time_profile, FixedProfile) && continue
-        message = "are not allowed for the field: "*String(field_name)
+        message = "are not allowed for the field: " * String(field_name)
 
         if isa(time_profile, StrategicProfile) && check_timeprofiles
             @assert_or_log(
                 length(time_profile.vals) == length(𝒯ᴵⁿᵛ),
-                "Field '" * string(field_name) * "' does not match the strategic structure."
+                "Field `" * string(field_name) * "` does not match the strategic structure."
             )
         end
-        check_invest_profile(time_profile, message)
+        EMB.check_strategic_profile(time_profile, message)
     end
 
     if isnothing(data.cap_start)
         time_profile = capacity(n)
         message = "are not allowed for the capacity, if investments are allowed and the \
             field `cap_start` is `nothing`."
-        check_invest_profile(time_profile, message)
+        EMB.check_strategic_profile(time_profile, message)
 
         cap = capacity(n)
         @assert_or_log(
@@ -68,7 +68,7 @@ function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype:
 
 end
 """
-    EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
+    EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles::Bool)
 
 Performs various checks on investment data for standard nodes. It is similar to the standard
 check nodes functions, but adds checks on
@@ -91,7 +91,7 @@ If `rate_start` is `nothing`, it also checks that the the field `:stor_rate` of 
 If `stor_start` is `nothing`, it also checks that the the field `:stor_cap` of the node \
 `n` is not including `OperationalProfile`, `RepresentativeProfile`, or `ScenarioProfile`.
 """
-function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles)
+function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles::Bool)
 
     inv_data = filter(data -> typeof(data) <: InvestmentData, node_data(n))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -120,17 +120,17 @@ function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::
         if isa(time_profile, StrategicProfile) && check_timeprofiles
             @assert_or_log(
                 length(time_profile.vals) == length(𝒯ᴵⁿᵛ),
-                "Field '" * string(field_name) * "' does not match the strategic structure."
+                "Field `" * string(field_name) * "` does not match the strategic structure."
             )
         end
-        check_invest_profile(time_profile, message)
+        EMB.check_strategic_profile(time_profile, message)
     end
 
     if isnothing(data.rate_start)
         time_profile = capacity(n).rate
         message = "are not allowed for the rate capacity, if investments are allowed and \
             the field `rate_start` is `nothing`."
-        check_invest_profile(time_profile, message)
+        EMB.check_strategic_profile(time_profile, message)
 
         @assert_or_log(
             capacity(n, t_inv_1).rate <= max_installed(n, t_inv_1).rate,
@@ -147,7 +147,7 @@ function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::
         time_profile = capacity(n).level
         message = "are not allowed for the storage capacity, if investments are allowed \
             and the field `stor_start` is `nothing`."
-        check_invest_profile(time_profile, message)
+        EMB.check_strategic_profile(time_profile, message)
 
         @assert_or_log(
             capacity(n, t_inv_1).level <= max_installed(n, t_inv_1).level,
@@ -171,44 +171,4 @@ function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::
         "`Rate_min_add` has to be less than `rate_max_add` in investments data (n.data)."
     )
 
-end
-"""
-    check_invest_profile(time_profile, message)
-
-Function for checking that and individual `TimeProfile` does not include the wrong type for
-the indexing within EnergyModelsInvestments
-
-## Checks
-- `TimeProfile`s in `InvestmentData` cannot include `OperationalProfile`, \
-`RepresentativeProfile`, or `ScenarioProfile` as this is not allowed through indexing \
-on the `TimeProfile`.
-"""
-function check_invest_profile(time_profile, message)
-
-    @assert_or_log(
-        !isa(time_profile, OperationalProfile),
-        "Operational profiles " * message
-    )
-    @assert_or_log(
-        !isa(time_profile, ScenarioProfile),
-        "Scenario profiles " * message
-    )
-    @assert_or_log(
-        !isa(time_profile, RepresentativeProfile),
-        "Representative profiles " * message
-    )
-    if isa(time_profile, StrategicProfile)
-        @assert_or_log(
-            !isa(time_profile.vals, Vector{<:OperationalProfile}),
-            "Operational profiles in strategic profiles " * message
-        )
-        @assert_or_log(
-            !isa(time_profile.vals, Vector{<:ScenarioProfile}),
-            "Scenario profiles in strategic profiles " * message
-        )
-        @assert_or_log(
-            !isa(time_profile.vals, Vector{<:RepresentativeProfile}),
-            "Representative profiles in strategic profiles " * message
-        )
-    end
 end
