@@ -2,6 +2,10 @@
 
 ## Version 0.5.3 (2024-03-06)
 
+### Bugfix
+
+* Fixed a bug for the function start_cap in `EMIGeoExt`, where there could be ambiguity with the function start_cap in `EnergyModelsInvestments`.
+
 ### Examples
 
 * Fixed a bug when running the examples from a non-cloned version of `EnergyModelsInvestments`.
