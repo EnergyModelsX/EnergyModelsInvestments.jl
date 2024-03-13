@@ -25,7 +25,7 @@ Returns the starting capacity of the `TransmissionMode` `tm` in the first invest
 If no starting capacity is provided in `InvestmentData` (default = Nothing), then use the
 provided capacity from the field `trans_Cap`.
 """
-EMI.start_cap(m, tm::TransmissionMode, t, ::Nothing, modeltype) = tm.trans_cap[t]
+EMI.start_cap(m, tm::TransmissionMode, t, ::Nothing, modeltype::EnergyModel) = tm.trans_cap[t]
 
 
 """
