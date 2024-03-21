@@ -1,16 +1,18 @@
 # Release notes
 
-## Version 0.5.4 (2024-03-13)
+## Version 0.5.4 (2024-03-21)
+
+### Checks
 
 * Adjusted function `EMB.check_node_data` to changed method call in `EnergyModelsBase`.
 * Allow for jumping over the check regarding the `StrategicProfile` structure in `InvData` and `InvDataStorage` with a conditional argument. The other checks regarding the profiles remain unchanged as a wrong `TimeProfile` there would lead to an error within `TimeStruct`.
 * Moved the checks for strategic indexing to `EnergyModelsBase`.
 
-## Version 0.5.3 (2024-03-06)
-
 ### Bugfix
 
-* Fixed a bug for the function start_cap in `EMIGeoExt`, where there could be ambiguity with the function start_cap in `EnergyModelsInvestments`.
+* Fixed a bug for the function `start_cap` in `EMIGeoExt`, where there could be ambiguity with the function `start_cap` in `EnergyModelsInvestments`.
+
+## Version 0.5.3 (2024-03-06)
 
 ### Examples
 
