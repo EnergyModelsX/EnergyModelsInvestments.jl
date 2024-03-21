@@ -7,7 +7,7 @@ EMB.TEST_ENV = true
     # - EMB.check_node_data(n::EMB.Node, data::InvData, 𝒯, modeltype::AbstractInvestmentModel)
     @testset "InvData" begin
 
-        function run_simple_graph(max_add)
+        function run_simple_graph(max_add; check_timeprofiles=true)
             investment_data_source = [InvData(
                 capex_cap       = FixedProfile(1000),       # capex [€/kW]
                 cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
@@ -21,10 +21,8 @@ EMB.TEST_ENV = true
             )
             case, modeltype = small_graph(;inv_data)
 
-            return optimize(case, modeltype)
+            return optimize(case, modeltype; check_timeprofiles)
         end
-
-
         demand_profile = FixedProfile(20)
 
         # Check that we receive an error if we provide two `InvestmentData`
@@ -69,6 +67,17 @@ EMB.TEST_ENV = true
         @test_throws AssertionError run_simple_graph(max_add)
         max_add = StrategicProfile([rprofile, rprofile, rprofile, rprofile])
         @test_throws AssertionError run_simple_graph(max_add)
+
+        max_add = StrategicProfile([4])
+        msg = "Checking of the time profiles is deactivated:\n" *
+        "Deactivating the checks for the time profiles is strongly discouraged. " *
+        "While the model will still run, unexpected results can occur, as well as " *
+        "inconsistent case data.\n\n" *
+        "Deactivating the checks for the timeprofiles should only be considered, " *
+        "when testing new components. In all other instances, it is recommended to " *
+        "provide the correct timeprofiles using a preprocessing routine.\n\n" *
+        "If timeprofiles are not checked, inconsistencies can occur."
+        @test_logs (:warn, msg) run_simple_graph(max_add; check_timeprofiles=false)
 
         # Check that we receive an error if the capacity is an operational profile
         investment_data_source = [InvData(
@@ -153,7 +162,7 @@ EMB.TEST_ENV = true
     # - EMB.check_node_data(n::EMB.Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
     @testset "InvDataStorage" begin
 
-        function run_simple_graph(rate_max_add, stor_max_add)
+        function run_simple_graph(rate_max_add, stor_max_add; check_timeprofiles=true)
             inv_data = [InvDataStorage(
                 capex_rate = FixedProfile(20),
                 rate_max_inst = FixedProfile(30),
@@ -167,7 +176,7 @@ EMB.TEST_ENV = true
             )]
             case, modeltype = small_graph_stor(;inv_data)
 
-            return optimize(case, modeltype)
+            return optimize(case, modeltype; check_timeprofiles)
         end
 
         # Check that we receive an error if we provide the wrong `InvestmentData`
@@ -241,7 +250,7 @@ EMB.TEST_ENV = true
         @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
         stor_max_add = rprofile
         @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        stor_max_add = StrategicProfile([4])
+        stor_max_add = StrategicProfile([6])
         @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
 
         stor_max_add = StrategicProfile([oprofile, oprofile, oprofile, oprofile])
@@ -250,6 +259,18 @@ EMB.TEST_ENV = true
         @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
         stor_max_add = StrategicProfile([rprofile, rprofile, rprofile, rprofile])
         @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
+
+        stor_max_add = StrategicProfile([6])
+        msg = "Checking of the time profiles is deactivated:\n" *
+        "Deactivating the checks for the time profiles is strongly discouraged. " *
+        "While the model will still run, unexpected results can occur, as well as " *
+        "inconsistent case data.\n\n" *
+        "Deactivating the checks for the timeprofiles should only be considered, " *
+        "when testing new components. In all other instances, it is recommended to " *
+        "provide the correct timeprofiles using a preprocessing routine.\n\n" *
+        "If timeprofiles are not checked, inconsistencies can occur."
+        @test_logs (:warn, msg) run_simple_graph(rate_max_add, stor_max_add; check_timeprofiles=false)
+
 
         # Check that we receive an error if the capacity is an operational profile
         rate_cap = OperationalProfile(ones(4))
