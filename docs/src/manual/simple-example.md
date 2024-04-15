@@ -1,6 +1,6 @@
 # [Examples](@id examples)
 
-For the content of the individual examples, see the [examples](https://gitlab.sintef.no/clean_export/energymodelsinvestments.jl/-/tree/main/examples) directory in the project repository.
+For the content of the individual examples, see the [examples](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/tree/main/examples) directory in the project repository.
 
 ## The package is installed with `] add`
 
