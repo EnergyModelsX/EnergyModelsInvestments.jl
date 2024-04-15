@@ -1,5 +1,9 @@
 # Release notes
 
+## Unversioned
+
+* Updated a link in the documentation for the examples.
+
 ## Version 0.5.4 (2024-03-21)
 
 ### Checks
