@@ -1,4 +1,4 @@
-# EnergyModelsInvestments.jl
+# EnergyModelsInvestments
 
 This Julia package provides investment options for the operational, multi carrier energy model [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/).
 It furthermore adds investment options for the transmission modes introduced in [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/), if the package is loaded.
@@ -18,6 +18,14 @@ Pages = [
     "manual/philosophy.md",
     "manual/optimization-variables.md",
     "manual/simple-example.md",
+]
+```
+
+## How to guides
+
+```@contents
+Pages = [
+    "how-to/contribute.md",
 ]
 ```
 
