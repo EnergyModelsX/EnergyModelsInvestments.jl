@@ -9,7 +9,7 @@ news = "docs/src/manual/NEWS.md"
 cp("NEWS.md", news; force=true)
 
 makedocs(
-    sitename = "EnergyModelsInvestments.jl",
+    sitename = "EnergyModelsInvestments",
     format = Documenter.HTML(
         prettyurls=get(ENV, "CI", "false") == "true",
         edit_link="main",
@@ -29,6 +29,9 @@ makedocs(
             "Optimization variables" => "manual/optimization-variables.md",
             "Example" => "manual/simple-example.md",
             "Release notes" => "manual/NEWS.md",
+        ],
+        "How to" => Any[
+            "Contribute to EnergyModelsInvestments" => "how-to/contribute.md",
         ],
         "Library" => Any[
             "Public" => "library/public.md",
