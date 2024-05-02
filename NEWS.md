@@ -1,6 +1,14 @@
 # Release notes
 
-## Unversioned
+## Version 0.5.5 (2024-05-02)
+
+### Bugfix
+
+* Fixed two bugs in the calculation of the OPEX contribution to the objective function for `TransmissionMode`:
+  * Switched to average discounting and
+  * Added the multiplication of the OPEX contribution with `duration(t_inv)` to account for varying lengths of strategic periods.
+
+### Miscellaneous
 
 * Updated a link in the documentation for the examples.
 * Provided a contribution section in the documentation.

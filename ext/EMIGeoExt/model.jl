@@ -22,8 +22,8 @@ function EMG.update_objective(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentMod
         if tm in ℳᴵⁿᵛ
             obj -= objective_weight(t_inv, disc) * m[:capex_trans][tm, t_inv]
         end
-        obj -= duration(t_inv) * objective_weight(t_inv, disc) * m[:trans_opex_fixed][tm, t_inv]
-        obj -= duration(t_inv) * objective_weight(t_inv, disc) * m[:trans_opex_var][tm, t_inv]
+        obj -= duration(t_inv) * objective_weight(t_inv, disc, type="avg") * m[:trans_opex_fixed][tm, t_inv]
+        obj -= duration(t_inv) * objective_weight(t_inv, disc, type="avg") * m[:trans_opex_var][tm, t_inv]
     end
 
     @objective(m, Max, obj)
