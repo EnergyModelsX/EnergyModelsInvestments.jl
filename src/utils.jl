@@ -26,7 +26,7 @@ For a given `Vector{<:Node}`, return all `Node`s with investments.
 nodes_investment(𝒩::Vector{<:EMB.Node}) = filter(has_investment, 𝒩)
 
 """
-    set_capex_value(years, lifetime, r)
+    set_capex_discounter(years, lifetime, r)
 
 Calculate the discounted values used in the lifetime calculations, when the `LifetimeMode`
 is given by `PeriodLife` and `StudyLife`.
@@ -38,7 +38,7 @@ and `duration(t_inv)` for `PeriodLife`.
 - `lifetime`: the lifetime of the node.
 - `r`: the discount rate.
 """
-function set_capex_value(years, lifetime, r)
+function set_capex_discounter(years, lifetime, r)
     N_inv = ceil(years/lifetime)
     capex_disc = sum((1+r)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
                  ((N_inv * lifetime - years)/lifetime) * (1+r)^(-years)
