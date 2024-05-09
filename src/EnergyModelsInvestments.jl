@@ -14,6 +14,7 @@ module EnergyModelsInvestments
 using EnergyModelsBase
 using JuMP
 using TimeStruct
+using SparseVariables
 
 const EMB = EnergyModelsBase
 const TS = TimeStruct

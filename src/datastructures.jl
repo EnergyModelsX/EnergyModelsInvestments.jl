@@ -155,26 +155,111 @@ case of `DiscreteInvestment`\n
 - **`lifetime::TimeProfile = FixedProfile(0)`** Duration/lifetime of the technology \
 invested in each period.
 """
-Base.@kwdef struct InvDataStorage <: InvestmentData
-    #Investment data related to storage power
-    capex_rate::TimeProfile #capex of power
-    rate_max_inst::TimeProfile
-    rate_max_add::TimeProfile
-    rate_min_add::TimeProfile
-    capex_stor::TimeProfile #capex of capacity
-    stor_max_inst::TimeProfile
-    stor_max_add::TimeProfile
-    stor_min_add::TimeProfile
-    # General inv data
+abstract type GeneralInvData end
+
+@kwdef struct NoStartInvData <: GeneralInvData
+    capex::TimeProfile       # Capex to install cap
+    max_inst::TimeProfile    # Max installable capacity in one period(in total)
+    max_add::TimeProfile     # Max capacity that can be added in one period
+    min_add::TimeProfile     # Min capacity that can be added in one period
     inv_mode::Investment = ContinuousInvestment()
-    rate_start::Union{Real, Nothing} = nothing
-    stor_start::Union{Real, Nothing} = nothing
-    rate_increment::TimeProfile = FixedProfile(0)
-    stor_increment::TimeProfile = FixedProfile(0)
-    # min_inst_cap::TimeProfile #TO DO Implement
+    increment::TimeProfile  = FixedProfile(0)
     life_mode::LifetimeMode = UnlimitedLife()
-    lifetime::TimeProfile = FixedProfile(0)
- end
+    lifetime::TimeProfile  = FixedProfile(0)
+end
+
+@kwdef struct StartInvData <: GeneralInvData
+    capex::TimeProfile       # Capex to install cap
+    max_inst::TimeProfile    # Max installable capacity in one period(in total)
+    max_add::TimeProfile     # Max capacity that can be added in one period
+    min_add::TimeProfile     # Min capacity that can be added in one period
+    initial::Real           # or initial already installed in period
+    inv_mode::Investment = ContinuousInvestment()
+    increment::TimeProfile  = FixedProfile(0)
+    life_mode::LifetimeMode = UnlimitedLife()
+    lifetime::TimeProfile  = FixedProfile(0)
+end
+
+@kwdef struct StorageInvData <: InvestmentData
+    charge::Union{GeneralInvData, Nothing} = nothing
+    level::Union{GeneralInvData, Nothing} = nothing
+    discharge::Union{GeneralInvData, Nothing} = nothing
+end
+
+function InvDataStorage(;
+    #Investment data related to storage power
+    capex_rate::TimeProfile,
+    rate_max_inst::TimeProfile,
+    rate_max_add::TimeProfile,
+    rate_min_add::TimeProfile,
+    capex_stor::TimeProfile,
+    stor_max_inst::TimeProfile,
+    stor_max_add::TimeProfile,
+    stor_min_add::TimeProfile,
+    # General inv data
+    inv_mode::Investment = ContinuousInvestment(),
+    rate_start::Union{Real, Nothing} = nothing,
+    stor_start::Union{Real, Nothing} = nothing,
+    rate_increment::TimeProfile = FixedProfile(0),
+    stor_increment::TimeProfile = FixedProfile(0),
+    # min_inst_cap::TimeProfile #TO DO Implement
+    life_mode::LifetimeMode = UnlimitedLife(),
+    lifetime::TimeProfile = FixedProfile(0),
+)
+    if isnothing(rate_start)
+        charge_type = NoStartInvData(
+            capex = capex_rate,
+            max_inst = rate_max_inst,
+            max_add = rate_max_add,
+            min_add = rate_min_add,
+            inv_mode = inv_mode,
+            increment = rate_increment,
+            life_mode = life_mode,
+            lifetime = lifetime,
+        )
+    else
+        charge_type = StartInvData(
+            capex = capex_rate,
+            max_inst = rate_max_inst,
+            max_add = rate_max_add,
+            min_add = rate_min_add,
+            initial = rate_start,
+            inv_mode = inv_mode,
+            increment = rate_increment,
+            life_mode = life_mode,
+            lifetime = lifetime,
+        )
+    end
+    if isnothing(stor_start)
+        level_type = NoStartInvData(
+            capex = capex_stor,
+            max_inst = stor_max_inst,
+            max_add = stor_max_add,
+            min_add = stor_min_add,
+            inv_mode = inv_mode,
+            increment = stor_increment,
+            life_mode = life_mode,
+            lifetime = lifetime,
+        )
+    else
+        level_type = StartInvData(
+            capex = capex_stor,
+            max_inst = stor_max_inst,
+            max_add = stor_max_add,
+            min_add = stor_min_add,
+            initial = stor_start,
+            inv_mode = inv_mode,
+            increment = stor_increment,
+            life_mode = life_mode,
+            lifetime = lifetime,
+        )
+    end
+
+    return StorageInvData(
+        charge = charge_type,
+        level = level_type,
+    )
+end
 
 """ Extra data for investing in transmission.
 

@@ -46,15 +46,17 @@ function general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
     @testset "cap_inst" begin
         # Test that cap_inst is less than node.data.cap_max_inst at all times.
-        @test sum(value.(m[:stor_cap_inst][stor, t]) ≤
-                    EMI.max_installed(stor, t).level for t ∈ 𝒯) == length(𝒯)
-        @test sum(value.(m[:stor_rate_inst][stor, t]) ≤
-                    EMI.max_installed(stor, t).rate for t ∈ 𝒯) == length(𝒯)
+        @test sum(value.(m[:stor_level_inst][stor, t]) ≤
+                    EMI.max_installed(EMI.investment_data(stor, :level), t) for t ∈ 𝒯) ==
+                length(𝒯)
+        @test sum(value.(m[:stor_charge_inst][stor, t]) ≤
+                    EMI.max_installed(EMI.investment_data(stor, :charge), t) for t ∈ 𝒯) ==
+                length(𝒯)
     end
     @testset "cap_add" begin
         # Test that the capacity is at least added once
-        @test sum(value.(m[:stor_cap_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
-        @test sum(value.(m[:stor_rate_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:stor_level_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:stor_charge_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
     end
 end
 

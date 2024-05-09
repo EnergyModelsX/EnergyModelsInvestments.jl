@@ -184,7 +184,7 @@ individual strategic periods"
 pretty_table(
     JuMP.Containers.rowtable(
         value,
-        m[:stor_rate_add][CO2_stor, :];
+        m[:stor_charge_add][CO2_stor, :];
         header = [:StrategicPeriod, :InvestCapacity],
     ),
 )

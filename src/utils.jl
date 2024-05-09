@@ -45,7 +45,6 @@ function set_capex_discounter(years, lifetime, r)
     return capex_disc
 end
 
-
 """
     investment_mode(type)
 
@@ -267,3 +266,166 @@ increment(n::Storage, t_inv) = (
 Returns the discount rate of `EnergyModel` modeltype
 """
 discount_rate(modeltype::AbstractInvestmentModel) = modeltype.r
+
+"""
+    has_investment(n::Storage, field::Symbol)
+
+For a given `Storage` node, checks that it contains investments for the field `field`, that
+is `:charge`, `:level`, or `:discharge`.
+"""
+function has_investment(n::Storage, field::Symbol)
+    (
+        hasproperty(n, :data) &&
+        !isempty(filter(data -> typeof(data) <: InvestmentData, n.data)) &&
+        !isnothing(getproperty(investment_data(n), field))
+    )
+end
+
+"""
+    investment_data(type, field::Symbol)
+
+Return the investment data of the type `type`.
+"""
+investment_data(type, field::Symbol) = getproperty(investment_data(type), field)
+
+"""
+    investment_mode(inv_data::GeneralInvData)
+
+Return the investment mode of the investment data `inv_data`. By default, all investments
+are continuous.
+"""
+investment_mode(inv_data::GeneralInvData) = inv_data.inv_mode
+
+"""
+    lifetime_mode(inv_data::GeneralInvData)
+
+Return the lifetime mode of the investment data `inv_data`. By default, all investments
+are unlimited.
+"""
+lifetime_mode(inv_data::GeneralInvData) = inv_data.life_mode
+
+"""
+    lifetime(inv_data::GeneralInvData)
+
+Return the lifetime of the investment data `inv_data` as `TimeProfile`.
+"""
+lifetime(inv_data::GeneralInvData) = inv_data.lifetime
+
+"""
+    lifetime(inv_data::GeneralInvData, t)
+
+Return the lifetime of the investment data `inv_data` in period `t`.
+"""
+lifetime(inv_data::GeneralInvData, t) = inv_data.lifetime[t]
+
+start_cap(n::EMB.Node, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
+    inv_data.initial
+start_cap(n::EMB.Node, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
+    capacity(n, t_inv)
+start_cap(n::Storage, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
+    inv_data.initial
+start_cap(n::Storage, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
+    capacity(getproperty(n, field), t_inv)
+
+"""
+    capex(inv_data::GeneralInvData)
+
+Returns the CAPEX of the investment data `inv_data` as `TimeProfile`.
+"""
+capex(inv_data::GeneralInvData) = inv_data.capex
+"""
+    capex(n::GeneralInvData, t_inv)
+
+Returns the CAPEX of the investment data `inv_data` in investment period `t_inv`.
+"""
+capex(inv_data::GeneralInvData, t_inv) = inv_data.capex[t_inv]
+
+
+"""
+    max_installed(inv_data::GeneralInvData)
+
+Returns the maximum allowed installed capacity the investment data `inv_data` as
+`TimeProfile`.
+"""
+max_installed(inv_data::GeneralInvData) = inv_data.max_inst
+"""
+    max_installed(inv_data::GeneralInvData, t_inv)
+
+Returns the maximum allowed installed capacity of the investment data `inv_data` in
+investment period `t_inv`.
+"""
+max_installed(inv_data::GeneralInvData, t_inv) = inv_data.max_inst[t_inv]
+
+"""
+    max_add(inv_data::GeneralInvData)
+
+Returns the maximum allowed added capacity of the investment data `inv_data` as
+`TimeProfile`.
+"""
+max_add(inv_data::GeneralInvData) = inv_data.max_add
+"""
+    max_add(inv_data::GeneralInvData, t_inv)
+
+Returns the maximum allowed added capacity of the investment data `inv_data` in investment
+period `t_inv`.
+"""
+max_add(inv_data::GeneralInvData, t_inv) = inv_data.max_add[t_inv]
+
+"""
+    min_add(inv_data::GeneralInvData)
+
+Returns the minimum allowed added capacity of the investment data `inv_data` as
+`TimeProfile`.
+"""
+min_add(inv_data::GeneralInvData) = inv_data.min_add
+"""
+    min_add(inv_data::GeneralInvData, t_inv)
+
+Returns the minimum allowed added capacity of the investment data `inv_data` in investment
+period `t_inv`.
+"""
+min_add(inv_data::GeneralInvData, t_inv) = inv_data.min_add[t_inv]
+
+"""
+    increment(inv_data::GeneralInvData)
+
+Returns the capacity increment of the investment data `inv_data` as `TimeProfile`.
+"""
+increment(inv_data::GeneralInvData) = inv_data.increment
+"""
+    increment(inv_data::GeneralInvData, t_inv)
+
+Returns the capacity increment of the investment data `inv_data` in investment period `t_inv`.
+"""
+increment(inv_data::GeneralInvData, t_inv) = inv_data.increment[t_inv]
+
+set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ) =
+    set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
+function set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
+    # Deduce the required variable
+    add = m[Symbol(prefix, :_add)][n, :]
+
+    return @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex(inv_data, t_inv) * add[t_inv])
+end
+
+get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
+get_var_capex(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(:capex_, prefix)][n, :]
+get_var_capex(m, prefix::Symbol, n::Storage)  = m[Symbol(prefix, :_capex)][n, :]
+
+get_var_inst(m, prefix::Symbol) = m[Symbol(prefix, :_inst)]
+get_var_inst(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_inst)][n, :]
+
+get_var_current(m, prefix::Symbol) = m[Symbol(prefix, :_current)]
+get_var_current(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_current)][n, :]
+
+get_var_add(m, prefix::Symbol) = m[Symbol(prefix, :_add)]
+get_var_add(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_add)][n, :]
+
+get_var_rem(m, prefix::Symbol) = m[Symbol(prefix, :_rem)]
+get_var_rem(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_rem)][n, :]
+
+get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
+get_var_invest_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_invest_b)][n, :]
+
+get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
+get_var_remove_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_remove_b)][n, :]
