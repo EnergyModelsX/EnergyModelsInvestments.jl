@@ -55,8 +55,8 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)
     # Calculation of the objective function.
     @objective(m, Max,
         -sum(
-            (opex[t_inv] + emissions[t_inv]) * TS.duration_strat(t_inv) * objective_weight(t_inv, 𝒯, disc; type="avg") +
-            (capex_cap[t_inv] + capex_stor[t_inv]) * objective_weight(t_inv, 𝒯, disc)
+            (opex[t_inv] + emissions[t_inv]) * TS.duration_strat(t_inv) * objective_weight(t_inv, disc; type="avg") +
+            (capex_cap[t_inv] + capex_stor[t_inv]) * objective_weight(t_inv, disc)
         for t_inv ∈ 𝒯ᴵⁿᵛ)
     )
 end
@@ -206,9 +206,9 @@ function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, 
             # Add the investment constraints
             add_investment_constraints(m, n, inv_data, field, prefix, 𝒯, modeltype)
 
-        elseif isa(stor_par, UnionCapacity)
+        elseif isa(stor_par, EMB.UnionCapacity)
             for t ∈ 𝒯
-                fix(var_inst[t], capacity(stor_par, t))
+                fix(var_inst[t], capacity(stor_par, t); force=true)
             end
         end
     end
@@ -498,7 +498,7 @@ end
 function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::PeriodLife)
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
-    capex_val = capex(n, t_inv) * set_capex_discounter(duration(t_inv), lifetime(n, t_inv), discount_rate(modeltype))
+    capex_val = capex(n, t_inv) * set_capex_discounter(duration_strat(t_inv), lifetime(n, t_inv), discount_rate(modeltype))
     @constraint(m, m[:capex_cap][n, t_inv] == capex_val * m[:cap_add][n, t_inv])
     @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv])
 end
@@ -509,17 +509,17 @@ function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::Rolling
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
      # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
-    if lifetime_val < duration(t_inv)
+    if lifetime_val < duration_strat(t_inv)
         set_capacity_cost(m, n, 𝒯, t_inv, modeltype, PeriodLife())
 
     # If lifetime is equal to sp duration we only need to invest once and there is no rest value
-    elseif lifetime_val == duration(t_inv)
+    elseif lifetime_val == duration_strat(t_inv)
         capex_val = capex(n, t_inv)
         @constraint(m, m[:capex_cap][n, t_inv] == capex_val * m[:cap_add][n, t_inv])
         @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
 
     # If lifetime is longer than sp duration, the capacity can roll over to the next sp.
-    elseif lifetime_val > duration(t_inv)
+    elseif lifetime_val > duration_strat(t_inv)
         # Initialization of the ante_sp and the remaining lifetime
         # ante_sp represents the last sp in which the remaining lifetime is  sufficient
         # to cover the whole sp duration.
@@ -529,10 +529,10 @@ function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::Rolling
         # Iteration to identify sp in which remaining_lifetime is smaller than sp duration
         for sp ∈ 𝒯ᴵⁿᵛ
             if sp >= t_inv
-                if remaining_lifetime < duration(sp)
+                if remaining_lifetime < duration_strat(sp)
                     break
                 end
-                remaining_lifetime -= duration(sp)
+                remaining_lifetime -= duration_strat(sp)
                 ante_sp = sp
             end
         end

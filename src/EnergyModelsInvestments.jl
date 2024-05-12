@@ -39,6 +39,7 @@ export UnlimitedLife, StudyLife, PeriodLife, RollingLife
 # Export of the types for the additional investment data
 export InvestmentData
 export InvData, InvDataStorage
+export GeneralInvData, NoStartInvData, StartInvData, StorageInvData
 
 # Geographical investment data
 export TransInvData

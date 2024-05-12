@@ -224,7 +224,7 @@ end
     end
 end
 
-@testset "Test InvDataStorage" begin
+@testset "Test StorageInvData" begin
     @testset "ContinuousInvestment" begin
 
         # Creation and solving of the model
@@ -258,17 +258,24 @@ end
 
     @testset "SemiContinuousInvestment" begin
 
-        inv_data = [InvDataStorage(
-            capex_rate = FixedProfile(20),
-            rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(30),
-            rate_min_add = FixedProfile(15),
-            capex_stor = FixedProfile(500),
-            stor_max_inst = FixedProfile(600),
-            stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(150),
-            inv_mode = SemiContinuousInvestment(),
-        )]
+        inv_data = [
+            StorageInvData(
+                charge = NoStartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(30),
+                    min_add = FixedProfile(15),
+                    inv_mode = SemiContinuousInvestment(),
+                ),
+                level = NoStartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(150),
+                    inv_mode = SemiContinuousInvestment(),
+                )
+            ),
+        ]
 
         # Creation and solving of the model
         case, modeltype = small_graph_stor(;inv_data)
@@ -310,19 +317,26 @@ end
     @testset "DiscreteInvestment" begin
 
         # Variation in the test structure
-        inv_data = [InvDataStorage(
-            capex_rate = FixedProfile(20),
-            rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(30),
-            rate_min_add = FixedProfile(15),
-            capex_stor = FixedProfile(500),
-            stor_max_inst = FixedProfile(600),
-            stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(150),
-            inv_mode = DiscreteInvestment(),
-            rate_increment = FixedProfile(5),
-            stor_increment = FixedProfile(150),
-        )]
+        inv_data = [
+            StorageInvData(
+                charge = NoStartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(30),
+                    min_add = FixedProfile(15),
+                    inv_mode = DiscreteInvestment(),
+                    increment = FixedProfile(5),
+                ),
+                level = NoStartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(150),
+                    inv_mode = DiscreteInvestment(),
+                    increment = FixedProfile(150),
+                )
+            ),
+        ]
 
         # Creation and solving of the model
         case, modeltype = small_graph_stor(;inv_data)
@@ -360,19 +374,26 @@ end
     @testset "FixedInvestment" begin
 
         # Variation in the test structure
-        inv_data = [InvDataStorage(
-            capex_rate = FixedProfile(20),
-            rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(30),
-            rate_min_add = FixedProfile(15),
-            rate_start = 0,
-            capex_stor = FixedProfile(500),
-            stor_max_inst = FixedProfile(600),
-            stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(150),
-            stor_start = 0,
-            inv_mode = FixedInvestment(),
-        )]
+        inv_data = [
+            StorageInvData(
+                charge = StartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(30),
+                    min_add = FixedProfile(15),
+                    inv_mode = FixedInvestment(),
+                    initial = 0,
+                ),
+                level = StartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(150),
+                    inv_mode = FixedInvestment(),
+                    initial = 0,
+                )
+            ),
+        ]
         rate_cap = StrategicProfile([15, 20])
         stor_cap = StrategicProfile([150, 200])
 

@@ -59,7 +59,7 @@ function generate_example_data()
     # Create the individual test nodes, corresponding to a system with an electricity demand/sink,
     # coal and nautral gas sources, coal and natural gas (with CCS) power plants and CO2 storage.
     # Only the natural gas power plant and the CO2 storage nodes have ivnestment options
-    op_profile = OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])
+    op_profile = OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20])
     nodes = [
         GenAvailability(1, products),   # Routing Node
         RefSource(                      # Natural gas source
@@ -107,28 +107,36 @@ function generate_example_data()
             Dict(Power => 1),           # Output from the node with output ratio
             [EmissionsEnergy()],        # Additonal data for emissions
         ),
-        RefStorage(
+        RefStorage{AccumulatingEmissions}(
             "CO2 storage",              # Node id
-            FixedProfile(0),            # Rate capacity in t/h
-            FixedProfile(1e8),          # Storage capacity in t
-            FixedProfile(9.1),          # Storage variable OPEX for the rate in EUR/t
-            FixedProfile(15*1e3),       # Storage fixed OPEX for the rate in EUR/year
+            StorCapOpex(
+                FixedProfile(0),        # Charge capacity in t/h
+                FixedProfile(9.1),      # Storage variable OPEX for the charging in EUR/t
+                FixedProfile(15*1e3),   # Storage fixed OPEX for the charging in EUR/(t/h 8h)
+            ),
+            StorCap(FixedProfile(1e8)), # Storage capacity in t
             CO2,                        # Stored resource
             Dict(CO2 => 1, Power => 0.02), # Input resource with input ratio
             # Line above: This implies that storing CO2 requires Power
             Dict(CO2 => 1),             # Output from the node with output ratio
             # In practice, for CO2 storage, this is never used.
-            [InvDataStorage(
-                    capex_rate = FixedProfile(200*1e3),
-                    rate_max_inst = FixedProfile(60),
-                    rate_max_add = FixedProfile(5),
-                    rate_min_add = FixedProfile(0),
-                    capex_stor = FixedProfile(0),
-                    stor_max_inst = FixedProfile(1e9),
-                    stor_max_add = FixedProfile(0),
-                    stor_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
-                ),
+            [
+                StorageInvData(
+                    charge = NoStartInvData(
+                        capex = FixedProfile(200*1e3),
+                        max_inst = FixedProfile(60),
+                        max_add = FixedProfile(5),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    ),
+                    level = NoStartInvData(
+                        capex = FixedProfile(0),
+                        max_inst = FixedProfile(1e9),
+                        max_add = FixedProfile(0),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    )
+                )
             ],
         ),
         RefSink(                        # Demand Node
