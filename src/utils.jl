@@ -26,241 +26,6 @@ For a given `Vector{<:Node}`, return all `Node`s with investments.
 nodes_investment(𝒩::Vector{<:EMB.Node}) = filter(has_investment, 𝒩)
 
 """
-    set_capex_discounter(years, lifetime, r)
-
-Calculate the discounted values used in the lifetime calculations, when the `LifetimeMode`
-is given by `PeriodLife` and `StudyLife`.
-
-# Arguments
-- `years:`: the remaining years for calculating the discounted value. The years are
-depending on the considered `LifetimeMode`, using `remaining(t_inv, 𝒯)` for `StudyLife` \
-and `duration(t_inv)` for `PeriodLife`.
-- `lifetime`: the lifetime of the node.
-- `r`: the discount rate.
-"""
-function set_capex_discounter(years, lifetime, r)
-    N_inv = ceil(years/lifetime)
-    capex_disc = sum((1+r)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
-                 ((N_inv * lifetime - years)/lifetime) * (1+r)^(-years)
-    return capex_disc
-end
-
-"""
-    investment_mode(type)
-
-Return the investment mode of the type `type`. By default, all investments are continuous.
-"""
-investment_mode(type) = investment_data(type).inv_mode
-
-
-"""
-    lifetime_mode(type)
-
-Return the lifetime mode of the type `type`. By default, all investments are unlimited.
-"""
-lifetime_mode(type) = investment_data(type).life_mode
-
-"""
-    lifetime(type)
-
-Return the lifetime of the type `type` as `TimeProfile`.
-"""
-lifetime(type) = investment_data(type).lifetime
-
-"""
-    lifetime(type, t)
-
-Return the lifetime of the type `type` in period `t`.
-"""
-lifetime(type, t) = investment_data(type).lifetime[t]
-
-
-"""
-    start_cap(m, n, t, stcap, modeltype)
-
-Returns the starting capacity of the node in the first investment period. If no
-starting capacity is provided in `InvestmentData` (default = Nothing), then use the
-provided capacity from the field Cap.
-"""
-start_cap(m, n, t, stcap, modeltype::EMB.EnergyModel) = stcap
-start_cap(m, n::EMB.Node, t, stcap::Nothing, modeltype::EMB.EnergyModel) = n.cap[t]
-
-start_cap_storage(m, n::Storage, t, stcap, modeltype::EMB.EnergyModel) = stcap
-start_cap_storage(m, n::Storage, t, stcap::Nothing, modeltype::EMB.EnergyModel) = n.stor_cap[t]
-start_rate_storage(m, n::Storage, t, stcap, modeltype::EMB.EnergyModel) = stcap
-start_rate_storage(m, n::Storage, t, stcap::Nothing, modeltype::EMB.EnergyModel) = n.rate_cap[t]
-
-
-"""
-    capex(n::EMB.Node)
-
-Returns the CAPEX of a node `n` as `TimeProfile`.
-"""
-capex(n::EMB.Node) = investment_data(n).capex_cap
-"""
-    capex(n::EMB.Node, t_inv)
-
-Returns the CAPEX of a node `n` in investment period `t_inv`.
-"""
-capex(n::EMB.Node, t_inv) = investment_data(n).capex_cap[t_inv]
-
-"""
-    capex(n::Storage)
-
-Returns the CAPEX of a Storage node `n` as `TimeProfile`.
-"""
-capex(n::Storage) = (
-    level = investment_data(n).capex_stor[t_inv],
-    rate = investment_data(n).capex_rate[t_inv],
-)
-"""
-    capex(n::Storage, t_inv)
-
-Returns the CAPEX of a Storage node `n` in investment period `t_inv`.
-"""
-capex(n::Storage, t_inv) = (
-    level = investment_data(n).capex_stor[t_inv],
-    rate = investment_data(n).capex_rate[t_inv],
-)
-
-"""
-    capex_offset(n::Node, t_inv)
-
-Returns the offset of the CAPEX of node `n` in investment period `t_inv`.
-"""
-capex_offset(n::EMB.Node, t_inv) = 0
-
-"""
-    max_installed(n::EMB.Node)
-
-Returns the maximum allowed installed capacity of node `n` as `TimeProfile`.
-"""
-max_installed(n::EMB.Node) = investment_data(n).cap_max_inst
-"""
-    max_installed(n::EMB.Node, t_inv)
-
-Returns the maximum allowed installed capacity of node `n` in investment period `t_inv`.
-"""
-max_installed(n::EMB.Node, t_inv) = investment_data(n).cap_max_inst[t_inv]
-
-"""
-    max_installed(n::Storage)
-
-Returns the maximum allowed installed capacity of `Storage` node `n` as `TimeProfile`.
-"""
-max_installed(n::Storage) = (
-    level = investment_data(n).stor_max_inst,
-    rate = investment_data(n).rate_max_inst,
-)
-"""
-    max_installed(n::Storage, t_inv)
-
-Returns the maximum allowed installed capacity of `Storage` node `n` in investment period
-`t_inv`.
-"""
-max_installed(n::Storage, t_inv) = (
-    level = investment_data(n).stor_max_inst[t_inv],
-    rate = investment_data(n).rate_max_inst[t_inv],
-)
-
-"""
-    max_add(n::EMB.Node)
-
-Returns the maximum allowed added capacity of Node `n` as `TimeProfile`.
-"""
-max_add(n::EMB.Node) = investment_data(n).cap_max_add[t_inv]
-"""
-    max_add(n::EMB.Node, t_inv)
-
-Returns the maximum allowed added capacity of Node `n` in investment period `t_inv`.
-"""
-max_add(n::EMB.Node, t_inv) = investment_data(n).cap_max_add[t_inv]
-
-"""
-    max_add(n::Storage)
-
-Returns the maximum allowed added capacity of Storage node `n` as `TimeProfile`.
-"""
-max_add(n::Storage) = (
-    level = investment_data(n).stor_max_add,
-    rate = investment_data(n).rate_max_add,
-)
-"""
-    max_add(n::Storage, t_inv)
-
-Returns the maximum allowed added capacity of Storage node `n` in investment period `t_inv`.
-"""
-max_add(n::Storage, t_inv) = (
-    level = investment_data(n).stor_max_add[t_inv],
-    rate = investment_data(n).rate_max_add[t_inv],
-)
-
-"""
-    min_add(n::EMB.Node)
-
-Returns the minimum allowed added capacity of node `n` as `TimeProfile`.
-"""
-min_add(n::EMB.Node) = investment_data(n).cap_min_add
-"""
-    min_add(n::EMB.Node, t_inv)
-
-Returns the minimum allowed added capacity of node `n` in investment period `t_inv`.
-"""
-min_add(n::EMB.Node, t_inv) = investment_data(n).cap_min_add[t_inv]
-
-"""
-    min_add(n::Storage)
-
-Returns the minimum allowed added capacity of Storage node `n` as `TimeProfile`.
-"""
-min_add(n::Storage) = (
-    level = investment_data(n).stor_min_add[t_inv],
-    rate = investment_data(n).rate_min_add[t_inv],
-)
-"""
-    min_add(n::Storage, t_inv)
-
-Returns the minimum allowed added capacity of Storage node `n` in investment period `t_inv`.
-"""
-min_add(n::Storage, t_inv) = (
-    level = investment_data(n).stor_min_add[t_inv],
-    rate = investment_data(n).rate_min_add[t_inv],
-)
-
-"""
-    increment(n::EMB.Node)
-
-Returns the capacity increment of node `n` as `TimeProfile`.
-"""
-increment(n::EMB.Node) = investment_data(n).cap_increment
-"""
-    increment(n::EMB.Node, t_inv)
-
-Returns the capacity increment of node `n` in investment period `t_inv`.
-"""
-increment(n::EMB.Node, t_inv) = investment_data(n).cap_increment[t_inv]
-
-"""
-    increment(n::Storage)
-
-Returns the capacity increment of Storage node `n` as `TimeProfile`.
-"""
-increment(n::Storage) = (
-    level = investment_data(n).stor_increment,
-    rate = investment_data(n).rate_increment,
-)
-"""
-    increment(n::Storage, t_inv)
-
-Returns the capacity increment of Storage node `n` in investment period `t_inv`.
-"""
-increment(n::Storage, t_inv) = (
-    level = investment_data(n).stor_increment[t_inv],
-    rate = investment_data(n).rate_increment[t_inv],
-)
-
-
-"""
     discount_rate(modeltype::AbstractInvestmentModel)
 
 Returns the discount rate of `EnergyModel` modeltype
@@ -289,6 +54,13 @@ Return the investment data of the type `type`.
 investment_data(type, field::Symbol) = getproperty(investment_data(type), field)
 
 """
+    investment_mode(type)
+
+Return the investment mode of the type `type`. By default, all investments are continuous.
+"""
+investment_mode(type) = investment_data(type).inv_mode
+
+"""
     investment_mode(inv_data::GeneralInvData)
 
 Return the investment mode of the investment data `inv_data`. By default, all investments
@@ -297,9 +69,16 @@ are continuous.
 investment_mode(inv_data::GeneralInvData) = inv_data.inv_mode
 
 """
+    investment_mode(type, ::Nothing)
+
+Return the investment mode of the type `type`.
+"""
+investment_mode(type, ::Nothing) = investment_mode(investment_data(type))
+
+"""
     investment_mode(type, field::Symbol)
 
-Return the investment mode of the `Storage` node `n` and the capacity `field`.
+Return the investment mode of the type `type` and the capacity `field`.
 """
 investment_mode(type, field::Symbol) = investment_mode(investment_data(type, field))
 
@@ -336,6 +115,13 @@ Return the lifetime of the investment data `inv_data` in investment period `t_in
 """
 lifetime(inv_data::GeneralInvData, t_inv) = lifetime(lifetime_mode(inv_data), t_inv)
 
+"""
+    start_cap(m, n, t, stcap, modeltype)
+
+Returns the starting capacity of the node in the first investment period.
+If [`NoStartInvData`](@ref) is used for the starting capacity, it deduces the value from the
+provided initial capacity.
+"""
 start_cap(n, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
     inv_data.initial
 start_cap(n::EMB.Node, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
@@ -356,6 +142,31 @@ Returns the CAPEX of the investment data `inv_data` in investment period `t_inv`
 """
 capex(inv_data::GeneralInvData, t_inv) = inv_data.capex[t_inv]
 
+"""
+    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+
+Returns the offset of the CAPEX of the investment mode `inv_mode` as `TimeProfile`.
+"""
+capex_offset(inv_mode::SemiContinuousOffsetInvestment) = inv_mode.capex_offset
+"""
+    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+
+Returns the offset of the CAPEX of the investment data `inv_data` as `TimeProfile`.
+"""
+capex_offset(inv_data::GeneralInvData) = capex_offset(investment_mode(inv_data))
+
+"""
+    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+
+Returns the offset of the CAPEX of the investment mode `inv_mode` in investment period `t_inv`.
+"""
+capex_offset(inv_mode::SemiContinuousOffsetInvestment, t_inv) = inv_mode.capex_offset[t_inv]
+"""
+    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+
+Returns the offset of the CAPEX of the investment data `inv_data` in investment period `t_inv`.
+"""
+capex_offset(inv_data::GeneralInvData) = capex_offset(investment_mode(inv_data), t_inv)
 
 """
     max_installed(inv_data::GeneralInvData)
@@ -457,33 +268,150 @@ Returns the capacity increment of the investment data `inv_data` in investment p
 """
 increment(inv_data::GeneralInvData, t_inv) = increment(investment_mode(inv_data), t_inv)
 
+"""
+    get_var_capex(m, prefix::Symbol)
+
+Extracts the CAPEX variable with a given `prefix` from the model.
+"""
+get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
+"""
+    get_var_capex(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_capex(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_capex)][n, :]
+
+"""
+    get_var_inst(m, prefix::Symbol)
+
+Extracts the installed capacity variable with a given `prefix` from the model.
+"""
+get_var_inst(m, prefix::Symbol) = m[Symbol(prefix, :_inst)]
+"""
+    get_var_inst(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_inst(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_inst)][n, :]
+
+"""
+    get_var_current(m, prefix::Symbol)
+
+Extracts the current capacity variable with a given `prefix` from the model.
+"""
+get_var_current(m, prefix::Symbol) = m[Symbol(prefix, :_current)]
+"""
+    get_var_current(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_current(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_current)][n, :]
+
+"""
+    get_var_add(m, prefix::Symbol)
+
+Extracts the investment capacity variable with a given `prefix` from the model.
+"""
+get_var_add(m, prefix::Symbol) = m[Symbol(prefix, :_add)]
+"""
+    get_var_add(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_add(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_add)][n, :]
+
+"""
+    get_var_rem(m, prefix::Symbol)
+
+Extracts the retired capacity variable with a given `prefix` from the model.
+"""
+get_var_rem(m, prefix::Symbol) = m[Symbol(prefix, :_rem)]
+"""
+    get_var_rem(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_rem(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_rem)][n, :]
+
+"""
+    get_var_invest_b(m, prefix::Symbol)
+
+Extracts the binary investment variable with a given `prefix` from the model.
+"""
+get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
+"""
+    get_var_invest_b(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_invest_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_invest_b)][n, :]
+
+"""
+    get_var_remove_b(m, prefix::Symbol)
+
+Extracts the binary retirement variable with a given `prefix` from the model.
+"""
+get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
+"""
+    get_var_remove_b(m, prefix::Symbol, n::EMB.Node)
+
+When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+the specified node.
+"""
+get_var_remove_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_remove_b)][n, :]
+
+"""
+    set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ)
+
+Calculate the cost value for the different investment modes of the investment data
+`inv_data` for type `n`.
+
+# Arguments
+- `m`: the JuMP model instance.
+- `n`: the node for which the absolute CAPEX should be calculated.
+- `r`: the discount rate.
+- `inv_data`: the investment data given as subtype of `GeneralInvData`.
+- `prefix`: the prefix used for variables for this type.
+- `𝒯ᴵⁿᵛ`: the strategic periods structure.
+"""
 set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ) =
     set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
+
+"""
+    set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
+
+When no specialized method is defined for the investment mode, it calculates the capital
+cost based on the multiplication of the field `capex` in `inv_data` with the added capacity.
+"""
 function set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
     # Deduce the required variable
-    add = m[Symbol(prefix, :_add)][n, :]
+    add = get_var_add(m, prefix, n)
 
     return @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex(inv_data, t_inv) * add[t_inv])
 end
 
-get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
-get_var_capex(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(:capex_, prefix)][n, :]
-get_var_capex(m, prefix::Symbol, n::Storage)  = m[Symbol(prefix, :_capex)][n, :]
+"""
+    set_capex_discounter(years, lifetime, r)
 
-get_var_inst(m, prefix::Symbol) = m[Symbol(prefix, :_inst)]
-get_var_inst(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_inst)][n, :]
+Calculate the discounted values used in the lifetime calculations, when the `LifetimeMode`
+is given by `PeriodLife` and `StudyLife`.
 
-get_var_current(m, prefix::Symbol) = m[Symbol(prefix, :_current)]
-get_var_current(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_current)][n, :]
-
-get_var_add(m, prefix::Symbol) = m[Symbol(prefix, :_add)]
-get_var_add(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_add)][n, :]
-
-get_var_rem(m, prefix::Symbol) = m[Symbol(prefix, :_rem)]
-get_var_rem(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_rem)][n, :]
-
-get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
-get_var_invest_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_invest_b)][n, :]
-
-get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
-get_var_remove_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_remove_b)][n, :]
+# Arguments
+- `years:`: the remaining years for calculating the discounted value. The years are
+  depending on the considered [`LifetimeMode`](@ref), using `remaining(t_inv, 𝒯)` for
+  [`StudyLife`](@ref) and `duration(t_inv)` for [`PeriodLife`](@ref).
+- `lifetime`: the lifetime of the node.
+- `r`: the discount rate.
+"""
+function set_capex_discounter(years, lifetime, r)
+    N_inv = ceil(years/lifetime)
+    capex_disc = sum((1+r)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
+                 ((N_inv * lifetime - years)/lifetime) * (1+r)^(-years)
+    return capex_disc
+end

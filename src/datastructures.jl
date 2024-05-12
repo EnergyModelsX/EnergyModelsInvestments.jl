@@ -204,50 +204,12 @@ Abstract type for the extra data for investing in technologies.
 """
 abstract type InvestmentData <: EMB.Data end
 
-""" Extra data for investing in technologies.
-
-Define the structure for the additional parameters passed to the technology structures
-defined in other packages. It uses the macro `Base.@kwdef` to use keyword arguments and
-default values. Hence, the name of the parameters have to be specified.
-
-# Fields
-- **`capex_cap::TimeProfile`** Capital expenditure for the capacity in a strategic period.\n
-- **`cap_max_inst::TimeProfile`** Maximum possible installed capacity of the technology in \
-a strategic period.\n
-- **`cap_max_add::TimeProfile`** Maximum capacity addition in a strategic period.\n
-- **`cap_min_add::TimeProfile`** Minimum capacity addition in a strategic period.\n
-- **`inv_mode::Investment = ContinuousInvestment()`** Type of the investment: \
-`BinaryInvestment`, `DiscreteInvestment`, `ContinuousInvestment`, \
-`SemiContinuousInvestment`,  or `FixedInvestment`.\n
-- **`cap_start::Union{Real, Nothing} = nothing`** Starting capacity in first period. \
-If nothing is given, it is set by `start_cap()` to the capacity `cap` of the node \
-in the first strategic period.\n
-- **`cap_increment::TimeProfile = FixedProfile(0)`** Capacity increment used in the case \
-of `DiscreteInvestment`.\n
-- **`life_mode::LifetimeMode = UnlimitedLife()`** Type of handling of the lifetime: \
-`UnlimitedLife`, `StudyLife`, `PeriodLife` or `RollingLife`\n
-- **`lifetime::TimeProfile = FixedProfile(0)`** Duration/lifetime of the technology \
-invested in each period.
-"""
-Base.@kwdef struct InvData <: InvestmentData
-    capex_cap::TimeProfile
-    cap_max_inst::TimeProfile
-    cap_max_add::TimeProfile
-    cap_min_add::TimeProfile
-    inv_mode::Investment = ContinuousInvestment()
-    cap_start::Union{Real, Nothing} = nothing
-    cap_increment::TimeProfile = FixedProfile(0)
-    # min_inst_cap::TimeProfile # TODO: Implement
-    life_mode::LifetimeMode = UnlimitedLife()
-    lifetime::TimeProfile = FixedProfile(0)
- end
-
 """
     GeneralInvData
 
 Supertype for investment data for nodal investments.
 """
-abstract type GeneralInvData end
+abstract type GeneralInvData <: InvestmentData end
 
 """
     StartInvData <: GeneralInvData
@@ -319,7 +281,6 @@ Hence, the name of the parameters have to be specified.
     level::Union{GeneralInvData, Nothing} = nothing
     discharge::Union{GeneralInvData, Nothing} = nothing
 end
-
 
 """ Extra data for investing in transmission.
 

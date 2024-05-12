@@ -5,19 +5,19 @@ resulting_obj = Dict()
     for sp_dur ∈ [2,4,6]#,10,15,20]
         push!(resulting_obj, "$(sp_dur) years" => [])
         @testset "Modes - $(sp_dur) years" begin
-            for life_mode ∈ [UnlimitedLife(), StudyLife(), PeriodLife(), RollingLife()]
+            for life_mode ∈ [UnlimitedLife(), StudyLife(FixedProfile(15)), PeriodLife(FixedProfile(15)), RollingLife(FixedProfile(15))]
                 @testset "Mode $(life_mode)" begin
                     @debug "~~~~~~~~ $(life_mode) - $(sp_dur) years ~~~~~~~~"
 
                     inv_data = Dict(
-                        "investment_data" => [InvData(
-                            capex_cap   = FixedProfile(1000),   # capex [€/kW]
-                            cap_max_inst = FixedProfile(30),    # max installed capacity [kW]
-                            cap_max_add = FixedProfile(30),     # max_add [kW]
-                            cap_min_add = FixedProfile(0),      # min_add [kW]
-                            life_mode   = life_mode,
-                            lifetime    = FixedProfile(lifetime),
-                        )],
+                        "investment_data" => [
+                            NoStartInvData(
+                                FixedProfile(1000), # capex [€/kW]
+                                FixedProfile(30),   # max installed capacity [kW]
+                                ContinuousInvestment(FixedProfile(0), FixedProfile(30)), # investment mode
+                                life_mode,          # lifetime mode
+                            ),
+                        ],
                         "profile" => FixedProfile(20),
                     )
                     T = TwoLevel(4, sp_dur, SimpleTimes(4, 1))
@@ -33,12 +33,13 @@ resulting_obj = Dict()
                     push!(resulting_obj["$(sp_dur) years"], objective_value(m))
 
                     source = case[:nodes][1]
+                    inv_data = EMI.investment_data(source)
                     𝒯 = case[:T]
                     𝒯ⁱⁿᵛ = strategic_periods(𝒯)
 
                     @testset "cap_inst" begin
                         # Check that cap_inst is less than node.data.Cap_max_inst at all times.
-                        @test sum(value.(m[:cap_inst][source, t]) <= EMI.max_installed(source, t) for t ∈ 𝒯) == length(𝒯)
+                        @test sum(value.(m[:cap_inst][source, t]) <= EMI.max_installed(inv_data, t) for t ∈ 𝒯) == length(𝒯)
 
                         for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                             # Check the initial installed capacity is correct set.

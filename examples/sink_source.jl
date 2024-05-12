@@ -24,7 +24,7 @@ The electricity source has initially no capacity. Hence, investments are require
 
 The example is partly based on the provided example `sink_source.jl` in `EnergyModelsBase`.
 """
-function generate_example_data(lifemode = RollingLife(); discount_rate = 0.05)
+function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
     @info "Generate case data - Simple sink-source example"
 
     # Define the different resources and their emission intensity in tCO2/MWh
@@ -57,13 +57,14 @@ function generate_example_data(lifemode = RollingLife(); discount_rate = 0.05)
     lifetime = FixedProfile(15)
 
     # Create the investment data for the source node
-    investment_data_source = InvData(
-        capex_cap = FixedProfile(300*1e3),  # Capex [€/MW]
-        cap_max_inst = FixedProfile(30),    # Max installed capacity [MW]
-        cap_max_add = FixedProfile(30),     # Max added capactity per sp [MW]
-        cap_min_add = FixedProfile(0),      # Max added capactity per sp [MW]
-        life_mode = lifemode,               # Lifetime mode
-        lifetime = lifetime,                # Lifetime
+    investment_data_source = NoStartInvData(
+        FixedProfile(300*1e3),  # capex [€/MW]
+        FixedProfile(30),       # max installed capacity [MW]
+        ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
+        # Line above: Investment mode with the following arguments:
+        # 1. argument: min added capactity per sp [MW]
+        # 2. argument: max added capactity per sp [MW]
+        lifemode(lifetime),     # Lifetime mode
     )
 
     # Create the individual test nodes, corresponding to a system with an electricity

@@ -42,7 +42,7 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)
 
     # Calculation of the capital cost contribution
     capex_cap = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        sum(m[:capex_cap][n, t_inv]  for n ∈ 𝒩ᴵⁿᵛ)
+        sum(m[:cap_capex][n, t_inv]  for n ∈ 𝒩ᴵⁿᵛ)
     )
 
     # Calculation of the capital cost contribution of storage nodes
@@ -55,7 +55,7 @@ function EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)
     # Calculation of the objective function.
     @objective(m, Max,
         -sum(
-            (opex[t_inv] + emissions[t_inv]) * TS.duration_strat(t_inv) * objective_weight(t_inv, disc; type="avg") +
+            (opex[t_inv] + emissions[t_inv]) * duration_strat(t_inv) * objective_weight(t_inv, disc; type="avg") +
             (capex_cap[t_inv] + capex_stor[t_inv]) * objective_weight(t_inv, disc)
         for t_inv ∈ 𝒯ᴵⁿᵛ)
     )
@@ -69,7 +69,7 @@ Create variables for the capital costs for the invesments in storage and
 technology nodes.
 
 Additional variables for investment in capacity:
- * `:capex_cap` - CAPEX costs for a technology
+ * `:cap_capex` - CAPEX costs for a technology
  * `:cap_current` - installed capacity for storage in each strategic period
  * `:cap_add` - added capacity
  * `:cap_rem` - removed capacity
@@ -103,12 +103,12 @@ function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentM
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Add investment variables for reference nodes for each strategic period:
-    @variable(m, capex_cap[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
+    @variable(m, cap_capex[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
     @variable(m, cap_current[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)     # Installed capacity
     @variable(m, cap_add[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)        # Add capacity
     @variable(m, cap_rem[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)        # Remove capacity
-    @variable(m, cap_invest_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ])
-    @variable(m, cap_remove_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ])
+    @variable(m, cap_invest_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
+    @variable(m, cap_remove_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
 
     # Add storage specific investment variables for each strategic period:
     @variable(m, stor_level_capex[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ] >= 0)
@@ -144,36 +144,13 @@ Set capacity-related constraints for nodes `𝒩` for investment time structure 
 """
 function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure, modeltype::AbstractInvestmentModel)
 
-    # Extraction of the required subsets
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-
     if has_investment(n)
         # Extract the investment data
         inv_data = investment_data(n)
+        prefix = :cap
 
-        for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
-            # Constraints for the CAPEX calculation
-            set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
-
-            # Set investment properties based on investment mode of node `n`
-            set_investment_properties(n, m[:cap_invest_b][n, t_inv])
-
-            # Link capacity usage to installed capacity
-            @constraint(m, [t ∈ t_inv], m[:cap_inst][n, t] == m[:cap_current][n, t_inv])
-
-            # Capacity updating
-            @constraint(m, m[:cap_current][n, t_inv] <= max_installed(n, t_inv))
-            if isnothing(t_inv_prev)
-                start_cap_val = start_cap(m, n, t_inv, inv_data.cap_start, modeltype)
-                @constraint(m, m[:cap_current][n, t_inv] ==
-                    start_cap_val + m[:cap_add][n, t_inv])
-            else
-                @constraint(m, m[:cap_current][n, t_inv] ==
-                    m[:cap_current][n, t_inv_prev]
-                    + m[:cap_add][n, t_inv] - m[:cap_rem][n, t_inv_prev])
-            end
-        end
-        set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
+        # Add the investment constraints
+        add_investment_constraints(m, n, inv_data, nothing, prefix, 𝒯, modeltype)
 
     else
         @constraint(m, [t ∈ 𝒯], m[:cap_inst][n, t] == capacity(n, t))
@@ -244,78 +221,6 @@ function add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype
 
     # Constraints for minimum investments
     set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ)
-end
-
-
-"""
-    set_capacity_installation(m, n, 𝒯ᴵⁿᵛ)
-
-Add constraints related to capacity installation depending on investment mode of node `n`
-"""
-set_capacity_installation(m, n, 𝒯ᴵⁿᵛ) = set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, investment_mode(n))
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::Investment)
-
-    # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], m[:cap_add][n, t_inv] <= max_add(n, t_inv))
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], m[:cap_add][n, t_inv] >= min_add(n, t_inv))
-    # This code leads to a situation in which one does not maximize early investments when using both
-    # Cap_min_add and Cap_max_inst, where both result in a situation that Cap_max_inst would be violated
-    # through larger investments in an early stage --> to be considered for potential soft constraints on
-    # Cap_min_add and Cap_max_inst.
-end
-
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        m[:cap_current][n, t_inv] ==
-            capacity(n, t_inv) * m[:cap_invest_b][n, t_inv]
-    )
-end
-
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
-    # Set the limits
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        set_investment_properties(n, m[:cap_remove_b][n,t_inv])
-        @constraint(m, m[:cap_add][n, t_inv] ==
-                            increment(n, t_inv) * m[:cap_invest_b][n, t_inv]
-        )
-        @constraint(m, m[:cap_rem][n, t_inv] ==
-                            increment(n, t_inv) * m[:cap_remove_b][n, t_inv]
-        )
-    end
-end
-
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
-    # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        m[:cap_add][n, t_inv] <=
-            max_add(n, t_inv) * m[:cap_invest_b][n, t_inv]
-    )
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-            m[:cap_add][n, t_inv] >=
-            min_add(n, t_inv) * m[:cap_invest_b][n, t_inv]
-    )
-end
-
-
-function set_capacity_installation_mockup(m, n, 𝒯ᴵⁿᵛ, ::SemiContiInvestment, cap_add_name=:cap_add)
-    cap_add = m[cap_add_name] # or better use :cap_add everywhere, but add variables indices where necessary (e.g. using SparseVariables)
-    cap_add_b = m[join(cap_add_name, :_b)] # Or something safer, perhaps?
-
-    # These may even be put in separate functions for reuse in other investment modes
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        @constraint(m, cap_add[n, t_inv] <= max_add(n, t_inv) * cap_add_b[n, t_inv])
-        @constraint(m, cap_add[n, t_inv] >= min_add(n, t_inv) * cap_add_b[n, t_inv])
-        @constraint(m, cap_rem[n, t_inv] == 0)
-    end
-end
-
-
-
-function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::FixedInvestment)
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        m[:cap_current][n, t_inv] ==
-            capacity(n, t_inv) * m[:cap_invest_b][n, t_inv]
-    )
 end
 
 """
@@ -463,7 +368,8 @@ function set_investment_properties(var, ::DiscreteInvestment) # TO DO
 end
 
 """
-    set_capacity_cost(m, n, 𝒯, t_inv, modeltype)
+    set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype)
+
 Set the capex_cost based on the technology investment cost, and strategic period length
 to include the needs for reinvestments and the rest value.
 It implements different versions of the lifetime implementation:
@@ -477,77 +383,6 @@ It implements different versions of the lifetime implementation:
                     retired at the end of its lifetime or the end of the previous sp if \
                     its lifetime ends between two sp.
 """
-set_capacity_cost(m, n, 𝒯, t_inv, modeltype) = set_capacity_cost(m, n, 𝒯, t_inv, modeltype, lifetime_mode(n))
-function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::UnlimitedLife)
-    # The capacity has an unlimited lifetime, one investment at the beginning of t_inv
-    @constraint(m, m[:capex_cap][n, t_inv] == capex(n, t_inv) * m[:cap_add][n, t_inv])
-    @constraint(m, m[:cap_rem][n, t_inv] == 0)
-end
-
-function set_capacity_cost(m, n, 𝒯, t_inv, modeltype::EnergyModel, ::StudyLife)
-    # The capacity is limited to the end of the study. Reinvestments are included
-    # No capacity removed as there are reinvestments according to the study length
-    capex_val = capex(n, t_inv) * set_capex_discounter(remaining(t_inv, 𝒯), lifetime(n, t_inv), discount_rate(modeltype))
-    @constraint(m, m[:capex_cap][n, t_inv] == capex_val * m[:cap_add][n, t_inv])
-    @constraint(m, m[:cap_rem][n, t_inv] == 0)
-end
-
-function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::PeriodLife)
-    # The capacity is limited to the current sp. It has to be removed in the next sp.
-    # The formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
-    capex_val = capex(n, t_inv) * set_capex_discounter(duration_strat(t_inv), lifetime(n, t_inv), discount_rate(modeltype))
-    @constraint(m, m[:capex_cap][n, t_inv] == capex_val * m[:cap_add][n, t_inv])
-    @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv])
-end
-
-function set_capacity_cost(m, n, 𝒯, t_inv,  modeltype::EnergyModel, ::RollingLife)
-    lifetime_val = lifetime(n, t_inv)
-    r = discount_rate(modeltype)
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-
-     # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
-    if lifetime_val < duration_strat(t_inv)
-        set_capacity_cost(m, n, 𝒯, t_inv, modeltype, PeriodLife())
-
-    # If lifetime is equal to sp duration we only need to invest once and there is no rest value
-    elseif lifetime_val == duration_strat(t_inv)
-        capex_val = capex(n, t_inv)
-        @constraint(m, m[:capex_cap][n, t_inv] == capex_val * m[:cap_add][n, t_inv])
-        @constraint(m, m[:cap_rem][n, t_inv] == m[:cap_add][n, t_inv] )
-
-    # If lifetime is longer than sp duration, the capacity can roll over to the next sp.
-    elseif lifetime_val > duration_strat(t_inv)
-        # Initialization of the ante_sp and the remaining lifetime
-        # ante_sp represents the last sp in which the remaining lifetime is  sufficient
-        # to cover the whole sp duration.
-        ante_sp = t_inv
-        remaining_lifetime = lifetime_val
-
-        # Iteration to identify sp in which remaining_lifetime is smaller than sp duration
-        for sp ∈ 𝒯ᴵⁿᵛ
-            if sp >= t_inv
-                if remaining_lifetime < duration_strat(sp)
-                    break
-                end
-                remaining_lifetime -= duration_strat(sp)
-                ante_sp = sp
-            end
-        end
-
-        # Calculation of cost and rest value
-        capex_val = capex(n, t_inv) *
-                (1 - (remaining_lifetime/lifetime_val) * (1+r)^(-(lifetime_val - remaining_lifetime)))
-        @constraint(m, m[:capex_cap][n, t_inv] == capex_val * m[:cap_add][n, t_inv])
-
-        # Capacity to be removed when remaining_lifetime < duration_years, i.e., in ante_sp
-        if ante_sp.sp < length(𝒯ᴵⁿᵛ)
-            @constraint(m, m[:cap_rem][n, ante_sp] == m[:cap_add][n, t_inv])
-        end
-    end
-end
-
-#same function dispatched for storages
-
 set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype) =
     set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype, lifetime_mode(inv_data))
 function set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype, ::UnlimitedLife)

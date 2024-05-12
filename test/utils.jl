@@ -81,13 +81,14 @@ function small_graph(;
                     )
 
     if isnothing(inv_data)
-        investment_data_source = [InvData(
-            capex_cap       = FixedProfile(1000),       # capex [€/kW]
-            cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-            cap_max_add     = FixedProfile(20),         # max_add [kW]
-            cap_min_add     = FixedProfile(5),          # min_add [kW]
-            inv_mode        = ContinuousInvestment() # investment mode
-        )]
+        investment_data_source = [
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(30),       # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(5), FixedProfile(20)), # investment mode
+                UnlimitedLife(),        # lifetime mode
+            )
+        ]
         demand_profile = FixedProfile(20)
     else
         investment_data_source = inv_data["investment_data"]
@@ -300,14 +301,13 @@ function network_graph()
             FixedProfile(30),
             FixedProfile(100),
             Dict(NG => 1),
-            [InvData(
-                capex_cap = FixedProfile(1000),
-                cap_max_inst = FixedProfile(200),
-                cap_max_add = FixedProfile(200),
-                cap_min_add = FixedProfile(10),
-                inv_mode = ContinuousInvestment(),
-                cap_increment = FixedProfile(5),
-                cap_start = 15,
+            [
+                StartInvData(
+                    FixedProfile(1000), # capex [€/kW]
+                    FixedProfile(200),  # max installed capacity [kW]
+                    15,                 # initial capacity [kW]
+                    ContinuousInvestment(FixedProfile(10), FixedProfile(200)), # investment mode
+                    UnlimitedLife(),    # lifetime mode
                 ),
             ],
         ),
@@ -317,12 +317,12 @@ function network_graph()
             FixedProfile(9),
             FixedProfile(100),
             Dict(Coal => 1),
-            [InvData(
-                    capex_cap = FixedProfile(1000),
-                    cap_max_inst = FixedProfile(200),
-                    cap_max_add = FixedProfile(200),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                NoStartInvData(
+                    FixedProfile(1000), # capex [€/kW]
+                    FixedProfile(200),  # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(200)), # investment mode
+                    UnlimitedLife(),    # lifetime mode
                 ),
             ],
         ),
@@ -334,12 +334,11 @@ function network_graph()
             Dict(NG => 2),
             Dict(Power => 1, CO2 => 0),
             [
-                InvData(
-                    capex_cap = FixedProfile(600),
-                    cap_max_inst = FixedProfile(25),
-                    cap_max_add = FixedProfile(25),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+                NoStartInvData(
+                    FixedProfile(600),  # capex [€/kW]
+                    FixedProfile(25),   # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
+                    UnlimitedLife(),    # lifetime mode
                 ),
                 CaptureEnergyEmissions(0.9),
             ],
@@ -352,12 +351,11 @@ function network_graph()
             Dict(Coal => 2.5),
             Dict(Power => 1),
             [
-                InvData(
-                    capex_cap = FixedProfile(800),
-                    cap_max_inst = FixedProfile(25),
-                    cap_max_add = FixedProfile(25),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+                NoStartInvData(
+                    FixedProfile(800),  # capex [€/kW]
+                    FixedProfile(25),   # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
+                    UnlimitedLife(),    # lifetime mode
                 ),
                 EmissionsEnergy(),
             ],
@@ -394,12 +392,11 @@ function network_graph()
             Dict(Coal => 2.5),
             Dict(Power => 1),
             [
-                InvData(
-                    capex_cap = FixedProfile(0),
-                    cap_max_inst = FixedProfile(25),
-                    cap_max_add = FixedProfile(2),
-                    cap_min_add = FixedProfile(2),
-                    inv_mode = ContinuousInvestment(),
+                NoStartInvData(
+                    FixedProfile(0),    # capex [€/kW]
+                    FixedProfile(25),    # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(2), FixedProfile(2)), # investment mode
+                    UnlimitedLife(),    # lifetime mode
                 ),
                 EmissionsEnergy(),
             ],
@@ -436,12 +433,11 @@ function network_graph()
             Dict(Coal => 2.5),
             Dict(Power => 1),
             [
-                InvData(
-                    capex_cap = FixedProfile(10000),
-                    cap_max_inst = FixedProfile(10000),
-                    cap_max_add = FixedProfile(10000),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+                NoStartInvData(
+                    FixedProfile(10000),        # capex [€/kW]
+                    FixedProfile(10000),     # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(10000)),  # investment mode
+                    UnlimitedLife(),    # lifetime mode
                 ),
                 EmissionsEnergy(),
             ],

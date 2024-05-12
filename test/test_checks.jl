@@ -3,18 +3,19 @@ EMB.TEST_ENV = true
 
 @testset "Test checks - InvestmentData" begin
 
-    # Testing, that the checks for InvData are working
-    # - EMB.check_node_data(n::EMB.Node, data::InvData, 𝒯, modeltype::AbstractInvestmentModel)
-    @testset "InvData" begin
+    # Testing, that the checks for NoStartInvData and StartInvData are working
+    # - EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
+    @testset "NoStartInvData and StartInvData" begin
 
         function run_simple_graph(max_add; check_timeprofiles=true)
-            investment_data_source = [InvData(
-                capex_cap       = FixedProfile(1000),       # capex [€/kW]
-                cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-                cap_max_add     = max_add,                  # max_add [kW]
-                cap_min_add     = FixedProfile(0),          # min_add [kW]
-                inv_mode        = ContinuousInvestment()    # investment mode
-            )]
+            investment_data_source = [
+                NoStartInvData(
+                    FixedProfile(1000),     # capex [€/kW]
+                    FixedProfile(30),       # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), max_add),   # investment mode
+                    UnlimitedLife(),        # lifetime mode
+                ),
+            ]
             inv_data = Dict(
                 "investment_data" => investment_data_source,
                 "profile"         => demand_profile,
@@ -27,17 +28,17 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if we provide two `InvestmentData`
         investment_data_source = [
-            InvData(
-                capex_cap       = FixedProfile(1000),       # capex [€/kW]
-                cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-                cap_max_add     = FixedProfile(20),         # max_add [kW]
-                cap_min_add     = FixedProfile(5),          # min_add [kW]
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(30),       # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(0), FixedProfile(20)), # investment mode
+                UnlimitedLife(),        # lifetime mode
             ),
-            InvData(
-                capex_cap       = FixedProfile(1000),       # capex [€/kW]
-                cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-                cap_max_add     = FixedProfile(20),         # max_add [kW]
-                cap_min_add     = FixedProfile(5),          # min_add [kW]
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(30),       # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
+                UnlimitedLife(),        # lifetime mode
             ),
         ]
         inv_data = Dict(
@@ -80,13 +81,14 @@ EMB.TEST_ENV = true
         @test_logs (:warn, msg) run_simple_graph(max_add; check_timeprofiles=false)
 
         # Check that we receive an error if the capacity is an operational profile
-        investment_data_source = [InvData(
-            capex_cap       = FixedProfile(1000),       # capex [€/kW]
-            cap_max_inst    = FixedProfile(10),          # max installed capacity [kW]
-            cap_max_add     = FixedProfile(20),         # max_add [kW]
-            cap_min_add     = FixedProfile(0),          # min_add [kW]
-            inv_mode        = ContinuousInvestment()    # investment mode
-        )]
+        investment_data_source = [
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(30),       # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
+                UnlimitedLife(),        # lifetime mode
+            ),
+        ]
         source = RefSource(
             "-src",
             OperationalProfile(ones(4)),
@@ -104,13 +106,14 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if the initial capacity is higher than the
         # allowed maximum installed
-        investment_data_source = [InvData(
-            capex_cap       = FixedProfile(1000),       # capex [€/kW]
-            cap_max_inst    = FixedProfile(0),          # max installed capacity [kW]
-            cap_max_add     = FixedProfile(20),         # max_add [kW]
-            cap_min_add     = FixedProfile(0),          # min_add [kW]
-            inv_mode        = ContinuousInvestment()    # investment mode
-        )]
+        investment_data_source = [
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(0),        # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
+                UnlimitedLife(),        # lifetime mode
+            ),
+        ]
         source = RefSource(
             "-src",
             FixedProfile(10),
@@ -125,14 +128,15 @@ EMB.TEST_ENV = true
         )
         case, modeltype = small_graph(;source, inv_data)
         @test_throws AssertionError optimize(case, modeltype)
-        investment_data_source = [InvData(
-            capex_cap       = FixedProfile(1000),       # capex [€/kW]
-            cap_max_inst    = FixedProfile(0),          # max installed capacity [kW]
-            cap_max_add     = FixedProfile(20),         # max_add [kW]
-            cap_min_add     = FixedProfile(0),          # min_add [kW]
-            inv_mode        = ContinuousInvestment(),    # investment mode
-            cap_start       = 10,                       # Starting capacity
-        )]
+        investment_data_source = [
+            StartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(10),       # max installed capacity [kW]
+                30,                     # initial capacity
+                ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
+                UnlimitedLife(),        # lifetime mode
+            ),
+        ]
         inv_data = Dict(
             "investment_data" => investment_data_source,
             "profile"         => demand_profile,
@@ -141,15 +145,14 @@ EMB.TEST_ENV = true
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if we provide a larger min_add than max_add
-        max_add = FixedProfile(10)
-        min_add = FixedProfile(15)
-        investment_data_source = [InvData(
-            capex_cap       = FixedProfile(1000),       # capex [€/kW]
-            cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-            cap_max_add     = max_add,                  # max_add [kW]
-            cap_min_add     = min_add,                  # min_add [kW]
-            inv_mode        = ContinuousInvestment()    # investment mode
-        )]
+        investment_data_source = [
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(10),       # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(15), FixedProfile(10)),   # investment mode
+                UnlimitedLife(),        # lifetime mode
+            ),
+        ]
         inv_data = Dict(
             "investment_data" => investment_data_source,
             "profile"         => demand_profile,
@@ -158,7 +161,7 @@ EMB.TEST_ENV = true
         @test_throws AssertionError optimize(case, modeltype)
     end
 
-    # Testing, that the checks for InvData are working
+    # Testing, that the checks for StorageInvData are working
     # - EMB.check_node_data(n::EMB.Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
     @testset "StorageInvData" begin
 
@@ -186,11 +189,11 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if we provide the wrong `InvestmentData`
         inv_data = [
-            InvData(
-                capex_cap       = FixedProfile(1000),       # capex [€/kW]
-                cap_max_inst    = FixedProfile(30),         # max installed capacity [kW]
-                cap_max_add     = FixedProfile(20),         # max_add [kW]
-                cap_min_add     = FixedProfile(5),          # min_add [kW]
+            NoStartInvData(
+                FixedProfile(1000),     # capex [€/kW]
+                FixedProfile(30),       # max installed capacity [kW]
+                ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
+                UnlimitedLife(),
             ),
         ]
         case, modeltype = small_graph_stor(;inv_data)
