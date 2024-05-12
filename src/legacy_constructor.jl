@@ -32,8 +32,11 @@ function InvDataStorage(;
         "future. See the documentation for the new implementation using the type " *
         "`StorageInvData` in the section on _How to update your model to the latest " *
         "versions_.\n" *
-        "The core change is that we allow now for individual investments in `charge`, "*
-        "`level`, as well `discharge` capacities."
+        "The core change is that we allow now for individual investments in `charge`, " *
+        "`level`, as well `discharge` capacities.\n" *
+        "This constructore should NOT be used for `HydroStor` or `PumpedHydroStor nodes " *
+        "introduced in the package [EnergyModelsRenewableProducers]" *
+        "(https://energymodelsx.github.io/EnergyModelsRenewableProducers.jl/stable/library/public/#EnergyModelsRenewableProducers.HydroStor)."
     )
 
     if isnothing(rate_start)

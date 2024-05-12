@@ -25,6 +25,7 @@ Pages = [
 
 ```@contents
 Pages = [
+    "how-to/update-models.md",
     "how-to/contribute.md",
 ]
 ```

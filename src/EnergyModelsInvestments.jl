@@ -20,6 +20,7 @@ const EMB = EnergyModelsBase
 const TS = TimeStruct
 
 include("datastructures.jl")
+include("legacy_constructor.jl")
 include("model.jl")
 include("utils.jl")
 include("checks.jl")

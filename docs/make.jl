@@ -31,6 +31,7 @@ makedocs(
             "Release notes" => "manual/NEWS.md",
         ],
         "How to" => Any[
+            "Update models" => "how-to/update-models.md",
             "Contribute to EnergyModelsInvestments" => "how-to/contribute.md",
         ],
         "Library" => Any[
