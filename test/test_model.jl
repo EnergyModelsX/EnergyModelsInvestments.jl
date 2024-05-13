@@ -264,16 +264,14 @@ end
                 charge = NoStartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(30),
-                    min_add = FixedProfile(15),
-                    inv_mode = SemiContinuousInvestment(),
+                    inv_mode = SemiContinuousInvestment(FixedProfile(30), FixedProfile(15)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(150),
-                    inv_mode = SemiContinuousInvestment(),
+                    inv_mode = SemiContinuousInvestment(FixedProfile(600), FixedProfile(150)),
+                    life_mode = UnlimitedLife(),
                 )
             ),
         ]
@@ -323,18 +321,14 @@ end
                 charge = NoStartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(30),
-                    min_add = FixedProfile(15),
-                    inv_mode = DiscreteInvestment(),
-                    increment = FixedProfile(5),
+                    inv_mode = DiscreteInvestment(FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(150),
-                    inv_mode = DiscreteInvestment(),
-                    increment = FixedProfile(150),
+                    inv_mode = DiscreteInvestment(FixedProfile(150)),
+                    life_mode = UnlimitedLife(),
                 )
             ),
         ]
@@ -380,17 +374,15 @@ end
                 charge = StartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(30),
-                    min_add = FixedProfile(15),
                     inv_mode = FixedInvestment(),
+                    life_mode = UnlimitedLife(),
                     initial = 0,
                 ),
                 level = StartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(150),
                     inv_mode = FixedInvestment(),
+                    life_mode = UnlimitedLife(),
                     initial = 0,
                 )
             ),
@@ -438,18 +430,16 @@ end
                 charge = StartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(30),
-                    min_add = FixedProfile(15),
-                    inv_mode = BinaryInvestment(),
                     initial = 0,
+                    inv_mode = BinaryInvestment(),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = StartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(150),
-                    inv_mode = BinaryInvestment(),
                     initial = 0,
+                    inv_mode = BinaryInvestment(),
+                    life_mode = UnlimitedLife(),
                 )
             ),
         ]

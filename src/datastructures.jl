@@ -27,46 +27,177 @@ struct InvestmentModel <: AbstractInvestmentModel
     r       # Discount rate
 end
 
+"""
+    Investment
 
-""" Investment type traits for nodes.
-
-The investment type corresponds to the chosen investment mode.
+Investment type traits for nodes.
+The investment type corresponds to the chosen investment mode and includes the required
+input.
 """
 abstract type Investment end
-""" Binary investment in given capacity with binary variables. Requires specification
-of `cap_start` in `InvData` for proper analyses."""
+
+"""
+    BinaryInvestment <: Investment
+
+Binary investment in a given capacity with binary variables.
+The chosen capacity within a strategic period is given by the capacity of the Node.
+
+Binary investments do not require additional input aside the specified input.
+Binary investments introduce one binary variable for each strategic period.
+"""
 struct BinaryInvestment <: Investment end
-""" Investment in fixed increments with integer variables. """
-struct DiscreteInvestment <: Investment end
-""" Continuous investment between a minimum and a maximum value. """
-struct ContinuousInvestment <: Investment end
-""" Forced investment in given capacity. """
+
+"""
+    DiscreteInvestment <: Investment
+
+Discrete investment with integer variables using an increment.
+The increment for the discrete investment can be different for the individual strategic
+periods.
+
+Discrete investments introduce one integer variable for each strategic period.
+
+# Fields
+- **`increment::TimeProfile`** is the used increment.
+"""
+struct DiscreteInvestment <: Investment
+    increment::TimeProfile
+end
+
+"""
+    ContinuousInvestment <: Investment
+
+Continuous investment between a lower and upper bound.
+The increment for the discrete investment can be different for the individual strategic
+periods.
+
+# Fields
+- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
+- **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
+  case of `ContinuousInvestment`, this implies that the model **must** invest at least
+  in this capacity in each strategic period.
+"""
+struct ContinuousInvestment <: Investment
+    max_add::TimeProfile
+    min_add::TimeProfile
+end
+"""
+    FixedInvestment <: Investment
+
+Fixed investment in a given capacity.
+The model is forced to invest in the capacity provided by the node.
+
+Fixed investments do not require additional input aside the specified input.
+"""
 struct FixedInvestment <: Investment end
-""" Semi-continuous investment, either zero or between a minimum and a maximum value,
-involves a binary variable. """
+
+"""
+    SemiContiInvestment <: Investment
+
+Supertype for semi-continuous investments, that is the added capacity is either zero or
+between a minimum and a maximum value.
+
+Semi-continuous investments introduce one binary variable for each strategic period.
+"""
 abstract type SemiContiInvestment <: Investment end
-""" Semi-continuous investment where the cost is going through the origin. """
-struct SemiContinuousInvestment <: SemiContiInvestment end
-""" Semi-continuous investment where the cost has an additional offset"""
-struct SemiContinuousOffsetInvestment <: SemiContiInvestment end
 
+"""
+    SemiContinuousInvestment <: Investment
 
-""" Abstract lifetime mode type."""
+Semi-continuous investments, that is the added capacity is either zero or between a minimum
+and a maximum value. In this subtype, the cost is crossing the origin, that is the CAPEX is
+still linear dependent on the
+
+Semi-continuous investments introduce one binary variable for each strategic period.
+
+# Fields
+- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
+- **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
+  case of `SemiContinuousInvestment`, this implies that the model **must** invest at least
+  in this capacity in each strategic period. The model can also choose not too invest at
+  all.
+"""
+struct SemiContinuousInvestment <: SemiContiInvestment
+    max_add::TimeProfile
+    min_add::TimeProfile
+end
+
+"""
+    SemiContinuousOffsetInvestment <: Investment
+
+Semi-continuous investments, that is the added capacity is either zero or between a minimum
+and a maximum value. In this subtype, the cost is not crossing the origin. Instead, there
+is an offset.
+
+Semi-continuous investments introduce one binary variable for each strategic period.
+
+# Fields
+- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
+- **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
+  case of `SemiContinuousInvestment`, this implies that the model **must** invest at least
+  in this capacity in each strategic period. The model can also choose not too invest at
+  all.
+- **`capex_offset::TimeProfile`** is offset for the CAPEX in a strategic period.
+"""
+struct SemiContinuousOffsetInvestment <: SemiContiInvestment
+    max_add::TimeProfile
+    min_add::TimeProfile
+    capex_offset::TimeProfile
+end
+
+"""
+    LifetimeMode
+
+Supertype for the lifetime mode.
+"""
 abstract type LifetimeMode end
-""" The investment's life is not limited. The investment costs do not consider any
-reinvestment or rest value. """
+
+"""
+    UnlimitedLife <: LifetimeMode
+
+The investment's life is not limited. The investment costs do not consider any
+reinvestment or rest value.
+"""
 struct UnlimitedLife <: LifetimeMode end
-""" The investment lasts for the whole study period with adequate reinvestments at the
-end of the lifetime and considering the rest value. """
-struct StudyLife <: LifetimeMode end
-""" The investment is considered to last only for the strategic period. The excess
+
+"""
+    StudyLife <: LifetimeMode
+
+The investment lasts for the whole study period with adequate reinvestments at the end of
+the lifetime and considering the rest value.
+
+# Fields
+- **`lifetime::TimeProfile`** is the chosen lifetime of the technology.
+"""
+struct StudyLife <: LifetimeMode
+    lifetime::TimeProfile
+end
+"""
+    PeriodLife <: LifetimeMode
+
+The investment is considered to last only for the strategic period. The excess
 lifetime is considered in the rest value. If the lifetime is lower than the length
-of the period, reinvestment is considered as well. """
-struct PeriodLife <: LifetimeMode end
-""" The investment is rolling to the next strategic periods and it is retired at the
+of the period, reinvestment is considered as well.
+
+# Fields
+- **`lifetime::TimeProfile`** is the chosen lifetime of the technology.
+"""
+struct PeriodLife <: LifetimeMode
+    lifetime::TimeProfile
+end
+
+"""
+    RollingLife <: LifetimeMode
+
+The investment is rolling to the next strategic periods and it is retired at the
 end of its lifetime or the end of the previous strategic period if its lifetime
-ends between two periods."""
-struct RollingLife <: LifetimeMode end
+ends between two periods.
+
+# Fields
+- **`lifetime::TimeProfile`** is the chosen lifetime of the technology.
+"""
+struct RollingLife <: LifetimeMode
+    lifetime::TimeProfile
+end
 
 """
 Abstract type for the extra data for investing in technologies.
@@ -131,29 +262,19 @@ Hence, the name of the parameters have to be specified.
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
   relative to the added capacity.
 - **`max_inst::TimeProfile`** is the maximum installed capacity in a strategic period.
-- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
-- **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. Its meaning
-  varies depending on the investment mode.
 - **`inv_mode::Investment`** is the chosen investment mode for the technology. The following
   investment modes are currently available: [`BinaryInvestment`](@ref),
   [`DiscreteInvestment`](@ref), [`ContinuousInvestment`](@ref), [`SemiContinuousInvestment`](@ref)
   or [`FixedInvestment`](@ref).
-- **`increment::TimeProfile`** is the increment used in the case of [`DiscreteInvestment`](@ref).
 - **`life_mode::LifetimeMode`** is type of handling the lifetime. Several different
   alternatives can be used: [`UnlimitedLife`](@ref), [`StudyLife`](@ref), [`PeriodLife`](@ref)
   or [`RollingLife`](@ref).
-- **`lifetime::TimeProfile`** is the chosen lifetime of the technology. The default value is
-  given as `FixedProfile(0)` implying that the technology has now lifetime.
 """
 @kwdef struct NoStartInvData <: GeneralInvData
-    capex::TimeProfile       # Capex to install cap
-    max_inst::TimeProfile    # Max installable capacity in one period(in total)
-    max_add::TimeProfile     # Max capacity that can be added in one period
-    min_add::TimeProfile     # Min capacity that can be added in one period
-    inv_mode::Investment = ContinuousInvestment()
-    increment::TimeProfile  = FixedProfile(0)
-    life_mode::LifetimeMode = UnlimitedLife()
-    lifetime::TimeProfile  = FixedProfile(0)
+    capex::TimeProfile
+    max_inst::TimeProfile
+    inv_mode::Investment
+    life_mode::LifetimeMode
 end
 
 """
@@ -170,15 +291,11 @@ Hence, the name of the parameters have to be specified.
 - **`initial::Real`** is the initial capacity.
 """
 @kwdef struct StartInvData <: GeneralInvData
-    capex::TimeProfile      # Capex to install cap
-    max_inst::TimeProfile   # Max installable capacity in one period(in total)
-    max_add::TimeProfile    # Max capacity that can be added in one period
-    min_add::TimeProfile    # Min capacity that can be added in one period
-    initial::Real           # or initial already installed in period
-    inv_mode::Investment = ContinuousInvestment()
-    increment::TimeProfile = FixedProfile(0)
-    life_mode::LifetimeMode = UnlimitedLife()
-    lifetime::TimeProfile = FixedProfile(0)
+    capex::TimeProfile
+    max_inst::TimeProfile
+    initial::Real
+    inv_mode::Investment
+    life_mode::LifetimeMode
 end
 """
     StorageInvData <: InvestmentData

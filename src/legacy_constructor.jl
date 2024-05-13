@@ -39,52 +39,66 @@ function InvDataStorage(;
         "(https://energymodelsx.github.io/EnergyModelsRenewableProducers.jl/stable/library/public/#EnergyModelsRenewableProducers.HydroStor)."
     )
 
+    # Create the new investment mode structures
+    if isa(inv_mode, BinaryInvestment)
+        inv_mode_rate = BinaryInvestment()
+        inv_mode_cap = BinaryInvestment()
+    elseif isa(inv_mode, FixedInvestment)
+        inv_mode_rate = FixedInvestment()
+        inv_mode_cap = FixedInvestment()
+    elseif isa(inv_mode, DiscreteInvestment)
+        inv_mode_rate = DiscreteInvestment(rate_increment)
+        inv_mode_cap = DiscreteInvestment(stor_increment)
+    elseif isa(inv_mode, ContinuousInvestment)
+        inv_mode_rate = ContinuousInvestment(rate_max_add, rate_min_add)
+        inv_mode_cap = ContinuousInvestment(stor_max_add, stor_min_add)
+    elseif isa(inv_mode, SemiContinuousInvestment)
+        inv_mode_rate = SemiContinuousInvestment(rate_max_add, rate_min_add)
+        inv_mode_cap = SemiContinuousInvestment(stor_max_add, stor_min_add)
+    end
+
+    # Create the new lifetime mode structures
+    if isa(life_mode, UnlimitedLife)
+        tmp_life_mode = UnlimitedLife()
+    elseif isa(life_mode, StudyLife)
+        tmp_life_mode = StudyLife(lifetime)
+    elseif isa(life_mode, PeriodLife)
+        tmp_life_mode = PeriodLife(lifetime)
+    elseif isa(life_mode, RollingLife)
+        tmp_life_mode = RollingLife(lifetime)
+    end
+
+    # Create the new generalized investment data
     if isnothing(rate_start)
         charge_type = NoStartInvData(
             capex = capex_rate,
             max_inst = rate_max_inst,
-            max_add = rate_max_add,
-            min_add = rate_min_add,
-            inv_mode = inv_mode,
-            increment = rate_increment,
-            life_mode = life_mode,
-            lifetime = lifetime,
+            inv_mode = inv_mode_rate,
+            life_mode = tmp_life_mode,
         )
     else
         charge_type = StartInvData(
             capex = capex_rate,
             max_inst = rate_max_inst,
-            max_add = rate_max_add,
-            min_add = rate_min_add,
             initial = rate_start,
-            inv_mode = inv_mode,
-            increment = rate_increment,
-            life_mode = life_mode,
-            lifetime = lifetime,
+            inv_mode = inv_mode_rate,
+            life_mode = tmp_life_mode,
         )
     end
     if isnothing(stor_start)
         level_type = NoStartInvData(
             capex = capex_stor,
             max_inst = stor_max_inst,
-            max_add = stor_max_add,
-            min_add = stor_min_add,
-            inv_mode = inv_mode,
-            increment = stor_increment,
-            life_mode = life_mode,
-            lifetime = lifetime,
+            inv_mode = inv_mode_cap,
+            life_mode = tmp_life_mode,
         )
     else
         level_type = StartInvData(
             capex = capex_stor,
             max_inst = stor_max_inst,
-            max_add = stor_max_add,
-            min_add = stor_min_add,
             initial = stor_start,
-            inv_mode = inv_mode,
-            increment = stor_increment,
-            life_mode = life_mode,
-            lifetime = lifetime,
+            inv_mode = inv_mode_cap,
+            life_mode = tmp_life_mode,
         )
     end
 
@@ -93,3 +107,12 @@ function InvDataStorage(;
         level = level_type,
     )
 end
+
+DiscreteInvestment() = DiscreteInvestment(FixedProfile(0))
+ContinuousInvestment() = ContinuousInvestment(FixedProfile(0), FixedProfile(0))
+SemiContinuousInvestment() = SemiContinuousInvestment(FixedProfile(0), FixedProfile(0))
+SemiContinuousOffsetInvestment() = SemiContinuousOffsetInvestment(FixedProfile(0), FixedProfile(0), FixedProfile(0))
+
+StudyLife() = StudyLife(FixedProfile(0))
+PeriodLife() = PeriodLife(FixedProfile(0))
+RollingLife() = RollingLife(FixedProfile(0))

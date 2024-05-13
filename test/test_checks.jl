@@ -168,16 +168,14 @@ EMB.TEST_ENV = true
                     charge = NoStartInvData(
                         capex = FixedProfile(20),
                         max_inst = FixedProfile(30),
-                        max_add = charge_max_add,
-                        min_add = FixedProfile(5),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(charge_max_add, FixedProfile(5)),
+                        life_mode = UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         capex = FixedProfile(500),
                         max_inst = FixedProfile(600),
-                        max_add = level_max_add,
-                        min_add = FixedProfile(5),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(level_max_add, FixedProfile(5)),
+                        life_mode = UnlimitedLife(),
                     )
                 )
             ]
@@ -204,32 +202,28 @@ EMB.TEST_ENV = true
                 charge = NoStartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(20),
-                    min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(20), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 )
             ),
             StorageInvData(
                 charge = NoStartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(20),
-                    min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(20), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 )
             ),
         ]
@@ -307,17 +301,15 @@ EMB.TEST_ENV = true
                 charge = StartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(20),
-                    min_add = FixedProfile(5),
                     initial = 40,
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(20), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 )
             )
         ]
@@ -331,17 +323,15 @@ EMB.TEST_ENV = true
                 charge = NoStartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(20),
-                    min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(20), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = StartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(5),
                     initial = 700,
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(5)),
+                    life_mode = UnlimitedLife(),
                 )
             )
         ]
@@ -351,7 +341,7 @@ EMB.TEST_ENV = true
         # Check that we receive an error if we provide a larger min_add than max_add
         rate_min_add = 40
         case, modeltype = small_graph_stor(;rate_min_add)
-        @test_throws AssertionError optimize(case, modeltype)
+        @test_throws AssertionError optimize(case, modeltype) # This one, no exception
         stor_min_add = 700
         case, modeltype = small_graph_stor(;stor_min_add)
         @test_throws AssertionError optimize(case, modeltype)

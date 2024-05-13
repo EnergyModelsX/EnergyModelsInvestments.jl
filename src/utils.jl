@@ -305,18 +305,29 @@ are unlimited.
 lifetime_mode(inv_data::GeneralInvData) = inv_data.life_mode
 
 """
+    lifetime(lifetime_mode::LifetimeMode)
+
+Return the lifetime of the lifetime mode `lifetime_mode` as `TimeProfile`.
+"""
+lifetime(lifetime_mode::LifetimeMode) = lifetime_mode.lifetime
+"""
     lifetime(inv_data::GeneralInvData)
 
 Return the lifetime of the investment data `inv_data` as `TimeProfile`.
 """
-lifetime(inv_data::GeneralInvData) = inv_data.lifetime
-
+lifetime(inv_data::GeneralInvData) = lifetime(lifetime_mode(inv_data))
 """
-    lifetime(inv_data::GeneralInvData, t)
+    lifetime(lifetime_mode::LifetimeMode, t_inv)
 
-Return the lifetime of the investment data `inv_data` in period `t`.
+Return the lifetime of the lifetime mode `lifetime_mode` in investment period `t_inv`.
 """
-lifetime(inv_data::GeneralInvData, t) = inv_data.lifetime[t]
+lifetime(lifetime_mode::LifetimeMode, t_inv) = lifetime_mode.lifetime[t_inv]
+"""
+    lifetime(inv_data::GeneralInvData, t_inv)
+
+Return the lifetime of the investment data `inv_data` in investment period `t_inv`.
+"""
+lifetime(inv_data::GeneralInvData, t_inv) = lifetime(lifetime_mode(inv_data), t_inv)
 
 start_cap(n, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
     inv_data.initial
@@ -355,47 +366,89 @@ investment period `t_inv`.
 max_installed(inv_data::GeneralInvData, t_inv) = inv_data.max_inst[t_inv]
 
 """
+    max_add(inv_mode::Investment)
+
+Returns the maximum allowed added capacity of the investment mode `inv_mode` as
+`TimeProfile`.
+"""
+max_add(inv_mode::Investment) = inv_mode.max_add
+"""
     max_add(inv_data::GeneralInvData)
 
 Returns the maximum allowed added capacity of the investment data `inv_data` as
 `TimeProfile`.
 """
-max_add(inv_data::GeneralInvData) = inv_data.max_add
+max_add(inv_data::GeneralInvData) = max_add(investment_mode(inv_data))
+"""
+    max_add(inv_mode::Investment, t_inv)
+
+Returns the maximum allowed added capacity of the investment mode `inv_mode` investment
+period `t_inv`.
+"""
+max_add(inv_mode::Investment, t_inv) = inv_mode.max_add[t_inv]
+
 """
     max_add(inv_data::GeneralInvData, t_inv)
 
 Returns the maximum allowed added capacity of the investment data `inv_data` in investment
 period `t_inv`.
 """
-max_add(inv_data::GeneralInvData, t_inv) = inv_data.max_add[t_inv]
+max_add(inv_data::GeneralInvData, t_inv) = max_add(investment_mode(inv_data), t_inv)
 
+"""
+    min_add(inv_mode::Investment)
+
+Returns the minimum allowed added capacity of the investment mode `inv_mode` as
+`TimeProfile`.
+"""
+min_add(inv_mode::Investment) = inv_mode.min_add
 """
     min_add(inv_data::GeneralInvData)
 
 Returns the minimum allowed added capacity of the investment data `inv_data` as
 `TimeProfile`.
 """
-min_add(inv_data::GeneralInvData) = inv_data.min_add
+min_add(inv_data::GeneralInvData) = min_add(investment_mode(inv_data))
+"""
+    min_add(inv_mode::Investment, t_inv)
+
+Returns the minimum allowed added capacity of the investment mode `inv_mode` in investment
+period `t_inv`.
+"""
+min_add(inv_mode::Investment, t_inv) = inv_mode.min_add[t_inv]
+
 """
     min_add(inv_data::GeneralInvData, t_inv)
 
 Returns the minimum allowed added capacity of the investment data `inv_data` in investment
 period `t_inv`.
 """
-min_add(inv_data::GeneralInvData, t_inv) = inv_data.min_add[t_inv]
+min_add(inv_data::GeneralInvData, t_inv) = min_add(investment_mode(inv_data), t_inv)
 
+"""
+    increment(inv_mode::Investment)
+
+Returns the capacity increment of the investment mode `inv_mode` as `TimeProfile`.
+"""
+increment(inv_mode::Investment) = inv_mode.increment
 """
     increment(inv_data::GeneralInvData)
 
 Returns the capacity increment of the investment data `inv_data` as `TimeProfile`.
 """
-increment(inv_data::GeneralInvData) = inv_data.increment
+increment(inv_data::GeneralInvData) = increment(investment_mode(inv_data))
+"""
+    increment(inv_mode::Investment, t_inv)
+
+Returns the capacity increment of the investment mode `inv_mode` in investment period `t_inv`.
+"""
+increment(inv_mode::Investment, t_inv) = inv_mode.increment[t_inv]
 """
     increment(inv_data::GeneralInvData, t_inv)
 
 Returns the capacity increment of the investment data `inv_data` in investment period `t_inv`.
 """
-increment(inv_data::GeneralInvData, t_inv) = inv_data.increment[t_inv]
+increment(inv_data::GeneralInvData, t_inv) = increment(investment_mode(inv_data), t_inv)
 
 set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ) =
     set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))

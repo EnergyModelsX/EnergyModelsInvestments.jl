@@ -142,16 +142,14 @@ function small_graph_stor(;
                 charge = NoStartInvData(
                     capex = FixedProfile(20),
                     max_inst = FixedProfile(30),
-                    max_add = FixedProfile(30),
-                    min_add = FixedProfile(rate_min_add),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(30), FixedProfile(rate_min_add)),
+                    life_mode = UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     capex = FixedProfile(500),
                     max_inst = FixedProfile(600),
-                    max_add = FixedProfile(600),
-                    min_add = FixedProfile(stor_min_add),
-                    inv_mode = ContinuousInvestment(),
+                    inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(stor_min_add)),
+                    life_mode = UnlimitedLife(),
                 )
             )
         ]
@@ -376,16 +374,14 @@ function network_graph()
                     charge = NoStartInvData(
                         capex = FixedProfile(0),
                         max_inst = FixedProfile(600),
-                        max_add = FixedProfile(600),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         capex = FixedProfile(500),
                         max_inst = FixedProfile(600),
-                        max_add = FixedProfile(600),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     )
                 ),
             ],
@@ -420,16 +416,14 @@ function network_graph()
                     charge = NoStartInvData(
                         capex = FixedProfile(0),
                         max_inst = FixedProfile(30),
-                        max_add = FixedProfile(3),
-                        min_add = FixedProfile(3),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(3), FixedProfile(3)),
+                        life_mode = UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         capex = FixedProfile(0),
                         max_inst = FixedProfile(50),
-                        max_add = FixedProfile(5),
-                        min_add = FixedProfile(5),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(5), FixedProfile(5)),
+                        life_mode = UnlimitedLife(),
                     )
                 ),
             ],

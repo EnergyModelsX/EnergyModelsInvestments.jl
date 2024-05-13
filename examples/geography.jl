@@ -283,16 +283,14 @@ function get_sub_system_data(
                     charge = NoStartInvData(
                         capex = FixedProfile(500),
                         max_inst = FixedProfile(600),
-                        max_add = FixedProfile(600),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         capex = FixedProfile(500),
                         max_inst = FixedProfile(600),
-                        max_add = FixedProfile(600),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     )
                 ),
             ],
@@ -325,16 +323,14 @@ function get_sub_system_data(
                     charge = NoStartInvData(
                         capex = FixedProfile(500),
                         max_inst = FixedProfile(30),
-                        max_add = FixedProfile(3),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(3), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         capex = FixedProfile(500),
                         max_inst = FixedProfile(50),
-                        max_add = FixedProfile(2),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(2), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     )
                 ),
             ],

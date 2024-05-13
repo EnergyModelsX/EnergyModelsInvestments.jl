@@ -125,16 +125,8 @@ function generate_example_data()
                     charge = NoStartInvData(
                         capex = FixedProfile(200*1e3),
                         max_inst = FixedProfile(60),
-                        max_add = FixedProfile(5),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
-                    ),
-                    level = NoStartInvData(
-                        capex = FixedProfile(0),
-                        max_inst = FixedProfile(1e9),
-                        max_add = FixedProfile(0),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        inv_mode = ContinuousInvestment(FixedProfile(5), FixedProfile(0)),
+                        life_mode = UnlimitedLife(),
                     )
                 )
             ],
