@@ -1,4 +1,3 @@
-
 """
     investment_data(type)
 
@@ -7,14 +6,14 @@ Return the investment data of the type `type`.
 investment_data(type) = filter(data -> typeof(data) <: InvestmentData, type.data)[1]
 
 """
-    has_investment(n::EMB.Node)
+    has_investment(type)
 
 For a given `Node`, checks that it contains the required investment data.
 """
-function has_investment(n::EMB.Node)
+function has_investment(type)
     (
-        hasproperty(n, :data) &&
-        !isempty(filter(data -> typeof(data) <: InvestmentData, n.data))
+        hasproperty(type, :data) &&
+        !isempty(filter(data -> typeof(data) <: InvestmentData, type.data))
     )
 end
 
@@ -116,16 +115,16 @@ Return the lifetime of the investment data `inv_data` in investment period `t_in
 lifetime(inv_data::GeneralInvData, t_inv) = lifetime(lifetime_mode(inv_data), t_inv)
 
 """
-    start_cap(m, n, t, stcap, modeltype)
+    start_cap(type, t_inv, inv_data::GeneralInvData, field, modeltype::EnergyModel)
 
 Returns the starting capacity of the node in the first investment period.
 If [`NoStartInvData`](@ref) is used for the starting capacity, it deduces the value from the
 provided initial capacity.
 """
-start_cap(n, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
+start_cap(type, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
     inv_data.initial
-start_cap(n::EMB.Node, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
-    capacity(n, t_inv)
+start_cap(type, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
+    capacity(type, t_inv)
 start_cap(n::Storage, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
     capacity(getproperty(n, field), t_inv)
 
@@ -149,24 +148,24 @@ Returns the offset of the CAPEX of the investment mode `inv_mode` as `TimeProfil
 """
 capex_offset(inv_mode::SemiContinuousOffsetInvestment) = inv_mode.capex_offset
 """
-    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+    capex_offset(inv_data::GeneralInvData)
 
 Returns the offset of the CAPEX of the investment data `inv_data` as `TimeProfile`.
 """
 capex_offset(inv_data::GeneralInvData) = capex_offset(investment_mode(inv_data))
 
 """
-    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+    capex_offset(inv_mode::SemiContinuousOffsetInvestment, t_inv)
 
 Returns the offset of the CAPEX of the investment mode `inv_mode` in investment period `t_inv`.
 """
 capex_offset(inv_mode::SemiContinuousOffsetInvestment, t_inv) = inv_mode.capex_offset[t_inv]
 """
-    capex_offset(inv_mode::SemiContinuousOffsetInvestment)
+    capex_offset(inv_data::GeneralInvData, t_inv)
 
 Returns the offset of the CAPEX of the investment data `inv_data` in investment period `t_inv`.
 """
-capex_offset(inv_data::GeneralInvData) = capex_offset(investment_mode(inv_data), t_inv)
+capex_offset(inv_data::GeneralInvData, t_inv) = capex_offset(investment_mode(inv_data), t_inv)
 
 """
     max_installed(inv_data::GeneralInvData)
@@ -275,12 +274,12 @@ Extracts the CAPEX variable with a given `prefix` from the model.
 """
 get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
 """
-    get_var_capex(m, prefix::Symbol, n::EMB.Node)
+    get_var_capex(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_capex(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_capex)][n, :]
+get_var_capex(m, prefix::Symbol, type)  = m[Symbol(prefix, :_capex)][type, :]
 
 """
     get_var_inst(m, prefix::Symbol)
@@ -289,12 +288,12 @@ Extracts the installed capacity variable with a given `prefix` from the model.
 """
 get_var_inst(m, prefix::Symbol) = m[Symbol(prefix, :_inst)]
 """
-    get_var_inst(m, prefix::Symbol, n::EMB.Node)
+    get_var_inst(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_inst(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_inst)][n, :]
+get_var_inst(m, prefix::Symbol, type)  = m[Symbol(prefix, :_inst)][type, :]
 
 """
     get_var_current(m, prefix::Symbol)
@@ -303,12 +302,12 @@ Extracts the current capacity variable with a given `prefix` from the model.
 """
 get_var_current(m, prefix::Symbol) = m[Symbol(prefix, :_current)]
 """
-    get_var_current(m, prefix::Symbol, n::EMB.Node)
+    get_var_current(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_current(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_current)][n, :]
+get_var_current(m, prefix::Symbol, type)  = m[Symbol(prefix, :_current)][type, :]
 
 """
     get_var_add(m, prefix::Symbol)
@@ -317,12 +316,12 @@ Extracts the investment capacity variable with a given `prefix` from the model.
 """
 get_var_add(m, prefix::Symbol) = m[Symbol(prefix, :_add)]
 """
-    get_var_add(m, prefix::Symbol, n::EMB.Node)
+    get_var_add(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_add(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_add)][n, :]
+get_var_add(m, prefix::Symbol, type)  = m[Symbol(prefix, :_add)][type, :]
 
 """
     get_var_rem(m, prefix::Symbol)
@@ -331,12 +330,12 @@ Extracts the retired capacity variable with a given `prefix` from the model.
 """
 get_var_rem(m, prefix::Symbol) = m[Symbol(prefix, :_rem)]
 """
-    get_var_rem(m, prefix::Symbol, n::EMB.Node)
+    get_var_rem(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_rem(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_rem)][n, :]
+get_var_rem(m, prefix::Symbol, type)  = m[Symbol(prefix, :_rem)][type, :]
 
 """
     get_var_invest_b(m, prefix::Symbol)
@@ -345,12 +344,12 @@ Extracts the binary investment variable with a given `prefix` from the model.
 """
 get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
 """
-    get_var_invest_b(m, prefix::Symbol, n::EMB.Node)
+    get_var_invest_b(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_invest_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_invest_b)][n, :]
+get_var_invest_b(m, prefix::Symbol, type)  = m[Symbol(prefix, :_invest_b)][type, :]
 
 """
     get_var_remove_b(m, prefix::Symbol)
@@ -359,41 +358,60 @@ Extracts the binary retirement variable with a given `prefix` from the model.
 """
 get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
 """
-    get_var_remove_b(m, prefix::Symbol, n::EMB.Node)
+    get_var_remove_b(m, prefix::Symbol, type)
 
-When the node `n::EMB.Node` is used as conditional input, it extracts only the variable for
+When the node `type` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_remove_b(m, prefix::Symbol, n::EMB.Node)  = m[Symbol(prefix, :_remove_b)][n, :]
+get_var_remove_b(m, prefix::Symbol, type)  = m[Symbol(prefix, :_remove_b)][type, :]
 
 """
-    set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ)
+    set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ)
 
 Calculate the cost value for the different investment modes of the investment data
-`inv_data` for type `n`.
+`inv_data` for type `type`.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `n`: the node for which the absolute CAPEX should be calculated.
+- `type`: the type for which the absolute CAPEX should be calculated.
 - `r`: the discount rate.
 - `inv_data`: the investment data given as subtype of `GeneralInvData`.
 - `prefix`: the prefix used for variables for this type.
 - `𝒯ᴵⁿᵛ`: the strategic periods structure.
 """
-set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ) =
-    set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
+set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ) =
+    set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
 
 """
-    set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
+    set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
 
 When no specialized method is defined for the investment mode, it calculates the capital
 cost based on the multiplication of the field `capex` in `inv_data` with the added capacity.
 """
-function set_capex_value(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
+function set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
     # Deduce the required variable
-    add = get_var_add(m, prefix, n)
+    var_add = get_var_add(m, prefix, type)
 
-    return @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex(inv_data, t_inv) * add[t_inv])
+    return @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex(inv_data, t_inv) * var_add[t_inv])
+end
+
+"""
+    set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, ::SemiContinuousOffsetInvestment)
+
+When the investment mode is given by [`SemiContinuousOffsetInvestment`](@ref) then there is
+an additional offset for the CAPEX.
+"""
+function set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContinuousOffsetInvestment)
+    # Deduce the required variable
+    var_add = get_var_add(m, prefix, type)
+    var_invest_b = get_var_invest_b(m, prefix)
+    t_inv = collect(𝒯ᴵⁿᵛ)[1]
+    println(var_invest_b)
+
+    return @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        capex(inv_data, t_inv) * var_add[t_inv] +
+        capex_offset(inv_mode, t_inv) * var_invest_b[type, t_inv]
+    )
 end
 
 """

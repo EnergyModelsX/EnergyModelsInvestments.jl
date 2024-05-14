@@ -206,7 +206,7 @@ end
 Creates a simple geography test case with the potential for investments in transmission
     infrastructure if provided with transmission investments through the argument `inv_data`.
 """
-function small_graph_geo(; source=nothing, sink=nothing, inv_data=[])
+function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
@@ -237,6 +237,12 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=[])
     areas = [RefArea(1, "Oslo", 10.751, 59.921, nodes[1]),
              RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2])]
 
+
+    if isnothing(inv_data)
+        inv_data = Data[]
+    else
+        inv_data = [inv_data]
+    end
     transmission_line = RefStatic(
         "transline",
         Power,

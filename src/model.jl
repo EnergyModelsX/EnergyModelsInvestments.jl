@@ -194,7 +194,7 @@ end
 function add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    # Deduce the required variables
+    # Deduce required variables
     var_current = get_var_current(m, prefix, n)
     var_inst = get_var_inst(m, prefix, n)
     var_add = get_var_add(m, prefix, n)
@@ -216,11 +216,11 @@ function add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype
             )
         end
     end
+    # Constraints for investments
+    set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ)
+
     # Constraints for the CAPEX calculation
     set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype)
-
-    # Constraints for minimum investments
-    set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ)
 end
 
 """
@@ -336,35 +336,6 @@ function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::F
         var_current[t_inv] ==
             cap_used[t_inv] * var_invest_b[n, t_inv]
     )
-end
-
-"""
-    set_investment_properties(n, var)
-
-Set investment properties for variable `var` for type `n`, e.g., set to binary for
-`BinaryInvestment`, bounds, etc.
-"""
-set_investment_properties(n, var) =
-    set_investment_properties(var, investment_mode(n))
-function set_investment_properties(var, ::Investment)
-    JuMP.set_lower_bound(var, 0)
-end
-
-function set_investment_properties(var, ::BinaryInvestment)
-    JuMP.set_binary(var)
-end
-
-function set_investment_properties(var, ::SemiContiInvestment)
-    JuMP.set_binary(var)
-end
-
-function set_investment_properties(var, ::FixedInvestment) # TO DO
-    JuMP.fix(var, 1; force=true)
-end
-
-function set_investment_properties(var, ::DiscreteInvestment) # TO DO
-    JuMP.set_integer(var)
-    JuMP.set_lower_bound(var,0)
 end
 
 """

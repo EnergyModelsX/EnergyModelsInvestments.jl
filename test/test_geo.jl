@@ -1,9 +1,3 @@
-# Definition of the individual resources used in the simple system
-CO2     = ResourceEmit("CO2", 1.)
-Power   = ResourceCarrier("Power", 0.)
-products = [Power, CO2]
-
-
 """
     optimize(cases)
 
@@ -37,27 +31,26 @@ end
                         ≈ capacity(sink, t) - capacity(tm, t) for t ∈ 𝒯) == length(𝒯)
 
     # Test showing that no investment variables are created
-    @test size(m[:trans_cap_invest_b])[1] == 0
-    @test size(m[:trans_cap_remove_b])[1] == 0
-    @test size(m[:trans_cap_current])[1] == 0
-    @test size(m[:trans_cap_add])[1] == 0
-    @test size(m[:trans_cap_rem])[1] == 0
-
+    @test isempty((m[:trans_cap_current]))
+    @test isempty((m[:trans_cap_add]))
+    @test isempty((m[:trans_cap_rem]))
+    @test isempty((m[:trans_cap_invest_b]))
+    @test isempty((m[:trans_cap_remove_b]))
 end
 
 # Test set for continuous investments
 @testset "Unidirectional transmission with ContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = [TransInvData(
-                capex_trans     = FixedProfile(10),     # capex [€/kW]
-                trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
-                trans_max_add   = FixedProfile(30),     # max_add [kW]
-                trans_min_add   = FixedProfile(0),      # min_add [kW]
-                inv_mode        = ContinuousInvestment(),
-                trans_increment = FixedProfile(10),
-                trans_start     = 0,
-            )]
+    inv_data = TransInvData(
+        capex_trans     = FixedProfile(10),     # capex [€/kW]
+        trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
+        trans_max_add   = FixedProfile(30),     # max_add [kW]
+        trans_min_add   = FixedProfile(0),      # min_add [kW]
+        inv_mode        = ContinuousInvestment(),
+        trans_increment = FixedProfile(10),
+        trans_start     = 0,
+    )
 
     case, modeltype = small_graph_geo(;inv_data)
     m               = optimize(case, modeltype)
@@ -80,7 +73,7 @@ end
             @testset "First investment period" begin
                 for t ∈ t_inv
                     @test (value.(m[:trans_cap_add][tm, t_inv])
-                                    ≈ capacity(sink, t)-inv_data[1].trans_start)
+                                    ≈ capacity(sink, t)-inv_data.initial)
                 end
             end
         else
@@ -99,7 +92,7 @@ end
 @testset "Unidirectional transmission with SemiContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = [EMI.TransInvData(
+    inv_data = EMI.TransInvData(
         capex_trans     = FixedProfile(10),     # capex [€/kW]
         trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
         trans_max_add   = FixedProfile(30),     # max_add [kW]
@@ -107,7 +100,7 @@ end
         inv_mode        = SemiContinuousInvestment(),
         trans_increment = FixedProfile(10),
         trans_start     = 0,
-    )]
+    )
 
     case, modeltype = small_graph_geo(;inv_data)
     m               = optimize(case, modeltype)
@@ -131,14 +124,14 @@ end
                 if isnothing(t_inv_prev)
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv])
-                                        >= max(capacity(sink, t) - inv_data[1].trans_start,
-                                            EMI.min_add(tm, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
+                                        >= max(capacity(sink, t) - inv_data.initial,
+                                            EMI.min_add(inv_data, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv])
                                         ⪆ max(capacity(sink, t) - value.(m[:trans_cap_current][tm, t_inv_prev]),
-                                            EMI.min_add(tm, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
+                                            EMI.min_add(inv_data, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 end
             end
@@ -154,13 +147,15 @@ end
         end
     end
 
+    # Test that the variable cap_invest_b is a binary
+    @test sum(is_binary(m[:trans_cap_invest_b][tm, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 end
 
 # Test set for semicontinuous investments with offsets in the cost
 @testset "Unidirectional transmission with SemiContinuousOffsetInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = [EMI.TransInvData(
+    inv_data = TransInvData(
         capex_trans     = FixedProfile(1),     # capex [€/kW]
         capex_trans_offset = FixedProfile(10),    # capex [€]
         trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
@@ -169,7 +164,7 @@ end
         inv_mode        = SemiContinuousOffsetInvestment(),
         trans_increment = FixedProfile(10),
         trans_start     = 0,
-    )]
+    )
 
     case, modeltype = small_graph_geo(;inv_data)
     m               = optimize(case, modeltype)
@@ -182,6 +177,7 @@ end
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
     tm  = modes(tr_osl_trd)[1]
+    inv_mode = EMI.investment_mode(inv_data)
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
@@ -193,14 +189,14 @@ end
                 if isnothing(t_inv_prev)
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv])
-                                        >= max(capacity(sink, t) - inv_data[1].trans_start,
-                                            EMI.min_add(tm, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
+                                        >= max(capacity(sink, t) - inv_data.initial,
+                                            EMI.min_add(inv_data, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 else
                     for t ∈ t_inv
                         @test (value.(m[:trans_cap_add][tm, t_inv])
                                         ⪆ max(capacity(sink, t) - value.(m[:trans_cap_current][tm, t_inv_prev]),
-                                            EMI.min_add(tm, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
+                                            EMI.min_add(inv_data, t) * value.(m[:trans_cap_invest_b][tm, t_inv])))
                     end
                 end
             end
@@ -216,17 +212,20 @@ end
         end
     end
     @testset "Investment costs" begin
-        @test sum(value(m[:trans_cap_add][tm, t_inv]) * EMI.capex(tm, t_inv) +
-            EMI.capex_offset(tm, t_inv) * value(m[:trans_cap_invest_b][tm, t_inv]) ≈
-            value(m[:capex_trans][tm, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, atol=TEST_ATOL) == length(𝒯ᴵⁿᵛ)
+        @test sum(value(m[:trans_cap_add][tm, t_inv]) * EMI.capex(inv_data, t_inv) +
+            EMI.capex_offset(inv_mode, t_inv) * value(m[:trans_cap_invest_b][tm, t_inv]) ≈
+            value(m[:trans_cap_capex][tm, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, atol=TEST_ATOL) == length(𝒯ᴵⁿᵛ)
     end
+
+    # Test that the variable cap_invest_b is a binary
+    @test sum(is_binary(m[:trans_cap_invest_b][tm, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 end
 
 # Test set for discrete investments
 @testset "Unidirectional transmission with DiscreteInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = [EMI.TransInvData(
+    inv_data = EMI.TransInvData(
         capex_trans     = FixedProfile(10),     # capex [€/kW]
         trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
         trans_max_add   = FixedProfile(30),     # max_add [kW]
@@ -234,7 +233,7 @@ end
         inv_mode        = DiscreteInvestment(),
         trans_increment = FixedProfile(5),
         trans_start     = 5,
-    )]
+    )
 
     case, modeltype = small_graph_geo(;inv_data)
     m               = optimize(case, modeltype)
@@ -258,8 +257,11 @@ end
                 @test value.(m[:trans_cap_add][tm, t_inv]) == 0
             else
                 @test value.(m[:trans_cap_add][tm, t_inv]) ≈
-                    EMI.increment(tm, t_inv) * value.(m[:trans_cap_invest_b][tm, t_inv])
+                    EMI.increment(inv_data, t_inv) * value.(m[:trans_cap_invest_b][tm, t_inv])
             end
         end
     end
+
+    # Test that the variable cap_invest_b is a binary
+    @test sum(is_integer(m[:trans_cap_invest_b][tm, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
 end

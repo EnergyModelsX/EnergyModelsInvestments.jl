@@ -71,6 +71,68 @@ function InvData(;
     end
 end
 
+
+"""
+Legacy constructor for a `InvData`.
+
+The new storage descriptions allows now for a reduction in functions.
+
+See the documentation for further information regarding how you can translate your existing
+model to the new model.
+"""
+function TransInvData(;
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    trans_max_add::TimeProfile,
+    trans_min_add::TimeProfile,
+    inv_mode::Investment = ContinuousInvestment(),
+    trans_start::Union{Real, Nothing} = nothing,
+    trans_increment::TimeProfile = FixedProfile(0),
+    capex_trans_offset::TimeProfile = FixedProfile(0),
+)
+    @warn(
+        "The used implementation of a `TransInvData` will be discontinued in the near " *
+        "future. See the documentation for the new implementation using the type " *
+        "`StartInvData` and `NoStartInvData` in the section on _How to update your model to
+        the latest versions_.\n" *
+        "The core change is that we allow the individual parameters are moved to the " *
+        "fields `inv_mode` and `life_mode`.\n"
+    )
+
+    # Create the new investment mode structures
+    if isa(inv_mode, BinaryInvestment)
+        tmp_inv_mode = BinaryInvestment()
+    elseif isa(inv_mode, FixedInvestment)
+        tmp_inv_mode = FixedInvestment()
+    elseif isa(inv_mode, DiscreteInvestment)
+        tmp_inv_mode = DiscreteInvestment(trans_increment)
+    elseif isa(inv_mode, ContinuousInvestment)
+        tmp_inv_mode = ContinuousInvestment(trans_min_add, trans_max_add)
+    elseif isa(inv_mode, SemiContinuousInvestment)
+        tmp_inv_mode = SemiContinuousInvestment(trans_min_add, trans_max_add)
+    elseif isa(inv_mode, SemiContinuousOffsetInvestment)
+        tmp_inv_mode = SemiContinuousOffsetInvestment(trans_min_add, trans_max_add, capex_trans_offset)
+    end
+
+    # Create the new generalized investment data
+    if isnothing(trans_start)
+        return NoStartInvData(
+            capex_trans,
+            trans_max_inst,
+            tmp_inv_mode,
+            UnlimitedLife(),
+        )
+    else
+        return StartInvData(
+            capex_trans,
+            trans_max_inst,
+            trans_start,
+            tmp_inv_mode,
+            UnlimitedLife(),
+        )
+    end
+end
+
 """
 Legacy constructor for a `InvDataStorage`.
 

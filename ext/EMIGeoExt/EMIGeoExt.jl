@@ -5,6 +5,7 @@ using EnergyModelsInvestments
 using EnergyModelsGeography
 using JuMP
 using TimeStruct
+using SparseVariables
 
 const EMB = EnergyModelsBase
 const EMI = EnergyModelsInvestments

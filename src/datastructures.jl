@@ -281,38 +281,3 @@ Hence, the name of the parameters have to be specified.
     level::Union{GeneralInvData, Nothing} = nothing
     discharge::Union{GeneralInvData, Nothing} = nothing
 end
-
-""" Extra data for investing in transmission.
-
-Define the structure for the additional parameters passed to the technology structures \
-defined in other packages. It uses the macro `Base.@kwdef` to use keyword arguments and \
-default values. Hence, the name of the parameters have to be specified.
-
-# Fields
-- **`capex_trans::TimeProfile`** Capital expenditure for the transmission capacity, here \
-investment costs of the transmission in each period.\n
-- **`trans_max_inst::TimeProfile`** Maximum possible installed transmission capacity in \
-each period.\n
-- **`trans_max_add::TimeProfile`** Maximum transmission capacity addition in one period \
-from the previous.\n
-- **`trans_min_add::TimeProfile`** Minimum transmission capacity addition in one period \
-from the previous.\n
-- **`inv_mode::Investment = ContinuousInvestment()`** Type of the investment: \
-`BinaryInvestment`, `DiscreteInvestment`, `ContinuousInvestment`, \
-`SemiContinuousInvestment` or `FixedInvestment`.\n
-- **`trans_start::Union{Real, Nothing} = nothing`** Starting transmission capacity in \
-first period. If nothing is given, it is set by get_start_cap() to the capacity \
-`trans_cap` of the transmission.\n
-- **`trans_increment::TimeProfile = FixedProfile(0)`** Transmission capacity increment \
-used in the case of `DiscreteInvestment`\n
-"""
-Base.@kwdef struct TransInvData <: InvestmentData
-    capex_trans::TimeProfile
-    trans_max_inst::TimeProfile
-    trans_max_add::TimeProfile
-    trans_min_add::TimeProfile
-    inv_mode::EnergyModelsInvestments.Investment = ContinuousInvestment()
-    trans_start::Union{Real, Nothing} = 0 # Nothing caused error in one of the examples
-    trans_increment::TimeProfile = FixedProfile(0)
-    capex_trans_offset::TimeProfile = FixedProfile(0)
-end
