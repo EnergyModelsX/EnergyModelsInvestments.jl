@@ -156,7 +156,6 @@ function small_graph_stor(;
             )
         ]
     end
-    StrategicProfile([20, 30])
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     source = RefSource(

@@ -339,13 +339,12 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        insertvar!(invest_b_all, n, t_inv)
-        set_binary(invest_b_all[n, t_inv])
+        insertvar!(var_invest_b, n, t_inv)
+        set_binary(var_invest_b[n, t_inv])
     end
 
     # Deduce the required variables
     var_current = get_var_current(m, prefix, n)
-    var_invest_b = invest_b_all[n, :]
 
     # Extract the capacity from the node
     if isnothing(field)

@@ -428,4 +428,61 @@ end
         @test sum(is_fixed(m[:stor_level_invest_b][stor, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
         @test sum(is_fixed(m[:stor_charge_invest_b][stor, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
     end
+
+    @testset "BinaryInvestment" begin
+
+        # Variation in the test structure
+        inv_data = [
+            StorageInvData(
+                charge = StartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(30),
+                    min_add = FixedProfile(15),
+                    inv_mode = BinaryInvestment(),
+                    initial = 0,
+                ),
+                level = StartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(150),
+                    inv_mode = BinaryInvestment(),
+                    initial = 0,
+                )
+            ),
+        ]
+        rate_cap = FixedProfile(30)
+        stor_cap = FixedProfile(200)
+
+        # Creation and solving of the model
+        case, modeltype = small_graph_stor(;inv_data, rate_cap, stor_cap)
+        m               = optimize(case, modeltype)
+
+        # Extraction of required data
+        source = case[:nodes][1]
+        stor   = case[:nodes][2]
+        sink   = case[:nodes][3]
+        𝒯    = case[:T]
+        𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+        inv_data_charge = EMI.investment_data(stor, :charge)
+        inv_data_level = EMI.investment_data(stor, :level)
+
+        # General tests for installed capacity
+        general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
+
+        inv_profile_charge = StrategicProfile([30, 0, 0, 0])
+        inv_profile_stor = StrategicProfile([200, 0, 0, 0])
+
+        # Test that the investments are happening based on the specified profile
+        @test sum(
+            value.(m[:stor_charge_add][stor, t_inv]) ≈ inv_profile_charge[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
+            ) == length(𝒯ᴵⁿᵛ)
+            @test sum(
+                value.(m[:stor_level_add][stor, t_inv]) ≈ inv_profile_stor[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
+                ) == length(𝒯ᴵⁿᵛ)
+
+        # Test that the variables and `stor_charge_invest_b` are fixed
+        @test sum(is_binary(m[:stor_charge_invest_b][stor, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+    end
 end
