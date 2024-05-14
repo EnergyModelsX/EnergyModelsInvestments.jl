@@ -120,10 +120,10 @@ function EMB.check_node_data(
     end
 
     for cap_fields ∈ fieldnames(typeof(data))
-        inv_data = getfield(data, cap_fields)
-        isnothing(inv_data) && continue
+        sub_data = getfield(data, cap_fields)
+        isnothing(sub_data) && continue
         check_inv_data(
-            inv_data,
+            sub_data,
             capacity(getproperty(n, cap_fields)),
             𝒯,
             " of field `" * String(cap_fields) * "`",

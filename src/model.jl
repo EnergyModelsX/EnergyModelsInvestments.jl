@@ -243,7 +243,7 @@ function add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype
     set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype)
 
     # Constraints for minimum investments
-    set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ)
+    set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ)
 end
 
 
@@ -319,23 +319,23 @@ function set_capacity_installation(m, n, 𝒯ᴵⁿᵛ, ::FixedInvestment)
 end
 
 """
-    set_storage_installation(m, n, 𝒯ᴵⁿᵛ)
+    set_capacity_installation(m, n, field, prefix, 𝒯ᴵⁿᵛ)
 
-Add constraints related to storage installation depending on investment mode of node `n`
+Add constraints related to installation depending on investment mode of type `n`.
 """
-set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ) =
-    set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
+set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ) =
+    set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, investment_mode(n, cap))
 
-function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::Investment)
+function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::Investment)
     # Deduce the required variable
     var_add = get_var_add(m, prefix, n)
 
     # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] <= max_add(inv_data, t_inv))
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] >= min_add(inv_data, t_inv))
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] <= max_add(inv_mode, t_inv))
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] >= min_add(inv_mode, t_inv))
 end
 
-function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
+function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::BinaryInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -360,7 +360,7 @@ function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, :
     )
 end
 
-function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
+function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::DiscreteInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     var_remove_b = get_var_remove_b(m, prefix)
@@ -378,15 +378,15 @@ function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, :
     # Set the limits
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_add[t_inv] ==
-            increment(inv_data, t_inv) * var_invest_b[n, t_inv]
+            increment(inv_mode, t_inv) * var_invest_b[n, t_inv]
     )
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_rem[t_inv] ==
-            increment(inv_data, t_inv) * var_remove_b[n, t_inv]
+            increment(inv_mode, t_inv) * var_remove_b[n, t_inv]
     )
 end
 
-function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
+function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -400,15 +400,15 @@ function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, :
     # Set the limits
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_add[t_inv] <=
-            max_add(inv_data, t_inv) * var_invest_b[n, t_inv]
+            max_add(inv_mode, t_inv) * var_invest_b[n, t_inv]
     )
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_add[t_inv] >=
-            min_add(inv_data, t_inv) * var_invest_b[n, t_inv]
+            min_add(inv_mode, t_inv) * var_invest_b[n, t_inv]
     )
 end
 
-function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::FixedInvestment)
+function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::FixedInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ

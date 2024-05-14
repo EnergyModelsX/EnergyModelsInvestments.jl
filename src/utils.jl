@@ -297,6 +297,13 @@ are continuous.
 investment_mode(inv_data::GeneralInvData) = inv_data.inv_mode
 
 """
+    investment_mode(type, field::Symbol)
+
+Return the investment mode of the `Storage` node `n` and the capacity `field`.
+"""
+investment_mode(type, field::Symbol) = investment_mode(investment_data(type, field))
+
+"""
     lifetime_mode(inv_data::GeneralInvData)
 
 Return the lifetime mode of the investment data `inv_data`. By default, all investments
