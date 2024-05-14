@@ -50,11 +50,11 @@ function InvDataStorage(;
         inv_mode_rate = DiscreteInvestment(rate_increment)
         inv_mode_cap = DiscreteInvestment(stor_increment)
     elseif isa(inv_mode, ContinuousInvestment)
-        inv_mode_rate = ContinuousInvestment(rate_max_add, rate_min_add)
-        inv_mode_cap = ContinuousInvestment(stor_max_add, stor_min_add)
+        inv_mode_rate = ContinuousInvestment(rate_min_add, rate_max_add)
+        inv_mode_cap = ContinuousInvestment(stor_min_add, stor_max_add)
     elseif isa(inv_mode, SemiContinuousInvestment)
-        inv_mode_rate = SemiContinuousInvestment(rate_max_add, rate_min_add)
-        inv_mode_cap = SemiContinuousInvestment(stor_max_add, stor_min_add)
+        inv_mode_rate = SemiContinuousInvestment(rate_min_add, rate_max_add)
+        inv_mode_cap = SemiContinuousInvestment(stor_min_add, stor_max_add)
     end
 
     # Create the new lifetime mode structures
@@ -71,34 +71,34 @@ function InvDataStorage(;
     # Create the new generalized investment data
     if isnothing(rate_start)
         charge_type = NoStartInvData(
-            capex = capex_rate,
-            max_inst = rate_max_inst,
-            inv_mode = inv_mode_rate,
-            life_mode = tmp_life_mode,
+            capex_rate,
+            rate_max_inst,
+            inv_mode_rate,
+            tmp_life_mode,
         )
     else
         charge_type = StartInvData(
-            capex = capex_rate,
-            max_inst = rate_max_inst,
-            initial = rate_start,
-            inv_mode = inv_mode_rate,
-            life_mode = tmp_life_mode,
+            capex_rate,
+            rate_max_inst,
+            rate_start,
+            inv_mode_rate,
+            tmp_life_mode,
         )
     end
     if isnothing(stor_start)
         level_type = NoStartInvData(
-            capex = capex_stor,
-            max_inst = stor_max_inst,
-            inv_mode = inv_mode_cap,
-            life_mode = tmp_life_mode,
+            capex_stor,
+            stor_max_inst,
+            inv_mode_cap,
+            tmp_life_mode,
         )
     else
         level_type = StartInvData(
-            capex = capex_stor,
-            max_inst = stor_max_inst,
-            initial = stor_start,
-            inv_mode = inv_mode_cap,
-            life_mode = tmp_life_mode,
+            capex_stor,
+            stor_max_inst,
+            stor_start,
+            inv_mode_cap,
+            tmp_life_mode,
         )
     end
 

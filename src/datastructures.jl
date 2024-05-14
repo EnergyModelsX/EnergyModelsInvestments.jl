@@ -71,14 +71,14 @@ The increment for the discrete investment can be different for the individual st
 periods.
 
 # Fields
-- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
 - **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
   case of `ContinuousInvestment`, this implies that the model **must** invest at least
   in this capacity in each strategic period.
+- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
 """
 struct ContinuousInvestment <: Investment
-    max_add::TimeProfile
     min_add::TimeProfile
+    max_add::TimeProfile
 end
 """
     FixedInvestment <: Investment
@@ -110,15 +110,15 @@ still linear dependent on the
 Semi-continuous investments introduce one binary variable for each strategic period.
 
 # Fields
-- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
 - **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
   case of `SemiContinuousInvestment`, this implies that the model **must** invest at least
   in this capacity in each strategic period. The model can also choose not too invest at
   all.
+- **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
 """
 struct SemiContinuousInvestment <: SemiContiInvestment
-    max_add::TimeProfile
     min_add::TimeProfile
+    max_add::TimeProfile
 end
 
 """
@@ -139,8 +139,8 @@ Semi-continuous investments introduce one binary variable for each strategic per
 - **`capex_offset::TimeProfile`** is offset for the CAPEX in a strategic period.
 """
 struct SemiContinuousOffsetInvestment <: SemiContiInvestment
-    max_add::TimeProfile
     min_add::TimeProfile
+    max_add::TimeProfile
     capex_offset::TimeProfile
 end
 
@@ -270,7 +270,7 @@ Hence, the name of the parameters have to be specified.
   alternatives can be used: [`UnlimitedLife`](@ref), [`StudyLife`](@ref), [`PeriodLife`](@ref)
   or [`RollingLife`](@ref).
 """
-@kwdef struct NoStartInvData <: GeneralInvData
+struct NoStartInvData <: GeneralInvData
     capex::TimeProfile
     max_inst::TimeProfile
     inv_mode::Investment
@@ -290,7 +290,7 @@ Hence, the name of the parameters have to be specified.
 # Fields in addition to [`NoStartInvData`](@ref)
 - **`initial::Real`** is the initial capacity.
 """
-@kwdef struct StartInvData <: GeneralInvData
+struct StartInvData <: GeneralInvData
     capex::TimeProfile
     max_inst::TimeProfile
     initial::Real

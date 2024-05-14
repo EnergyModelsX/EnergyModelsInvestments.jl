@@ -281,16 +281,16 @@ function get_sub_system_data(
             [
                 StorageInvData(
                     charge = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(600),
-                        inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(0)),
-                        life_mode = UnlimitedLife(),
+                        FixedProfile(500),
+                        FixedProfile(600),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
+                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(600),
-                        inv_mode = ContinuousInvestment(FixedProfile(600), FixedProfile(0)),
-                        life_mode = UnlimitedLife(),
+                        FixedProfile(500),
+                        FixedProfile(600),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
+                        UnlimitedLife(),
                     )
                 ),
             ],
@@ -321,16 +321,16 @@ function get_sub_system_data(
             [
                 StorageInvData(
                     charge = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(30),
-                        inv_mode = ContinuousInvestment(FixedProfile(3), FixedProfile(0)),
-                        life_mode = UnlimitedLife(),
+                        FixedProfile(500),
+                        FixedProfile(30),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(3)),
+                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(50),
-                        inv_mode = ContinuousInvestment(FixedProfile(2), FixedProfile(0)),
-                        life_mode = UnlimitedLife(),
+                        FixedProfile(500),
+                        FixedProfile(50),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(2)),
+                        UnlimitedLife(),
                     )
                 ),
             ],
