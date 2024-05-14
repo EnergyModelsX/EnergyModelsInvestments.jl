@@ -211,11 +211,10 @@ function get_sub_system_data(
             FixedProfile(100),
             Dict(NG => 1),
             [
-                NoStartInvData(
+                SingleInvData(
                     FixedProfile(1000), # capex [€/kW]
                     FixedProfile(200),  # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(10), FixedProfile(200)), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 ),
             ],
         ),
@@ -226,12 +225,11 @@ function get_sub_system_data(
             FixedProfile(100),
             Dict(Coal => 1),
             [
-                StartInvData(
+                SingleInvData(
                     FixedProfile(1000), # capex [€/kW]
                     FixedProfile(200),  # max installed capacity [kW]
                     0,
                     ContinuousInvestment(FixedProfile(10), FixedProfile(200)), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 ),
             ],
         ),
@@ -243,11 +241,10 @@ function get_sub_system_data(
             Dict(NG => 2),
             Dict(Power => 1, CO2 => 0),
             [
-                NoStartInvData(
+                SingleInvData(
                     FixedProfile(600),  # capex [€/kW]
                     FixedProfile(25),   # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 ),
                 CaptureEnergyEmissions(0.9)
             ],
@@ -260,11 +257,10 @@ function get_sub_system_data(
             Dict(Coal => 2.5),
             Dict(Power => 1),
             [
-                NoStartInvData(
+                SingleInvData(
                     FixedProfile(800),  # capex [€/kW]
                     FixedProfile(25),   # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 ),
                 EmissionsEnergy(),
             ],
@@ -282,13 +278,11 @@ function get_sub_system_data(
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
-                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
-                        UnlimitedLife(),
                     )
                 ),
             ],
@@ -301,11 +295,10 @@ function get_sub_system_data(
             Dict(Coal => 2.5),
             Dict(Power => 1),
             [
-                NoStartInvData(
+                SingleInvData(
                     FixedProfile(10000),    # capex [€/kW]
                     FixedProfile(25),       # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(0), FixedProfile(2)), # investment mode
-                    UnlimitedLife(),        # lifetime mode
                 ),
                 EmissionsEnergy(),
             ],
@@ -323,13 +316,11 @@ function get_sub_system_data(
                         FixedProfile(500),
                         FixedProfile(30),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(3)),
-                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         FixedProfile(500),
                         FixedProfile(50),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(2)),
-                        UnlimitedLife(),
                     )
                 ),
             ],
@@ -342,11 +333,10 @@ function get_sub_system_data(
             Dict(Coal => 2.5),
             Dict(Power => 1),
             [
-                NoStartInvData(
-                    FixedProfile(10000),        # capex [€/kW]
-                    FixedProfile(10000),     # max installed capacity [kW]
+                SingleInvData(
+                    FixedProfile(10000),    # capex [€/kW]
+                    FixedProfile(10000),    # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(0), FixedProfile(10000)), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 ),
                 EmissionsEnergy(),
             ],

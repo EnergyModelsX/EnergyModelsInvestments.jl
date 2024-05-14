@@ -1,12 +1,30 @@
 
 
 """
+    InvData(;
+        capex_cap::TimeProfile,
+        cap_max_inst::TimeProfile,
+        cap_max_add::TimeProfile,
+        cap_min_add::TimeProfile,
+        inv_mode::Investment = ContinuousInvestment(),
+        cap_start::Union{Real, Nothing} = nothing,
+        cap_increment::TimeProfile = FixedProfile(0),
+        life_mode::LifetimeMode = UnlimitedLife(),
+        lifetime::TimeProfile = FixedProfile(0),
+    )
+
 Legacy constructor for a `InvData`.
 
-The new storage descriptions allows now for a reduction in functions.
+The new storage descriptions allows now for a reduction in functions which is used
+to make `EnergModelsInvestments` less dependent on `EnergyModelsBase`.
 
-See the documentation for further information regarding how you can translate your existing
-model to the new model.
+The core changes to the existing structure is the move of the required parameters to the
+type [`Investment`](@ref) (_e.g._, the minimum and maximum added capacity is only required
+for investment mdodes that require these parameters) as well as moving the `lifetime` to the
+type [`LifetimeMode`], when required..
+
+See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models.html)_
+for further information regarding how you can translate your existing model to the new model.
 """
 function InvData(;
     capex_cap::TimeProfile,
@@ -22,10 +40,10 @@ function InvData(;
     @warn(
         "The used implementation of a `InvData` will be discontinued in the near " *
         "future. See the documentation for the new implementation using the type " *
-        "`StartInvData` and `NoStartInvData` in the section on _How to update your model to
-        the latest versions_.\n" *
+        "`SingleInvData` in the section on _How to update your model to the latest versions_.\n" *
         "The core change is that we allow the individual parameters are moved to the " *
-        "fields `inv_mode` and `life_mode`.\n"
+        "fields `inv_mode` and `life_mode`.\n",
+        maxlog = 1
     )
 
     # Create the new investment mode structures
@@ -73,12 +91,29 @@ end
 
 
 """
+InvData(;
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    trans_max_add::TimeProfile,
+    trans_min_add::TimeProfile,
+    inv_mode::Investment = ContinuousInvestment(),
+    trans_start::Union{Real, Nothing} = nothing,
+    trans_increment::TimeProfile = FixedProfile(0),
+    capex_trans_offset::TimeProfile = FixedProfile(0),
+)
+
 Legacy constructor for a `InvData`.
 
-The new storage descriptions allows now for a reduction in functions.
+The new storage descriptions allows now for a reduction in functions which is used
+to make `EnergModelsInvestments` less dependent on `EnergyModelsBase`.
 
-See the documentation for further information regarding how you can translate your existing
-model to the new model.
+The core changes to the existing structure is the move of the required parameters to the
+type [`Investment`](@ref) (_e.g._, the minimum and maximum added capacity is only required
+for investment mdodes that require these parameters) as well as moving the `lifetime` to the
+type [`LifetimeMode`], when required.
+
+See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models.html)_
+for further information regarding how you can translate your existing model to the new model.
 """
 function TransInvData(;
     capex_trans::TimeProfile,
@@ -93,10 +128,10 @@ function TransInvData(;
     @warn(
         "The used implementation of a `TransInvData` will be discontinued in the near " *
         "future. See the documentation for the new implementation using the type " *
-        "`StartInvData` and `NoStartInvData` in the section on _How to update your model to
-        the latest versions_.\n" *
+        "`SingleInvData` in the section on _How to update your model to the latest versions_.\n" *
         "The core change is that we allow the individual parameters are moved to the " *
-        "fields `inv_mode` and `life_mode`.\n"
+        "field `inv_mode` and we allow now for `life_mode`.\n",
+        maxlog = 1,
     )
 
     # Create the new investment mode structures
@@ -116,31 +151,46 @@ function TransInvData(;
 
     # Create the new generalized investment data
     if isnothing(trans_start)
-        return NoStartInvData(
+        return SingleInvData(
             capex_trans,
             trans_max_inst,
             tmp_inv_mode,
-            UnlimitedLife(),
         )
     else
-        return StartInvData(
+        return SingleInvData(
             capex_trans,
             trans_max_inst,
             trans_start,
             tmp_inv_mode,
-            UnlimitedLife(),
         )
     end
 end
 
 """
-Legacy constructor for a `InvDataStorage`.
+    InvDataStorage(;
+        #Investment data related to storage power
+        capex_rate::TimeProfile,
+        rate_max_inst::TimeProfile,
+        rate_max_add::TimeProfile,
+        rate_min_add::TimeProfile,
+        capex_stor::TimeProfile,
+        stor_max_inst::TimeProfile,
+        stor_max_add::TimeProfile,
+        stor_min_add::TimeProfile,
+        inv_mode::Investment = ContinuousInvestment(),
+        rate_start::Union{Real, Nothing} = nothing,
+        stor_start::Union{Real, Nothing} = nothing,
+        rate_increment::TimeProfile = FixedProfile(0),
+        stor_increment::TimeProfile = FixedProfile(0),
+        life_mode::LifetimeMode = UnlimitedLife(),
+        lifetime::TimeProfile = FixedProfile(0),
+    )
 
 Storage descriptions were changed in EnergyModelsBase v0.7 resulting in the requirement for
 rewriting the investment options for `Storage` nodes.
 
-See the documentation for further information regarding how you can translate your existing
-model to the new model.
+See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models.html)_
+for further information regarding how you can translate your existing model to the new model.
 """
 function InvDataStorage(;
     #Investment data related to storage power
@@ -161,7 +211,6 @@ function InvDataStorage(;
     lifetime::TimeProfile = FixedProfile(0),
 )
 
-
     @warn(
         "The used implementation of a `InvDataStorage` will be discontinued in the near " *
         "future. See the documentation for the new implementation using the type " *
@@ -171,7 +220,8 @@ function InvDataStorage(;
         "`level`, as well `discharge` capacities.\n" *
         "This constructore should NOT be used for `HydroStor` or `PumpedHydroStor nodes " *
         "introduced in the package [EnergyModelsRenewableProducers]" *
-        "(https://energymodelsx.github.io/EnergyModelsRenewableProducers.jl/stable/library/public/#EnergyModelsRenewableProducers.HydroStor)."
+        "(https://energymodelsx.github.io/EnergyModelsRenewableProducers.jl/stable/library/public/#EnergyModelsRenewableProducers.HydroStor).",
+        maxlog = 1
     )
 
     # Create the new investment mode structures
@@ -243,11 +293,59 @@ function InvDataStorage(;
     )
 end
 
+"""
+When the field `cap` is not included, it is assumed that its value is `FixedProfile(0)`.
+This behavior is only for allowing the legacy constructor to work, while it will be removed
+in the near future.
+"""
+FixedInvestment() = FixedInvestment(FixedProfile(0))
+"""
+When the field `cap` is not included, it is assumed that its value is `FixedProfile(0)`.
+This behavior is only for allowing the legacy constructor to work, while it will be removed
+in the near future.
+"""
+BinaryInvestment() = BinaryInvestment(FixedProfile(0))
+"""
+When the field `increment` is not included, it is assumed that its value is `FixedProfile(0)`.
+This behavior is only for allowing the legacy constructor to work, while it will be removed
+in the near future.
+"""
 DiscreteInvestment() = DiscreteInvestment(FixedProfile(0))
+"""
+When the fields `min_add` and `max_add` are not included, it is assumed that their values
+are `FixedProfile(0)`. This behavior is only for allowing the legacy constructor to work,
+while it will be removed in the near future.
+"""
 ContinuousInvestment() = ContinuousInvestment(FixedProfile(0), FixedProfile(0))
+"""
+When the fields `min_add` and `max_add` are not included, it is assumed that their values
+are `FixedProfile(0)`. This behavior is only for allowing the legacy constructor to work,
+while it will be removed in the near future.
+"""
 SemiContinuousInvestment() = SemiContinuousInvestment(FixedProfile(0), FixedProfile(0))
-SemiContinuousOffsetInvestment() = SemiContinuousOffsetInvestment(FixedProfile(0), FixedProfile(0), FixedProfile(0))
+"""
+When the fields `min_add`, `max_add`, and `capex_offset` are not included, it is assumed
+that their values are `FixedProfile(0)`. This behavior is only for allowing the legacy
+constructor to work, while it will be removed in the near future.
+"""
+SemiContinuousOffsetInvestment() =
+    SemiContinuousOffsetInvestment(FixedProfile(0), FixedProfile(0), FixedProfile(0))
 
+"""
+When the field `lifetime` is not included, it is assumed that its value is `FixedProfile(0)`.
+This behavior is only for allowing the legacy constructor to work, while it will be removed
+in the near future.
+"""
 StudyLife() = StudyLife(FixedProfile(0))
+"""
+When the field `lifetime` is not included, it is assumed that its value is `FixedProfile(0)`.
+This behavior is only for allowing the legacy constructor to work, while it will be removed
+in the near future.
+"""
 PeriodLife() = PeriodLife(FixedProfile(0))
+"""
+When the field `lifetime` is not included, it is assumed that its value is `FixedProfile(0)`.
+This behavior is only for allowing the legacy constructor to work, while it will be removed
+in the near future.
+"""
 RollingLife() = RollingLife(FixedProfile(0))

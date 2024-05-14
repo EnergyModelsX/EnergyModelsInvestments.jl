@@ -88,14 +88,13 @@ function generate_example_data()
             # Line above: CO2 is required as output for variable definition, but the
             # value does not matter
             [
-                NoStartInvData(
+                SingleInvData(
                     FixedProfile(600*1e3),  # Capex in EUR/MW
                     FixedProfile(40),       # Max installed capacity [MW]
                     SemiContinuousInvestment(FixedProfile(5), FixedProfile(40)),
                     # Line above: Investment mode with the following arguments:
                     # 1. argument: min added capactity per sp [MW]
                     # 2. argument: max added capactity per sp [MW]
-                    UnlimitedLife(),        # Lifetime mode
                 ),
                 CaptureEnergyEmissions(0.9),        # CO2 capture included for the node
             ],

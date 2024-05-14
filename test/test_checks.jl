@@ -5,15 +5,14 @@ EMB.TEST_ENV = true
 
     # Testing, that the checks for NoStartInvData and StartInvData are working
     # - EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
-    @testset "NoStartInvData and StartInvData" begin
+    @testset "SingleInvData" begin
 
         function run_simple_graph(max_add; check_timeprofiles=true)
             investment_data_source = [
-                NoStartInvData(
+                SingleInvData(
                     FixedProfile(1000),     # capex [€/kW]
                     FixedProfile(30),       # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(0), max_add),   # investment mode
-                    UnlimitedLife(),        # lifetime mode
                 ),
             ]
             inv_data = Dict(
@@ -28,17 +27,15 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if we provide two `InvestmentData`
         investment_data_source = [
-            NoStartInvData(
+            SingleInvData(
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(30),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)), # investment mode
-                UnlimitedLife(),        # lifetime mode
             ),
-            NoStartInvData(
+            SingleInvData(
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(30),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
-                UnlimitedLife(),        # lifetime mode
             ),
         ]
         inv_data = Dict(
@@ -82,11 +79,10 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if the capacity is an operational profile
         investment_data_source = [
-            NoStartInvData(
+            SingleInvData(
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(30),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
-                UnlimitedLife(),        # lifetime mode
             ),
         ]
         source = RefSource(
@@ -107,11 +103,10 @@ EMB.TEST_ENV = true
         # Check that we receive an error if the initial capacity is higher than the
         # allowed maximum installed
         investment_data_source = [
-            NoStartInvData(
+            SingleInvData(
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(0),        # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
-                UnlimitedLife(),        # lifetime mode
             ),
         ]
         source = RefSource(
@@ -134,7 +129,6 @@ EMB.TEST_ENV = true
                 FixedProfile(10),       # max installed capacity [kW]
                 30,                     # initial capacity
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
-                UnlimitedLife(),        # lifetime mode
             ),
         ]
         inv_data = Dict(
@@ -146,11 +140,10 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if we provide a larger min_add than max_add
         investment_data_source = [
-            NoStartInvData(
+            SingleInvData(
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(10),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(15), FixedProfile(10)),   # investment mode
-                UnlimitedLife(),        # lifetime mode
             ),
         ]
         inv_data = Dict(
@@ -172,13 +165,11 @@ EMB.TEST_ENV = true
                         FixedProfile(20),
                         FixedProfile(30),
                         ContinuousInvestment(FixedProfile(5), charge_max_add),
-                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(5), level_max_add),
-                        UnlimitedLife(),
                     )
                 )
             ]
@@ -189,12 +180,11 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if we provide the wrong `InvestmentData`
         inv_data = [
-            NoStartInvData(
+            SingleInvData(
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(30),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
-                UnlimitedLife(),
-            ),
+            )
         ]
         case, modeltype = small_graph_stor(;inv_data)
         @test_throws AssertionError optimize(case, modeltype)
@@ -206,13 +196,11 @@ EMB.TEST_ENV = true
                     FixedProfile(20),
                     FixedProfile(30),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
-                    UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                    UnlimitedLife(),
                 )
             ),
             StorageInvData(
@@ -220,13 +208,11 @@ EMB.TEST_ENV = true
                     FixedProfile(20),
                     FixedProfile(30),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
-                    UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                    UnlimitedLife(),
                 )
             ),
         ]
@@ -306,13 +292,11 @@ EMB.TEST_ENV = true
                     FixedProfile(30),
                     40,
                     ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
-                    UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                    UnlimitedLife(),
                 )
             )
         ]
@@ -327,14 +311,12 @@ EMB.TEST_ENV = true
                     FixedProfile(20),
                     FixedProfile(30),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
-                    UnlimitedLife(),
                 ),
                 level = StartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     700,
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                    UnlimitedLife(),
                 )
             )
         ]

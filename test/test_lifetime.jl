@@ -11,7 +11,7 @@ resulting_obj = Dict()
 
                     inv_data = Dict(
                         "investment_data" => [
-                            NoStartInvData(
+                            SingleInvData(
                                 FixedProfile(1000), # capex [€/kW]
                                 FixedProfile(30),   # max installed capacity [kW]
                                 ContinuousInvestment(FixedProfile(0), FixedProfile(30)), # investment mode
@@ -33,7 +33,7 @@ resulting_obj = Dict()
                     push!(resulting_obj["$(sp_dur) years"], objective_value(m))
 
                     source = case[:nodes][1]
-                    inv_data = EMI.investment_data(source)
+                    inv_data = EMI.investment_data(source, :cap)
                     𝒯 = case[:T]
                     𝒯ⁱⁿᵛ = strategic_periods(𝒯)
 

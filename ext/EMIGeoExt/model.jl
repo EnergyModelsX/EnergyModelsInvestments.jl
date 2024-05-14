@@ -76,11 +76,11 @@ function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInves
     for tm ∈ ℳ
         if EMI.has_investment(tm)
             # Extract the investment data
-            inv_data = EMI.investment_data(tm)
+            inv_data = EMI.investment_data(tm, :cap)
             prefix = :trans_cap
 
             # Add the investment constraints
-            EMI.add_investment_constraints(m, tm, inv_data, nothing, prefix, 𝒯, modeltype)
+            EMI.add_investment_constraints(m, tm, inv_data, :cap, prefix, 𝒯, modeltype)
 
         else
             @constraint(m, [t ∈ 𝒯], m[:trans_cap][tm, t] == capacity(tm, t))

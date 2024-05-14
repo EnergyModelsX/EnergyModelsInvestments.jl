@@ -63,6 +63,7 @@ end
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
     tm  = modes(tr_osl_trd)[1]
+    inv_data = EMI.investment_data(tm, :cap)
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
@@ -113,6 +114,7 @@ end
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
     tm  = modes(tr_osl_trd)[1]
+    inv_data = EMI.investment_data(tm, :cap)
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)
@@ -177,6 +179,7 @@ end
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
     tm  = modes(tr_osl_trd)[1]
+    inv_data = EMI.investment_data(tm, :cap)
     inv_mode = EMI.investment_mode(inv_data)
 
     # Test identifying that the there is no deficit
@@ -246,6 +249,7 @@ end
     sink = case[:nodes][4]
     tr_osl_trd  = case[:transmission][1]
     tm  = modes(tr_osl_trd)[1]
+    inv_data = EMI.investment_data(tm, :cap)
 
     # Test identifying that the there is no deficit
     @test sum(value.(m[:sink_deficit][sink, t])  == 0 for t ∈ 𝒯) == length(𝒯)

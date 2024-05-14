@@ -25,7 +25,7 @@
     @test emissions_CO2 <= [450, 400, 350, 300]
 end
 
-@testset "Test NoStartInvData and StartInvData" begin
+@testset "Test SingleInvData" begin
     @testset "ContinuousInvestment" begin
 
         # Creation and solving of the model
@@ -38,7 +38,7 @@ end
         sink   = case[:nodes][2]
         𝒯    = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-        inv_data = EMI.investment_data(source)
+        inv_data = EMI.investment_data(source, :cap)
 
         @testset "cap_inst" begin
             # Test that cap_inst is less than node.data.max_inst at all times.
@@ -65,12 +65,11 @@ end
 
         inv_data = Dict(
             "investment_data" => [
-                StartInvData(
+                SingleInvData(
                     FixedProfile(1000), # capex [€/kW]
                     FixedProfile(30),   # max installed capacity [kW]
                     0,                  # initial capacity
                     SemiContinuousInvestment(FixedProfile(10), FixedProfile(30)), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 )
             ],
             "profile" => StrategicProfile([0, 20, 25, 30]),
@@ -86,7 +85,7 @@ end
         sink   = case[:nodes][2]
         𝒯    = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-        inv_data = EMI.investment_data(source)
+        inv_data = EMI.investment_data(source, :cap)
 
         @testset "cap_inst" begin
             # Test that cap_inst is less than node.data.max_inst at all times.
@@ -122,12 +121,11 @@ end
 
         # Variation in the test structure
         investment_data_source = [
-            StartInvData(
+            SingleInvData(
                 FixedProfile(1000), # capex [€/kW]
                 FixedProfile(30),   # max installed capacity [kW]
                 0,                  # initial capacity
                 DiscreteInvestment(FixedProfile(8)), # investment mode
-                UnlimitedLife(),    # lifetime mode
             )
         ]
         inv_data = Dict(
@@ -156,21 +154,21 @@ end
     @testset "FixedInvestment" begin
 
         # Variation in the test structure
+        inv_cap = StrategicProfile([0, 20, 25, 30])
         inv_data = Dict(
             "investment_data" => [
-                StartInvData(
+                SingleInvData(
                     FixedProfile(1000), # capex [€/kW]
                     FixedProfile(30),   # max installed capacity [kW]
                     0,                  # initial capacity
-                    FixedInvestment(),   # investment mode
-                    UnlimitedLife(),    # lifetime mode
+                    FixedInvestment(inv_cap),   # investment mode
                 )
             ],
             "profile" => StrategicProfile([0, 20, 25, 30]),
         )
         source = RefSource(
             "-src",
-            StrategicProfile([0, 20, 25, 30]),
+            inv_cap,
             FixedProfile(10),
             FixedProfile(5),
             Dict(Power => 1),
@@ -203,12 +201,11 @@ end
         # Variation in the test structure
         inv_data = Dict(
             "investment_data" => [
-                StartInvData(
+                SingleInvData(
                     FixedProfile(1000), # capex [€/kW]
                     FixedProfile(30),   # max installed capacity [kW]
                     0,                  # initial capacity
                     ContinuousInvestment(min_add_val, max_add_val), # investment mode
-                    UnlimitedLife(),    # lifetime mode
                 )
             ],
             "profile" => StrategicProfile([0, 20, 25, 30])
@@ -270,13 +267,11 @@ end
                     FixedProfile(20),
                     FixedProfile(30),
                     SemiContinuousInvestment(FixedProfile(15), FixedProfile(30)),
-                    UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     SemiContinuousInvestment(FixedProfile(150), FixedProfile(600)),
-                    UnlimitedLife(),
                 )
             ),
         ]
@@ -327,13 +322,11 @@ end
                     FixedProfile(20),
                     FixedProfile(30),
                     DiscreteInvestment(FixedProfile(5)),
-                    UnlimitedLife(),
                 ),
                 level = NoStartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     DiscreteInvestment(FixedProfile(150)),
-                    UnlimitedLife(),
                 )
             ),
         ]
@@ -374,27 +367,24 @@ end
     @testset "FixedInvestment" begin
 
         # Variation in the test structure
+        rate_cap = StrategicProfile([15, 20])
+        stor_cap = StrategicProfile([150, 200])
         inv_data = [
             StorageInvData(
                 charge = StartInvData(
                     FixedProfile(20),
                     FixedProfile(30),
                     0,
-                    FixedInvestment(),
-                    UnlimitedLife(),
+                    FixedInvestment(rate_cap),
                 ),
                 level = StartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     0,
-                    FixedInvestment(),
-                    UnlimitedLife(),
+                    FixedInvestment(stor_cap),
                 )
             ),
         ]
-        rate_cap = StrategicProfile([15, 20])
-        stor_cap = StrategicProfile([150, 200])
-
         # Creation and solving of the model
         case, modeltype = small_graph_stor(;inv_data, rate_cap, stor_cap)
         m               = optimize(case, modeltype)
@@ -411,10 +401,9 @@ end
         # General tests for installed capacity
         general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
-        inv_profile_charge = StrategicProfile([15, 5, 0, 0])
-        inv_profile_stor = StrategicProfile([150, 50, 0, 0])
-
         # Test that the investments are happening based on the specified profile
+        inv_profile_charge = StrategicProfile([15, 5])
+        inv_profile_stor = StrategicProfile([150, 50])
         @test sum(
             value.(m[:stor_charge_add][stor, t_inv]) ≈ inv_profile_charge[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
             ) == length(𝒯ᴵⁿᵛ)
@@ -430,26 +419,24 @@ end
     @testset "BinaryInvestment" begin
 
         # Variation in the test structure
+        rate_cap = FixedProfile(30)
+        stor_cap = FixedProfile(200)
         inv_data = [
             StorageInvData(
                 charge = StartInvData(
                     FixedProfile(20),
                     FixedProfile(30),
                     0,
-                    BinaryInvestment(),
-                    UnlimitedLife(),
+                    BinaryInvestment(rate_cap),
                 ),
                 level = StartInvData(
                     FixedProfile(500),
                     FixedProfile(600),
                     0,
-                    BinaryInvestment(),
-                    UnlimitedLife(),
+                    BinaryInvestment(stor_cap),
                 )
             ),
         ]
-        rate_cap = FixedProfile(30)
-        stor_cap = FixedProfile(200)
 
         # Creation and solving of the model
         case, modeltype = small_graph_stor(;inv_data, rate_cap, stor_cap)
@@ -467,10 +454,9 @@ end
         # General tests for installed capacity
         general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
-        inv_profile_charge = StrategicProfile([30, 0, 0, 0])
-        inv_profile_stor = StrategicProfile([200, 0, 0, 0])
-
         # Test that the investments are happening based on the specified profile
+        inv_profile_charge = StrategicProfile([30, 0])
+        inv_profile_stor = StrategicProfile([200, 0])
         @test sum(
             value.(m[:stor_charge_add][stor, t_inv]) ≈ inv_profile_charge[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ
             ) == length(𝒯ᴵⁿᵛ)

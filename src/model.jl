@@ -146,11 +146,11 @@ function EMB.constraints_capacity_installed(m, n::EMB.Node, 𝒯::TimeStructure,
 
     if has_investment(n)
         # Extract the investment data
-        inv_data = investment_data(n)
+        inv_data = investment_data(n, :cap)
         prefix = :cap
 
         # Add the investment constraints
-        add_investment_constraints(m, n, inv_data, nothing, prefix, 𝒯, modeltype)
+        add_investment_constraints(m, n, inv_data, :cap, prefix, 𝒯, modeltype)
 
     else
         @constraint(m, [t ∈ 𝒯], m[:cap_inst][n, t] == capacity(n, t))
@@ -217,21 +217,18 @@ function add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype
         end
     end
     # Constraints for investments
-    set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ)
+    set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, investment_mode(n, cap))
 
     # Constraints for the CAPEX calculation
     set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype)
 end
 
 """
-    set_capacity_installation(m, n, field, prefix, 𝒯ᴵⁿᵛ)
+    set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, inv_mode)
 
 Add constraints related to installation depending on investment mode of type `n`.
 """
-set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ) =
-    set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, investment_mode(n, cap))
-
-function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::Investment)
+function set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, inv_mode::Investment)
     # Deduce the required variable
     var_add = get_var_add(m, prefix, n)
 
@@ -240,7 +237,7 @@ function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::I
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] >= min_add(inv_mode, t_inv))
 end
 
-function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::BinaryInvestment)
+function set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, inv_mode::BinaryInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -251,21 +248,14 @@ function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::B
     # Deduce the required variables
     var_current = get_var_current(m, prefix, n)
 
-    # Extract the capacity from the node
-    if isnothing(cap)
-        cap_used = capacity(n)
-    else
-        cap_used = capacity(getproperty(n, cap))
-    end
-
     # Set the limits
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current[t_inv] ==
-        cap_used[t_inv] * var_invest_b[n, t_inv]
+        invest_capacity(inv_mode, t_inv) * var_invest_b[n, t_inv]
     )
 end
 
-function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::DiscreteInvestment)
+function set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, inv_mode::DiscreteInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     var_remove_b = get_var_remove_b(m, prefix)
@@ -291,7 +281,7 @@ function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::D
     )
 end
 
-function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
+function set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -313,7 +303,7 @@ function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::S
     )
 end
 
-function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::FixedInvestment)
+function set_capacity_installation(m, n, prefix, 𝒯ᴵⁿᵛ, inv_mode::FixedInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -324,17 +314,10 @@ function set_capacity_installation(m, n, cap, prefix, 𝒯ᴵⁿᵛ, inv_mode::F
     # Deduce the required variables
     var_current = get_var_current(m, prefix, n)
 
-    # Extract the capacity from the node
-    if isnothing(cap)
-        cap_used = capacity(n)
-    else
-        cap_used = capacity(getproperty(n, cap))
-    end
-
     # Set the limits
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current[t_inv] ==
-            cap_used[t_inv] * var_invest_b[n, t_inv]
+        invest_capacity(inv_mode, t_inv) * var_invest_b[n, t_inv]
     )
 end
 

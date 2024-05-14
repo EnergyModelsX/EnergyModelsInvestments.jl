@@ -40,12 +40,16 @@ abstract type Investment end
     BinaryInvestment <: Investment
 
 Binary investment in a given capacity with binary variables.
-The chosen capacity within a strategic period is given by the capacity of the Node.
+The chosen capacity within a strategic period is given by the field `cap`.
 
-Binary investments do not require additional input aside the specified input.
 Binary investments introduce one binary variable for each strategic period.
+
+# Fields
+- **`cap::TimeProfile`** is capacity used for the fixed investments.
 """
-struct BinaryInvestment <: Investment end
+struct BinaryInvestment <: Investment
+    cap::TimeProfile
+end
 
 """
     DiscreteInvestment <: Investment
@@ -84,11 +88,14 @@ end
     FixedInvestment <: Investment
 
 Fixed investment in a given capacity.
-The model is forced to invest in the capacity provided by the node.
+The model is forced to invest in the capacity provided by the field `cap`.
 
-Fixed investments do not require additional input aside the specified input.
+# Fields
+- **`cap::TimeProfile`** is capacity used for the fixed investments.
 """
-struct FixedInvestment <: Investment end
+struct FixedInvestment <: Investment
+    cap::TimeProfile
+end
 
 """
     SemiContiInvestment <: Investment
@@ -209,16 +216,13 @@ abstract type InvestmentData <: EMB.Data end
 
 Supertype for investment data for nodal investments.
 """
-abstract type GeneralInvData <: InvestmentData end
+abstract type GeneralInvData end
 
 """
     StartInvData <: GeneralInvData
 
 Investment data in which the initial capacity is not specified in the `InvestmentData`.
 Instead, the initial capacity is deduced from the capacity of the technology.
-
-It uses the macro `Base.@kwdef` to use keyword arguments and default values.
-Hence, the name of the parameters have to be specified.
 
 # Fields
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
@@ -238,6 +242,20 @@ struct NoStartInvData <: GeneralInvData
     inv_mode::Investment
     life_mode::LifetimeMode
 end
+function NoStartInvData(
+        capex_trans::TimeProfile,
+        trans_max_inst::TimeProfile,
+        inv_mode::Investment,
+)
+
+    return NoStartInvData(
+        capex_trans,
+        trans_max_inst,
+        inv_mode,
+        UnlimitedLife(),
+    )
+end
+
 
 """
     StartInvData <: GeneralInvData
@@ -245,9 +263,6 @@ end
 Investment data in which the initial capacity is specified in the `InvestmentData`.
 The structure is similiar to [`NoStartInvData`](@ref) with the addition of the field
 **`initial::Real`**, see below.
-
-It uses the macro `Base.@kwdef` to use keyword arguments and default values.
-Hence, the name of the parameters have to be specified.
 
 # Fields in addition to [`NoStartInvData`](@ref)
 - **`initial::Real`** is the initial capacity.
@@ -259,6 +274,22 @@ struct StartInvData <: GeneralInvData
     inv_mode::Investment
     life_mode::LifetimeMode
 end
+function StartInvData(
+        capex_trans::TimeProfile,
+        trans_max_inst::TimeProfile,
+        initial::Real,
+        inv_mode::Investment,
+)
+
+    return StartInvData(
+        capex_trans,
+        trans_max_inst,
+        initial,
+        inv_mode,
+        UnlimitedLife(),
+    )
+end
+
 """
     StorageInvData <: InvestmentData
 
@@ -280,4 +311,103 @@ Hence, the name of the parameters have to be specified.
     charge::Union{GeneralInvData, Nothing} = nothing
     level::Union{GeneralInvData, Nothing} = nothing
     discharge::Union{GeneralInvData, Nothing} = nothing
+end
+
+"""
+    SingleInvData <: InvestmentData
+
+Extra investment data for type investments. The extra investment data has only a single
+field in which [`GeneralInvData`](@ref) has to be added.
+
+The advantage of separating `GeneralInvData` from the `InvestmentData` node is to allow
+easier separation of `EnergyModelsInvestments` and `EnergyModelsBase` and provides the user
+with the potential of introducing new capacities for types.
+
+# Fields
+- **`cap::GeneralInvData`** is the investment data for the capacity.
+
+When multiple inputs are provided, a constructor directly creates the corresponding
+`GeneralInvData`.
+
+# Fields
+- **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
+  relative to the added capacity.
+- **`max_inst::TimeProfile`** is the maximum installed capacity in a strategic period.
+- **`initial::Real`** is the initial capacity. This results in the creation of a
+  [`SingleInvData`](@ref) type for the investment data.
+- **`inv_mode::Investment`** is the chosen investment mode for the technology. The following
+  investment modes are currently available: [`BinaryInvestment`](@ref),
+  [`DiscreteInvestment`](@ref), [`ContinuousInvestment`](@ref), [`SemiContinuousInvestment`](@ref)
+  or [`FixedInvestment`](@ref).
+- **`life_mode::LifetimeMode`** is type of handling the lifetime. Several different
+  alternatives can be used: [`UnlimitedLife`](@ref), [`StudyLife`](@ref), [`PeriodLife`](@ref)
+  or [`RollingLife`](@ref). If `life_mode` is not specified, the model assumes an
+  [`UnlimitedLife`](@ref).
+"""
+struct SingleInvData <: InvestmentData
+    cap::GeneralInvData
+end
+function SingleInvData(
+        capex_trans::TimeProfile,
+        trans_max_inst::TimeProfile,
+        inv_mode::Investment,
+)
+
+    return SingleInvData(
+        NoStartInvData(
+            capex_trans,
+            trans_max_inst,
+            inv_mode,
+        )
+    )
+end
+function SingleInvData(
+        capex_trans::TimeProfile,
+        trans_max_inst::TimeProfile,
+        inv_mode::Investment,
+        life_mode::LifetimeMode,
+)
+
+    return SingleInvData(
+        NoStartInvData(
+            capex_trans,
+            trans_max_inst,
+            inv_mode,
+            life_mode,
+        )
+    )
+end
+function SingleInvData(
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    initial::Real,
+    inv_mode::Investment,
+)
+
+    return SingleInvData(
+        StartInvData(
+            capex_trans,
+            trans_max_inst,
+            initial,
+            inv_mode,
+        )
+    )
+end
+function SingleInvData(
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    initial::Real,
+    inv_mode::Investment,
+    life_mode::LifetimeMode,
+)
+
+    return SingleInvData(
+        StartInvData(
+            capex_trans,
+            trans_max_inst,
+            initial,
+            inv_mode,
+            life_mode,
+        )
+    )
 end

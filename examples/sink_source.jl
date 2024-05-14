@@ -57,7 +57,7 @@ function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
     lifetime = FixedProfile(15)
 
     # Create the investment data for the source node
-    investment_data_source = NoStartInvData(
+    investment_data_source = SingleInvData(
         FixedProfile(300*1e3),  # capex [€/MW]
         FixedProfile(30),       # max installed capacity [MW]
         ContinuousInvestment(FixedProfile(0), FixedProfile(30)),

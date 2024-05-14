@@ -28,7 +28,7 @@ function EMB.check_node_data(
         "Only one `InvestmentData` can be added to each node."
     )
 
-    check_inv_data(data, capacity(n), 𝒯, "", check_timeprofiles)
+    check_inv_data(investment_data(data), capacity(n), 𝒯, "", check_timeprofiles)
 end
 """
     EMB.check_node_data(
@@ -172,7 +172,6 @@ function check_inv_data(
             " the first strategic period for the capacity coupled to the investment data" *
             message * "."
         )
-
     end
 
     # Check on the minmimum and maximum added capacities

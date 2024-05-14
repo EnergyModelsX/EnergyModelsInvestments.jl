@@ -1,7 +1,7 @@
 """
-    EMI.get_var_inst(m, prefix::Symbol, type::EMG.TransmissionMode)
+    EMI.get_var_inst(m, prefix::Symbol, tm::EMG.TransmissionMode)
 
-When the node `type` is used as conditional input, it extracts only the variable for
-the specified node.
+When the transmission mode `tm` is used as conditional input, it extracts only the variable
+for the specified transmission mode.
 """
-EMI.get_var_inst(m, prefix::Symbol, type::EMG.TransmissionMode)  = m[Symbol(prefix)][type, :]
+EMI.get_var_inst(m, prefix::Symbol, tm::EMG.TransmissionMode)  = m[Symbol(prefix)][tm, :]

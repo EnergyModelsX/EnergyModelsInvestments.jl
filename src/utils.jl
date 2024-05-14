@@ -6,6 +6,22 @@ Return the investment data of the type `type`.
 investment_data(type) = filter(data -> typeof(data) <: InvestmentData, type.data)[1]
 
 """
+
+investment_data(inv_data::SingleInvData)
+
+Return the investment data of the investment data `SingleInvData`.
+"""
+investment_data(inv_data::SingleInvData) = inv_data.cap
+
+"""
+    investment_data(type, field::Symbol)
+
+Return the investment data of the type `type` of the capacity `field`.
+"""
+investment_data(type, field::Symbol) =
+    getproperty(investment_data(type), field)
+
+"""
     has_investment(type)
 
 For a given `Node`, checks that it contains the required investment data.
@@ -40,17 +56,10 @@ is `:charge`, `:level`, or `:discharge`.
 function has_investment(n::Storage, field::Symbol)
     (
         hasproperty(n, :data) &&
-        !isempty(filter(data -> typeof(data) <: InvestmentData, n.data)) &&
+        !isempty(filter(data -> typeof(data) <: InvestmentData, node_data(n))) &&
         !isnothing(getproperty(investment_data(n), field))
     )
 end
-
-"""
-    investment_data(type, field::Symbol)
-
-Return the investment data of the type `type`.
-"""
-investment_data(type, field::Symbol) = getproperty(investment_data(type), field)
 
 """
     investment_mode(type)
@@ -66,13 +75,6 @@ Return the investment mode of the investment data `inv_data`. By default, all in
 are continuous.
 """
 investment_mode(inv_data::GeneralInvData) = inv_data.inv_mode
-
-"""
-    investment_mode(type, ::Nothing)
-
-Return the investment mode of the type `type`.
-"""
-investment_mode(type, ::Nothing) = investment_mode(investment_data(type))
 
 """
     investment_mode(type, field::Symbol)
@@ -266,6 +268,34 @@ increment(inv_mode::Investment, t_inv) = inv_mode.increment[t_inv]
 Returns the capacity increment of the investment data `inv_data` in investment period `t_inv`.
 """
 increment(inv_data::GeneralInvData, t_inv) = increment(investment_mode(inv_data), t_inv)
+
+"""
+    invest_capacity(inv_mode::Investment)
+
+Returns the capacity investments of the investment mode `inv_mode` as `TimeProfile`.
+"""
+invest_capacity(inv_mode::Investment) = inv_mode.cap
+"""
+    invest_capacity(inv_data::GeneralInvData)
+
+Returns the capacity investments of the investment data `inv_data` as `TimeProfile`.
+"""
+invest_capacity(inv_data::GeneralInvData) = invest_capacity(investment_mode(inv_data))
+"""
+    invest_capacity(inv_mode::Investment, t_inv)
+
+Returns the capacity profile for investments of the investment mode `inv_mode` in investment
+period `t_inv`.
+"""
+invest_capacity(inv_mode::Investment, t_inv) = inv_mode.cap[t_inv]
+"""
+    invest_capacity(inv_data::GeneralInvData, t_inv)
+
+Returns the capacity profile for investments of the investment data `inv_data` in investment
+period `t_inv`.
+"""
+invest_capacity(inv_data::GeneralInvData, t_inv) =
+    invest_capacity(investment_mode(inv_data), t_inv)
 
 """
     get_var_capex(m, prefix::Symbol)
