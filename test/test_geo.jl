@@ -44,14 +44,11 @@ end
 @testset "Unidirectional transmission with ContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = TransInvData(
-        capex_trans     = FixedProfile(10),     # capex [€/kW]
-        trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
-        trans_max_add   = FixedProfile(30),     # max_add [kW]
-        trans_min_add   = FixedProfile(0),      # min_add [kW]
-        inv_mode        = ContinuousInvestment(),
-        trans_increment = FixedProfile(10),
-        trans_start     = 0,
+    inv_data = SingleInvData(
+        FixedProfile(10),       # capex [€/kW]
+        FixedProfile(250),      # max installed capacity [kW]
+        0,                      # initial capacity [kW]
+        ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
     )
 
     case, modeltype = small_graph_geo(;inv_data)
@@ -96,14 +93,11 @@ end
 @testset "Unidirectional transmission with SemiContinuousInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = EMI.TransInvData(
-        capex_trans     = FixedProfile(10),     # capex [€/kW]
-        trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
-        trans_max_add   = FixedProfile(30),     # max_add [kW]
-        trans_min_add   = FixedProfile(10),     # min_add [kW]
-        inv_mode        = SemiContinuousInvestment(),
-        trans_increment = FixedProfile(10),
-        trans_start     = 0,
+    inv_data = SingleInvData(
+        FixedProfile(10),       # capex [€/kW]
+        FixedProfile(250),      # max installed capacity [kW]
+        0,                      # initial capacity [kW]
+        SemiContinuousInvestment(FixedProfile(10), FixedProfile(30)),
     )
 
     case, modeltype = small_graph_geo(;inv_data)
@@ -160,15 +154,11 @@ end
 @testset "Unidirectional transmission with SemiContinuousOffsetInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = TransInvData(
-        capex_trans     = FixedProfile(1),     # capex [€/kW]
-        capex_trans_offset = FixedProfile(10),    # capex [€]
-        trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
-        trans_max_add   = FixedProfile(30),     # max_add [kW]
-        trans_min_add   = FixedProfile(10),     # min_add [kW]
-        inv_mode        = SemiContinuousOffsetInvestment(),
-        trans_increment = FixedProfile(10),
-        trans_start     = 0,
+    inv_data = SingleInvData(
+        FixedProfile(10),       # capex [€/kW]
+        FixedProfile(250),      # max installed capacity [kW]
+        0,                      # initial capacity [kW]
+        SemiContinuousOffsetInvestment(FixedProfile(10), FixedProfile(30), FixedProfile(10)),
     )
 
     case, modeltype = small_graph_geo(;inv_data)
@@ -231,14 +221,11 @@ end
 @testset "Unidirectional transmission with DiscreteInvestment" begin
 
     # Creation and run of the optimization problem
-    inv_data = EMI.TransInvData(
-        capex_trans     = FixedProfile(10),     # capex [€/kW]
-        trans_max_inst  = FixedProfile(250),    # max installed capacity [kW]
-        trans_max_add   = FixedProfile(30),     # max_add [kW]
-        trans_min_add   = FixedProfile(10),     # min_add [kW]
-        inv_mode        = DiscreteInvestment(),
-        trans_increment = FixedProfile(5),
-        trans_start     = 5,
+    inv_data = SingleInvData(
+        FixedProfile(10),       # capex [€/kW]
+        FixedProfile(250),      # max installed capacity [kW]
+        0,                      # initial capacity [kW]
+        DiscreteInvestment(FixedProfile(5)),
     )
 
     case, modeltype = small_graph_geo(;inv_data)

@@ -72,41 +72,32 @@ function generate_example_data()
     ]
 
     # Create the investment data for the different power line investment modes
-    inv_data_12 = TransInvData(
-        capex_trans = FixedProfile(500),
-        trans_max_inst = FixedProfile(50),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(0),
-        inv_mode = BinaryInvestment(),
-        trans_start = 0,
+    inv_data_12 = SingleInvData(
+        FixedProfile(500),
+        FixedProfile(50),
+        0,
+        BinaryInvestment(FixedProfile(50.0)),
     )
 
-    inv_data_13 = TransInvData(
-        capex_trans = FixedProfile(10),
-        trans_max_inst = FixedProfile(100),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(10),
-        inv_mode = SemiContinuousInvestment(),
-        trans_start = 0,
+    inv_data_13 =  SingleInvData(
+        FixedProfile(10),
+        FixedProfile(100),
+        0,
+        SemiContinuousInvestment(FixedProfile(10), FixedProfile(100)),
     )
 
-    inv_data_23 = TransInvData(
-        capex_trans = FixedProfile(10),
-        trans_max_inst = FixedProfile(50),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(5),
-        inv_mode = DiscreteInvestment(),
-        trans_increment = FixedProfile(6),
-        trans_start = 20,
+    inv_data_23 = SingleInvData(
+        FixedProfile(10),
+        FixedProfile(50),
+        20,
+        DiscreteInvestment(FixedProfile(6)),
     )
 
-    inv_data_34 = TransInvData(
-        capex_trans = FixedProfile(10),
-        trans_max_inst = FixedProfile(50),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(1),
-        inv_mode = ContinuousInvestment(),
-        trans_start = 0,
+    inv_data_34 = SingleInvData(
+        FixedProfile(10),
+        FixedProfile(50),
+        0,
+        ContinuousInvestment(FixedProfile(1), FixedProfile(100)),
     )
 
     # Create the TransmissionModes and the Transmission corridors
