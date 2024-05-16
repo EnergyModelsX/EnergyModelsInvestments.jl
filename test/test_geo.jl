@@ -27,8 +27,10 @@ end
     tm  = modes(tr_osl_trd)[1]
 
     # Test identifying that the proper deficit is calculated
-    @test sum(value.(m[:sink_deficit][sink, t])
-                        ≈ capacity(sink, t) - capacity(tm, t) for t ∈ 𝒯) == length(𝒯)
+    @test sum(
+        value.(m[:sink_deficit][sink, t])
+            ≈ capacity(sink, t) - capacity(tm, t) for t ∈ 𝒯
+        ) == length(𝒯)
 
     # Test showing that no investment variables are created
     @test isempty((m[:trans_cap_current]))
@@ -74,14 +76,15 @@ end
             @testset "First investment period" begin
                 for t ∈ t_inv
                     @test (value.(m[:trans_cap_add][tm, t_inv])
-                                    ≈ capacity(sink, t)-inv_data.initial)
+                                    ≈ capacity(sink, t)-inv_data.initial) atol=TEST_ATOL
                 end
             end
         else
             @testset "Subsequent investment periods" begin
                 for t ∈ t_inv
                     @test (value.(m[:trans_cap_add][tm, t_inv])
-                            ≈ capacity(sink, t)-value.(m[:trans_cap_current][tm, t_inv_prev]))
+                            ≈ capacity(sink, t) -
+                              value.(m[:trans_cap_current][tm, t_inv_prev])) atol=TEST_ATOL
                 end
             end
         end
@@ -140,8 +143,8 @@ end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_cap_invest_b][tm, t_inv]) == 0
-                    @test value.(m[:trans_cap_add][tm, t_inv]) == 0
+                if value.(m[:trans_cap_invest_b][tm, t_inv]) ≈ 0 atol=TEST_ATOL
+                    @test value.(m[:trans_cap_add][tm, t_inv]) ≈ 0 atol=TEST_ATOL
                 else
                     @test value.(m[:trans_cap_add][tm, t_inv]) ⪆ 0
                 end
@@ -206,8 +209,8 @@ end
 
             # Test that the binary value is regulating the investments
             @testset "Binary value" begin
-                if value.(m[:trans_cap_invest_b][tm, t_inv]) == 0
-                    @test value.(m[:trans_cap_add][tm, t_inv]) == 0
+                if value.(m[:trans_cap_invest_b][tm, t_inv]) ≈ 0
+                    @test value.(m[:trans_cap_add][tm, t_inv]) ≈ 0 atol=TEST_ATOL
                 else
                     @test value.(m[:trans_cap_add][tm, t_inv]) ⪆ 0
                 end
@@ -257,8 +260,8 @@ end
     # Test showing that the investments are as expected
     for t_inv ∈ 𝒯ᴵⁿᵛ
         @testset "Invested capacity $(t_inv.sp)" begin
-            if value.(m[:trans_cap_invest_b][tm, t_inv]) == 0
-                @test value.(m[:trans_cap_add][tm, t_inv]) == 0
+            if value.(m[:trans_cap_invest_b][tm, t_inv]) ≈ 0 atol=TEST_ATOL
+                @test value.(m[:trans_cap_add][tm, t_inv]) ≈ 0 atol=TEST_ATOL
             else
                 @test value.(m[:trans_cap_add][tm, t_inv]) ≈
                     EMI.increment(inv_data, t_inv) * value.(m[:trans_cap_invest_b][tm, t_inv])

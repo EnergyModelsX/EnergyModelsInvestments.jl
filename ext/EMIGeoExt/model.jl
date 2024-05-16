@@ -15,15 +15,17 @@ function EMG.update_objective(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentMod
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     ℳᴵⁿᵛ = filter(EMI.has_investment, ℳ)
     obj  = JuMP.objective_function(m)
-    disc = Discounter(modeltype.r, 𝒯)               # Discount type decleration
+    disc = Discounter(EMI.discount_rate(modeltype), 𝒯)
 
     # Update of the cost function for modes with investments
     for t_inv ∈  𝒯ᴵⁿᵛ, tm ∈ ℳ
-        if tm in ℳᴵⁿᵛ
+        if tm ∈ ℳᴵⁿᵛ
             obj -= objective_weight(t_inv, disc) * m[:trans_cap_capex][tm, t_inv]
         end
-        obj -= duration_strat(t_inv) * objective_weight(t_inv, disc, type="avg") * m[:trans_opex_fixed][tm, t_inv]
-        obj -= duration_strat(t_inv) * objective_weight(t_inv, disc, type="avg") * m[:trans_opex_var][tm, t_inv]
+        obj -= duration_strat(t_inv) * objective_weight(t_inv, disc, type="avg") *
+            m[:trans_opex_fixed][tm, t_inv]
+        obj -= duration_strat(t_inv) * objective_weight(t_inv, disc, type="avg") *
+            m[:trans_opex_var][tm, t_inv]
     end
 
     @objective(m, Max, obj)
@@ -64,9 +66,9 @@ function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInves
     ℳᴵⁿᵛ = filter(EMI.has_investment, ℳ)
 
     # Add transmission specific investment variables for each strategic period:
-    @variable(m, trans_cap_current[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)   # Installed capacity
-    @variable(m, trans_cap_add[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Add capacity
-    @variable(m, trans_cap_rem[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]  >= 0)      # Remove capacity
+    @variable(m, trans_cap_current[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)    # Installed capacity
+    @variable(m, trans_cap_add[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)        # Add capacity
+    @variable(m, trans_cap_rem[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)        # Remove capacity
     @variable(m, trans_cap_invest_b[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
     @variable(m, trans_cap_remove_b[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
 
@@ -75,15 +77,17 @@ function EMG.variables_trans_capacity(m, 𝒯, ℳ, modeltype::EMI.AbstractInves
     # (One alternative could be to build variables iteratively with JuMPUtils.jl)
     for tm ∈ ℳ
         if EMI.has_investment(tm)
-            # Extract the investment data
+            # Extract the investment data and the discount rate
+            disc_rate = EMI.discount_rate(modeltype)
             inv_data = EMI.investment_data(tm, :cap)
-            prefix = :trans_cap
 
             # Add the investment constraints
-            EMI.add_investment_constraints(m, tm, inv_data, :cap, prefix, 𝒯, modeltype)
+            EMI.add_investment_constraints(m, tm, inv_data, :cap, :trans_cap, 𝒯ᴵⁿᵛ, disc_rate)
 
         else
-            @constraint(m, [t ∈ 𝒯], m[:trans_cap][tm, t] == capacity(tm, t))
+            for t ∈ 𝒯
+                fix(m[:trans_cap][tm, t], capacity(tm, t); force=true)
+            end
         end
     end
 end
