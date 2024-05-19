@@ -57,7 +57,6 @@ function EMG.variables_trans_capex(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestme
     @variable(m, trans_cap_rem[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)        # Remove capacity
     @variable(m, trans_cap_invest_b[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
     @variable(m, trans_cap_remove_b[ℳᴵⁿᵛ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
-
 end
 
 """

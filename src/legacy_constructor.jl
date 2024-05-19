@@ -23,7 +23,7 @@ type [`Investment`](@ref) (_e.g._, the minimum and maximum added capacity is onl
 for investment mdodes that require these parameters) as well as moving the `lifetime` to the
 type [`LifetimeMode`], when required..
 
-See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models.html)_
+See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)_
 for further information regarding how you can translate your existing model to the new model.
 """
 function InvData(;
@@ -37,14 +37,6 @@ function InvData(;
     life_mode::LifetimeMode = UnlimitedLife(),
     lifetime::TimeProfile = FixedProfile(0),
 )
-    @warn(
-        "The used implementation of a `InvData` will be discontinued in the near " *
-        "future. See the documentation for the new implementation using the type " *
-        "`SingleInvData` in the section on _How to update your model to the latest versions_.\n" *
-        "The core change is that we allow the individual parameters are moved to the " *
-        "fields `inv_mode` and `life_mode`.\n",
-        maxlog = 1
-    )
 
     # Create the new investment mode structures
     if isa(inv_mode, BinaryInvestment)
@@ -59,6 +51,15 @@ function InvData(;
         tmp_inv_mode = SemiContinuousInvestment(cap_min_add, cap_max_add)
     end
 
+    @warn(
+        "The used implementation of a `InvData` will be discontinued in the near " *
+        "future. See the documentation for the new implementation using the type " *
+        "`SingleInvData` in the section on _How to update your model to the latest versions_.\n" *
+        "The core change is that we allow the individual parameters are moved to the " *
+        "fields `inv_mode` and `life_mode`.\n",
+        maxlog = 1
+    )
+
     # Create the new lifetime mode structures
     if isa(life_mode, UnlimitedLife)
         tmp_life_mode = UnlimitedLife()
@@ -72,14 +73,14 @@ function InvData(;
 
     # Create the new generalized investment data
     if isnothing(cap_start)
-        return NoStartInvData(
+        return SingleInvData(
             capex_cap,
             cap_max_inst,
             tmp_inv_mode,
             tmp_life_mode,
         )
     else
-        return StartInvData(
+        return SingleInvData(
             capex_cap,
             cap_max_inst,
             cap_start,
@@ -112,7 +113,7 @@ type [`Investment`](@ref) (_e.g._, the minimum and maximum added capacity is onl
 for investment mdodes that require these parameters) as well as moving the `lifetime` to the
 type [`LifetimeMode`], when required.
 
-See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models.html)_
+See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)_
 for further information regarding how you can translate your existing model to the new model.
 """
 function TransInvData(;
@@ -125,15 +126,6 @@ function TransInvData(;
     trans_increment::TimeProfile = FixedProfile(0),
     capex_trans_offset::TimeProfile = FixedProfile(0),
 )
-    @warn(
-        "The used implementation of a `TransInvData` will be discontinued in the near " *
-        "future. See the documentation for the new implementation using the type " *
-        "`SingleInvData` in the section on _How to update your model to the latest versions_.\n" *
-        "The core change is that we allow the individual parameters are moved to the " *
-        "field `inv_mode` and we allow now for `life_mode`.\n",
-        maxlog = 1,
-    )
-
     # Create the new investment mode structures
     if isa(inv_mode, BinaryInvestment)
         tmp_inv_mode = BinaryInvestment()
@@ -148,6 +140,15 @@ function TransInvData(;
     elseif isa(inv_mode, SemiContinuousOffsetInvestment)
         tmp_inv_mode = SemiContinuousOffsetInvestment(trans_min_add, trans_max_add, capex_trans_offset)
     end
+
+    @warn(
+        "The used implementation of a `TransInvData` will be discontinued in the near " *
+        "future. See the documentation for the new implementation using the type " *
+        "`SingleInvData` in the section on _How to update your model to the latest versions_.\n" *
+        "The core change is that we allow the individual parameters are moved to the " *
+        "field `inv_mode` and we allow now for `life_mode`.\n",
+        maxlog = 1,
+    )
 
     # Create the new generalized investment data
     if isnothing(trans_start)
@@ -189,7 +190,7 @@ end
 Storage descriptions were changed in EnergyModelsBase v0.7 resulting in the requirement for
 rewriting the investment options for `Storage` nodes.
 
-See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models.html)_
+See the _[documentation](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)_
 for further information regarding how you can translate your existing model to the new model.
 """
 function InvDataStorage(;
@@ -211,19 +212,6 @@ function InvDataStorage(;
     lifetime::TimeProfile = FixedProfile(0),
 )
 
-    @warn(
-        "The used implementation of a `InvDataStorage` will be discontinued in the near " *
-        "future. See the documentation for the new implementation using the type " *
-        "`StorageInvData` in the section on _How to update your model to the latest " *
-        "versions_.\n" *
-        "The core change is that we allow now for individual investments in `charge`, " *
-        "`level`, as well `discharge` capacities.\n" *
-        "This constructore should NOT be used for `HydroStor` or `PumpedHydroStor nodes " *
-        "introduced in the package [EnergyModelsRenewableProducers]" *
-        "(https://energymodelsx.github.io/EnergyModelsRenewableProducers.jl/stable/library/public/#EnergyModelsRenewableProducers.HydroStor).",
-        maxlog = 1
-    )
-
     # Create the new investment mode structures
     if isa(inv_mode, BinaryInvestment)
         inv_mode_rate = BinaryInvestment()
@@ -241,6 +229,19 @@ function InvDataStorage(;
         inv_mode_rate = SemiContinuousInvestment(rate_min_add, rate_max_add)
         inv_mode_cap = SemiContinuousInvestment(stor_min_add, stor_max_add)
     end
+
+    @warn(
+        "The used implementation of a `InvDataStorage` will be discontinued in the near " *
+        "future. See the documentation for the new implementation using the type " *
+        "`StorageInvData` in the section on _How to update your model to the latest " *
+        "versions_.\n" *
+        "The core change is that we allow now for individual investments in `charge`, " *
+        "`level`, as well `discharge` capacities.\n" *
+        "This constructore should NOT be used for `HydroStor` or `PumpedHydroStor nodes " *
+        "introduced in the package [EnergyModelsRenewableProducers]" *
+        "(https://energymodelsx.github.io/EnergyModelsRenewableProducers.jl/stable/library/public/#EnergyModelsRenewableProducers.HydroStor).",
+        maxlog = 1
+    )
 
     # Create the new lifetime mode structures
     if isa(life_mode, UnlimitedLife)

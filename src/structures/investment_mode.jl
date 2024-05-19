@@ -29,7 +29,7 @@ The chosen capacity within a strategic period is given by the field `cap`.
 Binary investments introduce one binary variable for each strategic period.
 
 # Fields
-- **`cap::TimeProfile`** is capacity used for the fixed investments.
+- **`cap::TimeProfile`** is the capacity used for the fixed investments.
 """
 struct BinaryInvestment <: Investment
     cap::TimeProfile

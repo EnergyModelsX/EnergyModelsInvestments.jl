@@ -6,7 +6,7 @@
     m               = optimize(case, modeltype)
 
     # Test for the total number of variables
-    # (-80 ((6+4)*2*4)  compared to 0.5.x as binaries only defined, if required through SparseVariables)
+    # (-80 ((6+4)*2*4) compared to 0.5.x as binaries only defined, if required through SparseVariables)
     # (+192 (2*4*24) compared to 0.5.x as stor_discharge_use added as variable)
     @test size(all_variables(m))[1] == 10224
 
