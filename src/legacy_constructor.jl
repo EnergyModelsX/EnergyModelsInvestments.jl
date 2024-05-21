@@ -40,9 +40,19 @@ function InvData(;
 
     # Create the new investment mode structures
     if isa(inv_mode, BinaryInvestment)
-        tmp_inv_mode = BinaryInvestment()
+        @error(
+            "BinaryInvestment() cannot use the constructor as it is not possible to " *
+            "deduce the capacity for the investment. You have to instead use the new " *
+            "types as outlined in the documentation (https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)"
+        )
+        return
     elseif isa(inv_mode, FixedInvestment)
-        tmp_inv_mode = FixedInvestment()
+        @error(
+            "FixedInvestment() cannot use the constructor as it is not possible to " *
+            "deduce the capacity for the investment. You have to instead use the new " *
+            "types as outlined in the documentation (https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)"
+        )
+        return
     elseif isa(inv_mode, DiscreteInvestment)
         tmp_inv_mode = DiscreteInvestment(cap_increment)
     elseif isa(inv_mode, ContinuousInvestment)
@@ -128,9 +138,19 @@ function TransInvData(;
 )
     # Create the new investment mode structures
     if isa(inv_mode, BinaryInvestment)
-        tmp_inv_mode = BinaryInvestment()
+        @error(
+            "BinaryInvestment() cannot use the constructor as it is not possible to " *
+            "deduce the capacity for the investment. You have to instead use the new " *
+            "types as outlined in the documentation (https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)"
+        )
+        return
     elseif isa(inv_mode, FixedInvestment)
-        tmp_inv_mode = FixedInvestment()
+        @error(
+            "FixedInvestment() cannot use the constructor as it is not possible to " *
+            "deduce the capacity for the investment. You have to instead use the new " *
+            "types as outlined in the documentation (https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)"
+        )
+        return
     elseif isa(inv_mode, DiscreteInvestment)
         tmp_inv_mode = DiscreteInvestment(trans_increment)
     elseif isa(inv_mode, ContinuousInvestment)
@@ -214,11 +234,19 @@ function InvDataStorage(;
 
     # Create the new investment mode structures
     if isa(inv_mode, BinaryInvestment)
-        inv_mode_rate = BinaryInvestment()
-        inv_mode_cap = BinaryInvestment()
+        @error(
+            "BinaryInvestment() cannot use the constructor as it is not possible to " *
+            "deduce the capacity for the investment. You have to instead use the new " *
+            "types as outlined in the documentation (https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)"
+        )
+        return
     elseif isa(inv_mode, FixedInvestment)
-        inv_mode_rate = FixedInvestment()
-        inv_mode_cap = FixedInvestment()
+        @error(
+            "FixedInvestment() cannot use the constructor as it is not possible to " *
+            "deduce the capacity for the investment. You have to instead use the new " *
+            "types as outlined in the documentation (https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/update-models)"
+        )
+        return
     elseif isa(inv_mode, DiscreteInvestment)
         inv_mode_rate = DiscreteInvestment(rate_increment)
         inv_mode_cap = DiscreteInvestment(stor_increment)
