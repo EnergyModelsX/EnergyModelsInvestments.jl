@@ -5,6 +5,7 @@ These variables are required for being able to extend the model with the potenti
 The current implementation creates different variables for investments in standard `Node`s, `Storage` nodes, and `TransmissionMode`s.
 
 The individual variables can be differentiated in *[Cost variables](@ref var_cost)*, *[Capacity variables](@ref var_capacity)*, and *[Auxiliary variables](@ref var_aux)*.
+In the case of `Storage` nodes, they are only defined if the node has investment in the respective fields, that is, `charge`, `level`, and/or `discharge`.
 
 !!! note
     As it is the case in `EnergyModelsBase`, we define almost exclusively variables relative to the rate in `EnergyModelsInvestments`.
@@ -17,8 +18,9 @@ The individual variables can be differentiated in *[Cost variables](@ref var_cos
 The different variables are:
 
 - ``\texttt{capex\_cap}[n_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `Node` ``n_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``,
-- ``\texttt{capex\_rate}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for rate investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
-- ``\texttt{capex\_stor}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for level investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``, and
+- ``\texttt{stor\_charge\_capex}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for charge capacity investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_level\_capex}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for level investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_discharge\_capex}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for discharge capacity investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``, and
 - ``\texttt{capex\_trans}[m_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `TransmissionMode` ``m_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``.
 
 The total CAPEX takes into account the invested capacity to calculate the total costs as well as the end of horizon value of the individual technologies including discounting.
@@ -33,8 +35,9 @@ In general, we can differentiate in installed capacity variables and change of c
 The installed capacity variables are:
 
 - ``\texttt{cap\_current}[n_\texttt{inv}, t_\texttt{inv}]``: Installed capacity of `Node` ``n_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_rate\_current}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Installed rate capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_cap\_current}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Installed level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``, and
+- ``\texttt{stor\_charge\_current}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Installed charge capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_level\_current}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Installed level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_discharge\_current}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Installed charge capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``, and
 - ``\texttt{trans\_cap\_current}[m_\texttt{inv}, t_\texttt{inv}]``: Installed capacity of `TransmissionMode` ``m_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``.
 
 The approach is similar to the *[Cost variables](@ref var_cost)* as variables are created for each of the individual types.
@@ -46,8 +49,9 @@ It is in practice not necessary and in most cases removed by the presolve routin
 In addition, we introduce variables for investments in a strategic period as:
 
 - ``\texttt{cap\_add}[n_\texttt{inv}, t_\texttt{inv}]``: Added capacity of `Node` ``n_\texttt{inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_rate\_add}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added rate capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_cap\_add}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``, and
+- ``\texttt{stor\_charge\_add}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added charge capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_level\_add}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_discharge\_add}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Added discharge capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``, and
 - ``\texttt{trans\_cap\_add}[m_\texttt{inv}, t_\texttt{inv}]``: Added capacity of `TransmissionMode` ``m_\texttt{inv}`` with investments in the beginning of strategic period ``t_\texttt{inv}``.
 
 These investments are available at the beginning of a strategic period.
@@ -55,8 +59,9 @@ These investments are available at the beginning of a strategic period.
 The model can also choose to retire technologies at the end of each strategic period through removal variables given as:
 
 - ``\texttt{cap\_rem}[n_\texttt{inv}, t_\texttt{inv}]``: Retired capacity of `Node` ``n_\texttt{inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_rate\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired rate capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
-- ``\texttt{stor\_cap\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``, and
+- ``\texttt{stor\_charge\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired charge capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_level\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired level capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``,
+- ``\texttt{stor\_discharge\_rem}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Retired discharge capacity of `Storage` node ``n_\texttt{stor,inv}`` with investments at the end of strategic period ``t_\texttt{inv}``, and
 - ``\texttt{trans\_cap\_rem}[m_\texttt{inv}, t_\texttt{inv}]``: Retired capacity of `TransmissionMode` ``m_\texttt{inv}`` with investments at the end of strategic period ``t_\texttt{inv}``.
 
 The retired capacity corresponds to removal of capacity, either due to the end of lifetime or due to lack of usage.
@@ -72,8 +77,8 @@ The model creates these variables independent of the investment mode, although t
 These variables are:
 
 - ``\texttt{cap\_invest\_b}[n_\texttt{inv}, t_\texttt{inv}]`` and ``\texttt{cap\_remove\_b}[n_\texttt{inv}, t_\texttt{inv}]`` ,
-- ``\texttt{stor\_rate\_invest\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]`` and ``\texttt{stor\_rate\_remove\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]``,
-- ``\texttt{stor\_cap\_invest\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]`` and ``\texttt{stor\_cap\_remove\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]``, and
+- ``\texttt{stor\_charge\_invest\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]`` and ``\texttt{stor\_charge\_remove\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]``,
+- ``\texttt{stor\_level\_invest\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]`` and ``\texttt{stor\_level\_remove\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]``, and
 - ``\texttt{trans\_cap\_invest\_b}[m_\texttt{inv}, t_\texttt{inv}]`` and ``\texttt{trans\_cap\_remove\_b}[m_\texttt{inv}, t_\texttt{inv}]``.
 
 ### [`ContinuousInvestment`](@ref)

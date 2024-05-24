@@ -68,30 +68,40 @@ function EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype:
 
 end
 """
-    EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles::Bool)
+    EMB.check_node_data(
+        n::Storage,
+        data::InvestmentData,
+        𝒯,
+        modeltype::AbstractInvestmentModel,
+        check_timeprofiles::Bool,
+    )
 
 Performs various checks on investment data for standard nodes. It is similar to the standard
 check nodes functions, but adds checks on
 
 ## Checks
 - Each node can only have a single `InvestmentData`.
-- The `InvestmentData` must be `InvDataStorage`.
-- For each field with `TimeProfile`:
-    - If the `TimeProfile` is a `StrategicProfile`, it will check that the profile is in \
-    accordance with the `TimeStructure`
-    - `TimeProfile`s in `InvestmentData` cannot include `OperationalProfile`, \
-    `RepresentativeProfile`, or `ScenarioProfile` as this is not allowed through indexing \
-    on the `TimeProfile`.
-- The field `:rate_min_add` has to be less than `:rate_max_add` in `InvDataStorage`.
-- The field `:stor_min_add` has to be less than `:stor_max_add` in `InvDataStorage`.
-- Existing capacity cannot be larger than `:rate_max_inst` capacity in the beginning. \
-If `rate_start` is `nothing`, it also checks that the the field `:stor_rate` of the node \
-`n` is not including `OperationalProfile`, `RepresentativeProfile`, or `ScenarioProfile`.
-- Existing capacity cannot be larger than `:stor_max_inst` capacity in the beginning. \
-If `stor_start` is `nothing`, it also checks that the the field `:stor_cap` of the node \
-`n` is not including `OperationalProfile`, `RepresentativeProfile`, or `ScenarioProfile`.
+- The `InvestmentData` must be `StorageInvData`.
+- For each individual investment field
+  - For each field with `TimeProfile`:
+      - If the `TimeProfile` is a `StrategicProfile`, it will check that the profile is in
+        accordance with the `TimeStructure`
+      - `TimeProfile`s in `InvestmentData` cannot include `OperationalProfile`,
+        `RepresentativeProfile`, or `ScenarioProfile` as this is not allowed through indexing
+        on the `TimeProfile`.
+  - The field `:min_add` has to be less than `:max_add`.
+  - Existing capacity cannot be larger than `:max_inst` capacity in the beginning.
+    If `NoStartInvData` is used, it also checks that the the field `:cap` of the subfield of
+    node `n` is not including `OperationalProfile`, `RepresentativeProfile`, or
+    `ScenarioProfile` to avoid indexing problems.
 """
-function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel, check_timeprofiles::Bool)
+function EMB.check_node_data(
+    n::Storage,
+    data::InvestmentData,
+    𝒯,
+    modeltype::AbstractInvestmentModel,
+    check_timeprofiles::Bool
+)
 
     inv_data = filter(data -> typeof(data) <: InvestmentData, node_data(n))
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -103,72 +113,56 @@ function EMB.check_node_data(n::Storage, data::InvestmentData, 𝒯, modeltype::
     )
 
     @assert_or_log(
-        isa(data, InvDataStorage),
-        "The investment data for a Storage must be of type `InvDataStorage`."
+        isa(data, StorageInvData),
+        "The investment data for a Storage must be of type `StorageInvData`."
     )
 
-    if !isa(data, InvDataStorage)
+    if !isa(data, StorageInvData)
         return
     end
 
-    for field_name ∈ fieldnames(typeof(data))
-        time_profile = getfield(data, field_name)
-        !isa(time_profile, TimeProfile) && continue
-        isa(time_profile, FixedProfile) && continue
-        message = "are not allowed for the field: "*String(field_name)
+    for cap_fields ∈ fieldnames(typeof(data))
+        inv_data = getfield(data, cap_fields)
+        isnothing(inv_data) && continue
 
-        if isa(time_profile, StrategicProfile) && check_timeprofiles
-            @assert_or_log(
-                length(time_profile.vals) == length(𝒯ᴵⁿᵛ),
-                "Field `" * string(field_name) * "` does not match the strategic structure."
-            )
+        for field_name ∈ fieldnames(typeof(inv_data))
+            time_profile = getfield(inv_data, field_name)
+            !isa(time_profile, TimeProfile) && continue
+            isa(time_profile, FixedProfile) && continue
+            message = "are not allowed for the field: "*String(field_name)*
+                "in the investment data field: "*String(cap_fields)
+
+            if isa(time_profile, StrategicProfile) && check_timeprofiles
+                @assert_or_log(
+                    length(time_profile.vals) == length(𝒯ᴵⁿᵛ),
+                    "Field `" * string(field_name) * "` does not match the strategic structure."
+                )
+            end
+            EMB.check_strategic_profile(time_profile, message)
         end
-        EMB.check_strategic_profile(time_profile, message)
-    end
+        if isa(inv_data, StartInvData)
+                @assert_or_log(
+                    inv_data.initial <= max_installed(inv_data, t_inv_1),
+                    "Starting value for " * String(cap_fields) *
+                    " can not be larger than the maximum installed constraint."
+                )
+        else
+            time_profile = capacity(getproperty(n, cap_fields))
+            message = "are not allowed for the capacity of the field" * String(cap_fields) *
+                ", if investments are allowed and the chosen investment type is `NoStartInvData`."
+            EMB.check_strategic_profile(time_profile, message)
 
-    if isnothing(data.rate_start)
-        time_profile = capacity(n).rate
-        message = "are not allowed for the rate capacity, if investments are allowed and \
-            the field `rate_start` is `nothing`."
-        EMB.check_strategic_profile(time_profile, message)
+            @assert_or_log(
+                capacity(getproperty(n, cap_fields), t_inv_1) <= max_installed(inv_data, t_inv_1),
+                "Existing capacity for `" *String(cap_fields) * "` can not be larger than \
+                the maximum installed value in the first strategic period."
+            )
 
+        end
         @assert_or_log(
-            capacity(n, t_inv_1).rate <= max_installed(n, t_inv_1).rate,
-            "Existing storage rate can not be larger than max installed rate in the \
-            beginning."
-        )
-    else
-        @assert_or_log(
-            data.rate_start <= max_installed(n, t_inv_1).rate,
-            "Starting storage rate can not be larger than max installed rate."
-        )
-    end
-    if isnothing(data.stor_start)
-        time_profile = capacity(n).level
-        message = "are not allowed for the storage capacity, if investments are allowed \
-            and the field `stor_start` is `nothing`."
-        EMB.check_strategic_profile(time_profile, message)
-
-        @assert_or_log(
-            capacity(n, t_inv_1).level <= max_installed(n, t_inv_1).level,
-            "Existing storage capacity can not be larger than max installed capacity in \
-            the beginning."
-        )
-    else
-        @assert_or_log(
-            data.stor_start <= max_installed(n, t_inv_1).level,
-            "Starting storage capacity can not be larger than max installed storage \
-            capacity."
+            sum(min_add(inv_data, t) ≤ max_add(inv_data, t) for t ∈ 𝒯) == length(𝒯),
+            "`min_add` has to be less than `max_add` in investments for field: " *
+            String(cap_fields) * "."
         )
     end
-
-    @assert_or_log(
-        sum(min_add(n, t).level ≤ max_add(n, t).level for t ∈ 𝒯) == length(𝒯),
-        "`stor_min_add` has to be less than `stor_max_add` in investments data (n.data)."
-    )
-    @assert_or_log(
-        sum(min_add(n, t).rate ≤ max_add(n, t).rate for t ∈ 𝒯) == length(𝒯),
-        "`Rate_min_add` has to be less than `rate_max_add` in investments data (n.data)."
-    )
-
 end

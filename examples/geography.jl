@@ -187,10 +187,10 @@ function get_sub_system_data(
 
     if demand == false
         demand = [
-            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20]),
-            OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])
+            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20]),
+            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20]),
+            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20]),
+            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20])
         ]
         demand *= d_scale
     end
@@ -271,25 +271,29 @@ function get_sub_system_data(
                 ),
             ],
         ),
-        RefStorage(
+        RefStorage{AccumulatingEmissions}(
             j + 7,
-            FixedProfile(0),
-            FixedProfile(0),
-            FixedProfile(9.1 * mc_scale),
-            FixedProfile(100),
+            StorCapOpex(FixedProfile(0), FixedProfile(9.1 * mc_scale), FixedProfile(100)),
+            StorCap(FixedProfile(0)),
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [InvDataStorage(
-                    capex_rate = FixedProfile(500),
-                    rate_max_inst = FixedProfile(600),
-                    rate_max_add = FixedProfile(600),
-                    rate_min_add = FixedProfile(0),
-                    capex_stor = FixedProfile(500),
-                    stor_max_inst = FixedProfile(600),
-                    stor_max_add = FixedProfile(600),
-                    stor_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                StorageInvData(
+                    charge = NoStartInvData(
+                        capex = FixedProfile(500),
+                        max_inst = FixedProfile(600),
+                        max_add = FixedProfile(600),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    ),
+                    level = NoStartInvData(
+                        capex = FixedProfile(500),
+                        max_inst = FixedProfile(600),
+                        max_add = FixedProfile(600),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    )
                 ),
             ],
         ),
@@ -309,25 +313,29 @@ function get_sub_system_data(
                 ),
             ],
         ),
-        RefStorage(
+        RefStorage{AccumulatingEmissions}(
             j + 9,
-            FixedProfile(3),
-            FixedProfile(5),
-            FixedProfile(0 * mc_scale),
-            FixedProfile(0),
+            StorCapOpex(FixedProfile(3), FixedProfile(0 * mc_scale), FixedProfile(0)),
+            StorCap(FixedProfile(5)),
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [InvDataStorage(
-                    capex_rate = FixedProfile(500),
-                    rate_max_inst = FixedProfile(30),
-                    rate_max_add = FixedProfile(3),
-                    rate_min_add = FixedProfile(0),
-                    capex_stor = FixedProfile(500),
-                    stor_max_inst = FixedProfile(50),
-                    stor_max_add = FixedProfile(5),
-                    stor_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                StorageInvData(
+                    charge = NoStartInvData(
+                        capex = FixedProfile(500),
+                        max_inst = FixedProfile(30),
+                        max_add = FixedProfile(3),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    ),
+                    level = NoStartInvData(
+                        capex = FixedProfile(500),
+                        max_inst = FixedProfile(50),
+                        max_add = FixedProfile(2),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    )
                 ),
             ],
         ),

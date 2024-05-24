@@ -14,11 +14,13 @@ module EnergyModelsInvestments
 using EnergyModelsBase
 using JuMP
 using TimeStruct
+using SparseVariables
 
 const EMB = EnergyModelsBase
 const TS = TimeStruct
 
 include("datastructures.jl")
+include("legacy_constructor.jl")
 include("model.jl")
 include("utils.jl")
 include("checks.jl")
@@ -38,6 +40,7 @@ export UnlimitedLife, StudyLife, PeriodLife, RollingLife
 # Export of the types for the additional investment data
 export InvestmentData
 export InvData, InvDataStorage
+export GeneralInvData, NoStartInvData, StartInvData, StorageInvData
 
 # Geographical investment data
 export TransInvData

@@ -22,12 +22,13 @@ Additional data for investment is specified when creating the nodes through subt
 
 ```@docs
 InvestmentData
+GeneralInvData
 ```
 
 This additional data is node specific, not technology specific.
 It is hence possible to provide different values for the same technology through different instances of said technology.
 
-Two types are used to define the parameters necessary for production technologies ([`InvData`](@ref)) and storages ([`InvDataStorage`](@ref)), while one is used for transmission modes ([`TransInvData`](@ref)) through the `EMIGeoExt` extension.
+Two types are used to define the parameters necessary for production technologies ([`InvData`](@ref)) and storages ([`StorageInvData`](@ref)), while one is used for transmission modes ([`TransInvData`](@ref)) through the `EMIGeoExt` extension.
 The different types are required as the required parameters differ.
 It is also possible for the user to define new subtypes of `InvestmentData` if they require additional parameters for including investments in technologies.
 
@@ -42,7 +43,9 @@ It is also possible for the user to define new subtypes of `InvestmentData` if t
 
 !!! note
     It is planned in a future iteration to revamp how we provide the investment data.
-    A key change is related to the approach for `Storage` and `TransmissionMode` investments to reduce repetitions in the functions.
+    In a first step, we changed the way how investment data is provided for `Storage` nodes.
+    This approach is tested now as well on other `Node`s and will be evaluated for `TransmissionMode`.
+    An advantage of this approach is that we remove repetitons from the code base and increase flexibility.
 
 ### `InvData`
 
@@ -74,26 +77,34 @@ The following parameter can be modified:
 InvData
 ```
 
-### `InvDataStorage`
+### `StorageInvData`
 
-`InvDataStorage` is required as `Storage` nodes behave differently compared to the other nodes.
-In `Storage` nodes, it is possible to invest both in the rate for storing energy as well as in the storage capacity, that is the level of a `Storage` node.
-Correspondingly, it is necessary to have individual parameters for both the rate and the level.
-`Storage` nodes have in general the same fields with a slightly different naming to account for both rate and level investments:
+`StorageInvData` is required as `Storage` nodes behave differently compared to the other nodes.
+In `Storage` nodes, it is possible to invest both in the charge capacity for storing energy, the storage capacity, that is the level of a `Storage` node, as well as the discharge capacity, that is how fast energy can be withdrawn.
+Correspondingly, it is necessary to have individual parameters for the potential investments.
 
-- `capex_cap` is provided for both the rate (`capex_rate`) and the level (`capex_stor`),
-- `cap_max_inst` is provided for both the rate (`rate_max_inst`) and the level (`stor_max_inst`),
-- `cap_max_add` is provided for both the rate (`rate_max_add`) and the level (`stor_max_add`),
-- `cap_min_add` is provided for both the rate (`rate_min_add`) and the level (`stor_min_add`),
-- `cap_start` is provided for both the rate (`rate_start`) and the level (`stor_start`), and
-- `cap_increment` is provided for both the rate (`rate_increment`) and the level (`stor_increment`).
+`Storage` nodes use the concept introduced through `GeneralInvData`, given by the two types `NoStartInvData` and `StartInvData`.
+The individual fields have the same meaning as in `InvData`, although the names are changed:
 
-Both the `Investment` mode and `LifetimeMode` are the same for investments in rate and storage level.
-The same holds as well for the lifetime of the technology.
+- `capex_cap` is named `capex`,
+- `cap_max_inst` is named `max_inst`,
+- `cap_max_add` is named `max_add`,
+- `cap_min_add` is named `min_add`,
+- `cap_start` is named `initial` (only for `StartInvData`), and
+- `cap_increment` is named `increment`.
 
 The required fields are the same as in [`InvData`](@ref).
 
 ```@docs
+NoStartInvData
+StartInvData
+```
+
+In addition, we provide a legacy constructor, `InvDataStorage`, that uses the same input as in version 0.5.x.
+If you want to adjust your model to the latest changes, please refer to the section *[Update your model to the latest version](@ref sec_how_to_update)*.
+
+```@docs
+StorageInvData
 InvDataStorage
 ```
 
@@ -123,7 +134,7 @@ TransInvData
 ## [Investment modes](@id sec_types_inv_mode)
 
 Different investment modes are available to help represent different situations.
-The investment mode is included in the field `inv_mode` in [`InvData`](@ref), [`InvDataStorage`](@ref), and [`TransInvData`](@ref).
+The investment mode is included in the field `inv_mode` in [`InvData`](@ref), [`NoStartInvData`](@ref), [`StartInvData`](@ref), and [`TransInvData`](@ref).
 The investment mode determines which other parameters are relevant in the investment and how these are treated.
 
 ### `Investment`

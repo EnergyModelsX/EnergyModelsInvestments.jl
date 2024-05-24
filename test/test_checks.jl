@@ -160,20 +160,27 @@ EMB.TEST_ENV = true
 
     # Testing, that the checks for InvData are working
     # - EMB.check_node_data(n::EMB.Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
-    @testset "InvDataStorage" begin
+    @testset "StorageInvData" begin
 
-        function run_simple_graph(rate_max_add, stor_max_add; check_timeprofiles=true)
-            inv_data = [InvDataStorage(
-                capex_rate = FixedProfile(20),
-                rate_max_inst = FixedProfile(30),
-                rate_max_add = rate_max_add,
-                rate_min_add = FixedProfile(5),
-                capex_stor = FixedProfile(500),
-                stor_max_inst = FixedProfile(600),
-                stor_max_add = stor_max_add,
-                stor_min_add = FixedProfile(5),
-                inv_mode = ContinuousInvestment(),
-            )]
+        function run_simple_graph(charge_max_add, level_max_add; check_timeprofiles=true)
+            inv_data = [
+                StorageInvData(
+                    charge = NoStartInvData(
+                        capex = FixedProfile(20),
+                        max_inst = FixedProfile(30),
+                        max_add = charge_max_add,
+                        min_add = FixedProfile(5),
+                        inv_mode = ContinuousInvestment(),
+                    ),
+                    level = NoStartInvData(
+                        capex = FixedProfile(500),
+                        max_inst = FixedProfile(600),
+                        max_add = level_max_add,
+                        min_add = FixedProfile(5),
+                        inv_mode = ContinuousInvestment(),
+                    )
+                )
+            ]
             case, modeltype = small_graph_stor(;inv_data)
 
             return optimize(case, modeltype; check_timeprofiles)
@@ -193,27 +200,37 @@ EMB.TEST_ENV = true
 
         # Check that we receive an error if we provide the wrong `InvestmentData`
         inv_data = [
-            InvDataStorage(
-                capex_rate = FixedProfile(20),
-                rate_max_inst = FixedProfile(30),
-                rate_max_add = FixedProfile(20),
-                rate_min_add = FixedProfile(5),
-                capex_stor = FixedProfile(500),
-                stor_max_inst = FixedProfile(600),
-                stor_max_add = FixedProfile(600),
-                stor_min_add = FixedProfile(5),
-                inv_mode = ContinuousInvestment(),
+            StorageInvData(
+                charge = NoStartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(20),
+                    min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
+                ),
+                level = NoStartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
+                )
             ),
-            InvDataStorage(
-                capex_rate = FixedProfile(20),
-                rate_max_inst = FixedProfile(30),
-                rate_max_add = FixedProfile(20),
-                rate_min_add = FixedProfile(5),
-                capex_stor = FixedProfile(500),
-                stor_max_inst = FixedProfile(600),
-                stor_max_add = FixedProfile(600),
-                stor_min_add = FixedProfile(5),
-                inv_mode = ContinuousInvestment(),
+            StorageInvData(
+                charge = NoStartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(20),
+                    min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
+                ),
+                level = NoStartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
+                )
             ),
         ]
         case, modeltype = small_graph_stor(;inv_data)
@@ -224,43 +241,43 @@ EMB.TEST_ENV = true
         scprofile = ScenarioProfile([FixedProfile(4)])
         oprofile = OperationalProfile(ones(4))
 
-        stor_max_add = FixedProfile(600)
+        level_max_add = FixedProfile(600)
 
-        rate_max_add = oprofile
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        rate_max_add = scprofile
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        rate_max_add = rprofile
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        rate_max_add = StrategicProfile([4])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
+        charge_max_add = oprofile
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        charge_max_add = scprofile
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        charge_max_add = rprofile
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        charge_max_add = StrategicProfile([4])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
 
-        rate_max_add = StrategicProfile([oprofile, oprofile, oprofile, oprofile])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        rate_max_add = StrategicProfile([scprofile, scprofile, scprofile, scprofile])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        rate_max_add = StrategicProfile([rprofile, rprofile, rprofile, rprofile])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
+        charge_max_add = StrategicProfile([oprofile, oprofile, oprofile, oprofile])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        charge_max_add = StrategicProfile([scprofile, scprofile, scprofile, scprofile])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        charge_max_add = StrategicProfile([rprofile, rprofile, rprofile, rprofile])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
 
-        rate_max_add = FixedProfile(20)
+        charge_max_add = FixedProfile(20)
 
-        stor_max_add = oprofile
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        stor_max_add = scprofile
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        stor_max_add = rprofile
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        stor_max_add = StrategicProfile([6])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
+        level_max_add = oprofile
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        level_max_add = scprofile
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        level_max_add = rprofile
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        level_max_add = StrategicProfile([6])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
 
-        stor_max_add = StrategicProfile([oprofile, oprofile, oprofile, oprofile])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        stor_max_add = StrategicProfile([scprofile, scprofile, scprofile, scprofile])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
-        stor_max_add = StrategicProfile([rprofile, rprofile, rprofile, rprofile])
-        @test_throws AssertionError run_simple_graph(rate_max_add, stor_max_add)
+        level_max_add = StrategicProfile([oprofile, oprofile, oprofile, oprofile])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        level_max_add = StrategicProfile([scprofile, scprofile, scprofile, scprofile])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
+        level_max_add = StrategicProfile([rprofile, rprofile, rprofile, rprofile])
+        @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
 
-        stor_max_add = StrategicProfile([6])
+        level_max_add = StrategicProfile([6])
         msg = "Checking of the time profiles is deactivated:\n" *
         "Deactivating the checks for the time profiles is strongly discouraged. " *
         "While the model will still run, unexpected results can occur, as well as " *
@@ -269,7 +286,7 @@ EMB.TEST_ENV = true
         "when testing new components. In all other instances, it is recommended to " *
         "provide the correct timeprofiles using a preprocessing routine.\n\n" *
         "If timeprofiles are not checked, inconsistencies can occur."
-        @test_logs (:warn, msg) run_simple_graph(rate_max_add, stor_max_add; check_timeprofiles=false)
+        @test_logs (:warn, msg) run_simple_graph(charge_max_add, level_max_add; check_timeprofiles=false)
 
 
         # Check that we receive an error if the capacity is an operational profile
@@ -285,35 +302,49 @@ EMB.TEST_ENV = true
         rate_cap = FixedProfile(60)
         case, modeltype = small_graph_stor(;rate_cap)
         @test_throws AssertionError optimize(case, modeltype)
-        inv_data = [InvDataStorage(
-            capex_rate = FixedProfile(20),
-            rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(20),
-            rate_min_add = FixedProfile(5),
-            rate_start = 40,
-            capex_stor = FixedProfile(500),
-            stor_max_inst = FixedProfile(600),
-            stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(5),
-            inv_mode = ContinuousInvestment(),
-        )]
+        inv_data = [
+            StorageInvData(
+                charge = StartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(20),
+                    min_add = FixedProfile(5),
+                    initial = 40,
+                    inv_mode = ContinuousInvestment(),
+                ),
+                level = NoStartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
+                )
+            )
+        ]
         case, modeltype = small_graph_stor(;inv_data)
         @test_throws AssertionError optimize(case, modeltype)
         stor_cap = FixedProfile(700)
         case, modeltype = small_graph_stor(;stor_cap)
         @test_throws AssertionError optimize(case, modeltype)
-        inv_data = [InvDataStorage(
-            capex_rate = FixedProfile(20),
-            rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(20),
-            rate_min_add = FixedProfile(5),
-            capex_stor = FixedProfile(500),
-            stor_max_inst = FixedProfile(600),
-            stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(5),
-            inv_mode = ContinuousInvestment(),
-            stor_start = 700,
-        )]
+        inv_data = [
+            StorageInvData(
+                charge = NoStartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(20),
+                    min_add = FixedProfile(5),
+                    inv_mode = ContinuousInvestment(),
+                ),
+                level = StartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(5),
+                    initial = 700,
+                    inv_mode = ContinuousInvestment(),
+                )
+            )
+        ]
         case, modeltype = small_graph_stor(;inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 

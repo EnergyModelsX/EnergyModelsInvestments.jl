@@ -46,15 +46,17 @@ function general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
     @testset "cap_inst" begin
         # Test that cap_inst is less than node.data.cap_max_inst at all times.
-        @test sum(value.(m[:stor_cap_inst][stor, t]) ≤
-                    EMI.max_installed(stor, t).level for t ∈ 𝒯) == length(𝒯)
-        @test sum(value.(m[:stor_rate_inst][stor, t]) ≤
-                    EMI.max_installed(stor, t).rate for t ∈ 𝒯) == length(𝒯)
+        @test sum(value.(m[:stor_level_inst][stor, t]) ≤
+                    EMI.max_installed(EMI.investment_data(stor, :level), t) for t ∈ 𝒯) ==
+                length(𝒯)
+        @test sum(value.(m[:stor_charge_inst][stor, t]) ≤
+                    EMI.max_installed(EMI.investment_data(stor, :charge), t) for t ∈ 𝒯) ==
+                length(𝒯)
     end
     @testset "cap_add" begin
         # Test that the capacity is at least added once
-        @test sum(value.(m[:stor_cap_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
-        @test sum(value.(m[:stor_rate_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:stor_level_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
+        @test sum(value.(m[:stor_charge_add][stor, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) > 0
     end
 end
 
@@ -135,19 +137,25 @@ function small_graph_stor(;
                     )
 
     if isnothing(inv_data)
-        inv_data = [InvDataStorage(
-            capex_rate = FixedProfile(20),
-            rate_max_inst = FixedProfile(30),
-            rate_max_add = FixedProfile(30),
-            rate_min_add = FixedProfile(rate_min_add),
-            capex_stor = FixedProfile(500),
-            stor_max_inst = FixedProfile(600),
-            stor_max_add = FixedProfile(600),
-            stor_min_add = FixedProfile(stor_min_add),
-            inv_mode = ContinuousInvestment(),
-        )]
+        inv_data = [
+            StorageInvData(
+                charge = NoStartInvData(
+                    capex = FixedProfile(20),
+                    max_inst = FixedProfile(30),
+                    max_add = FixedProfile(30),
+                    min_add = FixedProfile(rate_min_add),
+                    inv_mode = ContinuousInvestment(),
+                ),
+                level = NoStartInvData(
+                    capex = FixedProfile(500),
+                    max_inst = FixedProfile(600),
+                    max_add = FixedProfile(600),
+                    min_add = FixedProfile(stor_min_add),
+                    inv_mode = ContinuousInvestment(),
+                )
+            )
+        ]
     end
-    StrategicProfile([20, 30])
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     source = RefSource(
@@ -157,12 +165,10 @@ function small_graph_stor(;
         FixedProfile(5),
         Dict(Power => 1),
     )
-    storage = RefStorage(
+    storage = RefStorage{CyclicStrategic}(
         "stor",
-        rate_cap,
-        stor_cap,
-        FixedProfile(0),
-        FixedProfile(100),
+        StorCapOpexVar(rate_cap, FixedProfile(0)),
+        StorCapOpexFixed(stor_cap, FixedProfile(100)),
         Power,
         Dict(Power => 1.0),
         Dict(Power => 1.0),
@@ -280,7 +286,7 @@ function network_graph()
     CO2      = ResourceEmit("CO2",1.)
     products = [NG, Coal, Power, CO2]
 
-    op_profile = OperationalProfile([20 20 20 20 25 30 35 35 40 40 40 40 40 35 35 30 25 30 35 30 25 20 20 20])
+    op_profile = OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20])
 
     nodes = [
         GenAvailability(1, products),
@@ -358,25 +364,29 @@ function network_graph()
                 EmissionsEnergy(),
             ],
         ),
-        RefStorage(
+        RefStorage{AccumulatingEmissions}(
             7,
-            FixedProfile(0),
-            FixedProfile(0),
-            FixedProfile(9.1),
-            FixedProfile(100),
+            StorCapOpex(FixedProfile(0), FixedProfile(9.1), FixedProfile(100)),
+            StorCap(FixedProfile(0)),
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [InvDataStorage(
-                    capex_rate = FixedProfile(0),
-                    rate_max_inst = FixedProfile(600),
-                    rate_max_add = FixedProfile(600),
-                    rate_min_add = FixedProfile(0),
-                    capex_stor = FixedProfile(500),
-                    stor_max_inst = FixedProfile(600),
-                    stor_max_add = FixedProfile(600),
-                    stor_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                StorageInvData(
+                    charge = NoStartInvData(
+                        capex = FixedProfile(0),
+                        max_inst = FixedProfile(600),
+                        max_add = FixedProfile(600),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    ),
+                    level = NoStartInvData(
+                        capex = FixedProfile(500),
+                        max_inst = FixedProfile(600),
+                        max_add = FixedProfile(600),
+                        min_add = FixedProfile(0),
+                        inv_mode = ContinuousInvestment(),
+                    )
                 ),
             ],
         ),
@@ -398,25 +408,29 @@ function network_graph()
                 EmissionsEnergy(),
             ],
         ),
-        RefStorage(
+        RefStorage{AccumulatingEmissions}(
             9,
-            FixedProfile(3),
-            FixedProfile(5),
-            FixedProfile(0),
-            FixedProfile(0),
+            StorCapOpex(FixedProfile(3), FixedProfile(0), FixedProfile(0)),
+            StorCap(FixedProfile(5)),
             CO2,
             Dict(CO2 => 1, Power => 0.02),
             Dict(CO2 => 1),
-            [InvDataStorage(
-                    capex_rate = FixedProfile(0),
-                    rate_max_inst = FixedProfile(30),
-                    rate_max_add = FixedProfile(3),
-                    rate_min_add = FixedProfile(3),
-                    capex_stor = FixedProfile(0),
-                    stor_max_inst = FixedProfile(50),
-                    stor_max_add = FixedProfile(5),
-                    stor_min_add = FixedProfile(5),
-                    inv_mode = ContinuousInvestment(),
+            [
+                StorageInvData(
+                    charge = NoStartInvData(
+                        capex = FixedProfile(0),
+                        max_inst = FixedProfile(30),
+                        max_add = FixedProfile(3),
+                        min_add = FixedProfile(3),
+                        inv_mode = ContinuousInvestment(),
+                    ),
+                    level = NoStartInvData(
+                        capex = FixedProfile(0),
+                        max_inst = FixedProfile(50),
+                        max_add = FixedProfile(5),
+                        min_add = FixedProfile(5),
+                        inv_mode = ContinuousInvestment(),
+                    )
                 ),
             ],
         ),
