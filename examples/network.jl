@@ -89,7 +89,7 @@ function generate_example_data()
             # value does not matter
             [
                 InvData(
-                    capex_cap = FixedProfile(600*1e3),  # Capex in EUR/MW
+                    capex_cap = FixedProfile(600*1e3),  # CAPEX [EUR/MW]
                     cap_max_inst = FixedProfile(40),    # Max installed capacity [MW]
                     cap_max_add = FixedProfile(40),     # Max added capactity per sp [MW]
                     cap_min_add = FixedProfile(5),     # Min added capactity per sp [MW]
@@ -123,18 +123,13 @@ function generate_example_data()
             [
                 StorageInvData(
                     charge = NoStartInvData(
-                        capex = FixedProfile(200*1e3),
-                        max_inst = FixedProfile(60),
-                        max_add = FixedProfile(5),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
-                    ),
-                    level = NoStartInvData(
-                        capex = FixedProfile(0),
-                        max_inst = FixedProfile(1e9),
-                        max_add = FixedProfile(0),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        FixedProfile(200*1e3),  # CAPEX [EUR/(t/h)]
+                        FixedProfile(60),       # Max installed capacity [EUR/(t/h)]
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(5)),
+                        # Line above: Investment mode with the following arguments:
+                        # 1. argument: min added capactity per sp [t/h]
+                        # 2. argument: max added capactity per sp [t/h]
+                        UnlimitedLife(),        # Lifetime mode
                     )
                 )
             ],

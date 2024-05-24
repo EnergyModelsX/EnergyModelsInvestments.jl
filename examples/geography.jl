@@ -281,18 +281,16 @@ function get_sub_system_data(
             [
                 StorageInvData(
                     charge = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(600),
-                        max_add = FixedProfile(600),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        FixedProfile(500),
+                        FixedProfile(600),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
+                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(600),
-                        max_add = FixedProfile(600),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        FixedProfile(500),
+                        FixedProfile(600),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
+                        UnlimitedLife(),
                     )
                 ),
             ],
@@ -323,18 +321,16 @@ function get_sub_system_data(
             [
                 StorageInvData(
                     charge = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(30),
-                        max_add = FixedProfile(3),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        FixedProfile(500),
+                        FixedProfile(30),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(3)),
+                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
-                        capex = FixedProfile(500),
-                        max_inst = FixedProfile(50),
-                        max_add = FixedProfile(2),
-                        min_add = FixedProfile(0),
-                        inv_mode = ContinuousInvestment(),
+                        FixedProfile(500),
+                        FixedProfile(50),
+                        ContinuousInvestment(FixedProfile(0), FixedProfile(2)),
+                        UnlimitedLife(),
                     )
                 ),
             ],
