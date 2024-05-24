@@ -7,10 +7,11 @@
 
     # Test for the total number of variables
     # (-32 compared to 0.5.x as binaries only defined, if required through SparseVariables)
-    @test size(all_variables(m))[1] == 10080
+    # (+192 (2*4*24) compared to 0.5.x as stor_discharge_use added as variable)
+    @test size(all_variables(m))[1] == 10272
 
     # Test results
-    # (-724 compared to 0.5.x as RefStorage as emission source does not require a chrage
+    # (-724 compared to 0.5.x as RefStorage as emission source does not require a charge
     #  capacity any longer in 0.7.x)
     general_tests(m)
     @test round(objective_value(m)) ≈ -302624
