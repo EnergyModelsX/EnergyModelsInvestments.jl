@@ -49,23 +49,23 @@ while the new type for single investments is given as
 
 ```julia
 struct SingleInvData <: InvestmentData
-    cap::GeneralInvData
+    cap::AbstractInvData
 end
 ```
 
 with a constructor allowing directly the creation without having to specify the intermediate type.
 
-The new type, [`GeneralInvData`](@ref) has at the time being two subtypes, [`NoStartInvData`](@ref) and [`StartInvData`](@ref), given as:
+The new type, [`AbstractInvData`](@ref) has at the time being two subtypes, [`NoStartInvData`](@ref) and [`StartInvData`](@ref), given as:
 
 ```julia
-@kwdef struct NoStartInvData <: GeneralInvData
+@kwdef struct NoStartInvData <: AbstractInvData
     capex::TimeProfile       # Capex to install cap
     max_inst::TimeProfile    # Max installable capacity in one period (in total)
     inv_mode::Investment
     life_mode::LifetimeMode
 end
 
-@kwdef struct StartInvData <: GeneralInvData
+@kwdef struct StartInvData <: AbstractInvData
     capex::TimeProfile      # Capex to install cap
     max_inst::TimeProfile   # Max installable capacity in one period (in total)
     initial::Real           # Initially installed capacity
@@ -130,13 +130,13 @@ The new storage investment type is now layered, allowing for different options f
 
 ```julia
 @kwdef struct StorageInvData <: InvestmentData
-    charge::Union{GeneralInvData, Nothing} = nothing
-    level::Union{GeneralInvData, Nothing} = nothing
-    discharge::Union{GeneralInvData, Nothing} = nothing
+    charge::Union{AbstractInvData, Nothing} = nothing
+    level::Union{AbstractInvData, Nothing} = nothing
+    discharge::Union{AbstractInvData, Nothing} = nothing
 end
 ```
 
-As outlined, [`GeneralInvData`](@ref) has at the time being two subtypes, [`NoStartInvData`](@ref) and [`StartInvData`](@ref).
+As outlined, [`AbstractInvData`](@ref) has at the time being two subtypes, [`NoStartInvData`](@ref) and [`StartInvData`](@ref).
 Depending on whether you specified in your previous `InvDataStorage` instance the field `rate_start` and `stor_start`, you will have to use either [`NoStartInvData`](@ref) (not specified) or [`StartInvData`](@ref) (specified).
 
 In addition, if you used the `rate` variables previously for the charge or discharge rate, you have to adjust the investment data slightly.

@@ -326,7 +326,7 @@ EMB.TEST_ENV = true
         # Check that we receive an error if we provide a larger min_add than max_add
         rate_min_add = 40
         case, modeltype = small_graph_stor(;rate_min_add)
-        @test_throws AssertionError optimize(case, modeltype) # This one, no exception
+        @test_throws AssertionError optimize(case, modeltype)
         stor_min_add = 700
         case, modeltype = small_graph_stor(;stor_min_add)
         @test_throws AssertionError optimize(case, modeltype)

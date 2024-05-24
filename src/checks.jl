@@ -87,7 +87,7 @@ end
 
 """
     check_inv_data(
-        inv_data::GeneralInvData,
+        inv_data::AbstractInvData,
         capacity_profile::TimeProfile,
         𝒯,
         message::String,
@@ -111,7 +111,7 @@ Performs various checks on investment data introduced within EnergyModelsInvestm
   to avoid indexing problems.
 """
 function check_inv_data(
-    inv_data::GeneralInvData,
+    inv_data::AbstractInvData,
     capacity_profile::TimeProfile,
     𝒯,
     message::String,

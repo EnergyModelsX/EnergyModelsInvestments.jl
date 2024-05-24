@@ -217,7 +217,7 @@ end
     add_investment_constraints(
         m,
         type,
-        inv_data::GeneralInvData,
+        inv_data::AbstractInvData,
         cap,
         prefix,
         𝒯ᴵⁿᵛ::TS.StratPeriods,
@@ -238,7 +238,7 @@ options.
 - `type`: the type for which investment constraints should be added. Any potential type can
   be used. In `EnergyModelsBase`, the individual type is either a `Node` or a
   `TransmissionMode`.
-- `inv_data::GeneralInvData`: the investment data for the node and capacity `field`.
+- `inv_data::AbstractInvData`: the investment data for the node and capacity `cap`.
 - `prefix`: the prefix used for variables for this type. This argument is used for extracting
   the individual investment variables.
 - `cap`: the field that is used if several capacities are provided.
@@ -249,7 +249,7 @@ options.
 function add_investment_constraints(
     m,
     type,
-    inv_data::GeneralInvData,
+    inv_data::AbstractInvData,
     cap,
     prefix,
     𝒯ᴵⁿᵛ::TS.StratPeriods,
@@ -442,7 +442,8 @@ function set_capacity_cost(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ,  disc_rate,
     var_rem = get_var_rem(m, prefix, type)
 
     # The capacity is limited to the current sp. It has to be removed in the next sp.
-    # The formula for capacity updating uses the cap_rem for the previous sp, hence the sps used here.
+    # The capacity removal variable is corresponding to the removal of the capacity at the
+    # end of the strategic period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
     capex_disc = StrategicProfile(
         [
             set_capex_discounter(

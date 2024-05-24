@@ -55,8 +55,6 @@ end
     ContinuousInvestment <: Investment
 
 Continuous investment between a lower and upper bound.
-The increment for the discrete investment can be different for the individual strategic
-periods.
 
 # Fields
 - **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
@@ -91,8 +89,8 @@ Semi-continuous investments introduce one binary variable for each strategic per
 # Fields
 - **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
   case of `SemiContinuousInvestment`, this implies that the model **must** invest at least
-  in this capacity in each strategic period. The model can also choose not too invest at
-  all.
+  in this capacity in each strategic period. in this capacity in each strategic period where
+  the model decides to invest. The model can also choose not too invest at all.
 - **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
 """
 struct SemiContinuousInvestment <: SemiContiInvestment
@@ -105,16 +103,18 @@ end
 
 Semi-continuous investments, that is the added capacity is either zero or between a minimum
 and a maximum value. In this subtype, the cost is not crossing the origin. Instead, there
-is an offset.
+is an offset (y- intercept) in the variable `capex_cap`, that is its value is larger or smaller
+than 0 at an invested capacity of 0 given by the field `capex_offset`. This allows to the
+user to use different slopes, and hence, account for economy of scales.
 
 Semi-continuous investments introduce one binary variable for each strategic period.
 
 # Fields
 - **`max_add::TimeProfile`** is the maximum added capacity in a strategic period.
 - **`min_add::TimeProfile`** is the minimum added capacity in a strategic period. In the
-  case of `SemiContinuousInvestment`, this implies that the model **must** invest at least
-  in this capacity in each strategic period. The model can also choose not too invest at
-  all.
+  case of `SemiContinuousOffsetInvestment`, this implies that the model **must** invest at
+  least in this capacity in each strategic period. in this capacity in each strategic period
+  where the model decides to invest. The model can also choose not too invest at all.
 - **`capex_offset::TimeProfile`** is offset for the CAPEX in a strategic period.
 """
 struct SemiContinuousOffsetInvestment <: SemiContiInvestment

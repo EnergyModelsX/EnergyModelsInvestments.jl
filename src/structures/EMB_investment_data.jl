@@ -6,41 +6,41 @@ abstract type InvestmentData <: EMB.Data end
 """
     StorageInvData <: InvestmentData
 
-Extra investment data for storage investments. The extra ivnestment data for storage
+Extra investment data for storage investments. The extra investment data for storage
 investments can, but does not require investment data for the charge capacity of the storage
 (**`charge`**), increasing the storage capacity (**`level`**), or the doscharge capacity of
 the storage (**`discharge`**).
 
-It uses the macro `Base.@kwdef` to use keyword arguments and default values.
+It uses the macro `@kwdef` to use keyword arguments and default values.
 Hence, the names of the parameters have to be specified.
 
 # Fields
-- **`charge::Union{GeneralInvData, Nothing}`** is the investment data for the charge capacity.
-- **`level::Union{GeneralInvData, Nothing}`** is the investment data for the level capacity.
-- **`discharge::Union{GeneralInvData, Nothing}`** is the investment data for the
+- **`charge::Union{AbstractInvData, Nothing}`** is the investment data for the charge capacity.
+- **`level::Union{AbstractInvData, Nothing}`** is the investment data for the level capacity.
+- **`discharge::Union{AbstractInvData, Nothing}`** is the investment data for the
   discharge capacity.
 """
 @kwdef struct StorageInvData <: InvestmentData
-    charge::Union{GeneralInvData, Nothing} = nothing
-    level::Union{GeneralInvData, Nothing} = nothing
-    discharge::Union{GeneralInvData, Nothing} = nothing
+    charge::Union{AbstractInvData, Nothing} = nothing
+    level::Union{AbstractInvData, Nothing} = nothing
+    discharge::Union{AbstractInvData, Nothing} = nothing
 end
 
 """
     SingleInvData <: InvestmentData
 
 Extra investment data for type investments. The extra investment data has only a single
-field in which [`GeneralInvData`](@ref) has to be added.
+field in which [`AbstractInvData`](@ref) has to be added.
 
-The advantage of separating `GeneralInvData` from the `InvestmentData` node is to allow
+The advantage of separating `AbstractInvData` from the `InvestmentData` node is to allow
 easier separation of `EnergyModelsInvestments` and `EnergyModelsBase` and provides the user
 with the potential of introducing new capacities for types.
 
 # Fields
-- **`cap::GeneralInvData`** is the investment data for the capacity.
+- **`cap::AbstractInvData`** is the investment data for the capacity.
 
 When multiple inputs are provided, a constructor directly creates the corresponding
-`GeneralInvData`.
+`AbstractInvData`.
 
 # Fields
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
@@ -58,7 +58,7 @@ When multiple inputs are provided, a constructor directly creates the correspond
   [`UnlimitedLife`](@ref).
 """
 struct SingleInvData <: InvestmentData
-    cap::GeneralInvData
+    cap::AbstractInvData
 end
 function SingleInvData(
         capex_trans::TimeProfile,

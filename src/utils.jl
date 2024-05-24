@@ -6,25 +6,28 @@ Return the investment mode of the type `type`. By default, all investments are c
 investment_mode(type) = investment_data(type).inv_mode
 
 """
-    investment_mode(type, field::Symbol)
+    investment_mode(type, cap::Symbol)
 
-Return the investment mode of the type `type` and the capacity `field`.
+Return the investment mode of the type `type` and the capacity `cap`.
+
+This function utilizes the function [`investment_mode(investment_mode(inv_data::AbstractInvData))`](@ref)
+for the [`AbstractInvData`](@ref) of the capacity `cap`
 """
-investment_mode(type, field::Symbol) = investment_mode(investment_data(type, field))
+investment_mode(type, cap::Symbol) = investment_mode(investment_data(type, cap))
 
 """
-    start_cap(type, t_inv, inv_data::GeneralInvData, field)
+    start_cap(type, t_inv, inv_data::AbstractInvData, cap)
 
 Returns the starting capacity of the node in the first investment period.
 If [`NoStartInvData`](@ref) is used for the starting capacity, it deduces the value from the
 provided initial capacity.
 """
-start_cap(type, t_inv, inv_data::StartInvData, field) =
+start_cap(type, t_inv, inv_data::StartInvData, cap) =
     inv_data.initial
-start_cap(type, t_inv, inv_data::NoStartInvData, field) =
+start_cap(type, t_inv, inv_data::NoStartInvData, cap) =
     capacity(type, t_inv)
-start_cap(n::Storage, t_inv, inv_data::NoStartInvData, field) =
-    capacity(getproperty(n, field), t_inv)
+start_cap(n::Storage, t_inv, inv_data::NoStartInvData, cap) =
+    capacity(getproperty(n, cap), t_inv)
 
 """
     get_var_capex(m, prefix::Symbol)
@@ -134,7 +137,7 @@ Calculate the cost value for the different investment modes of the investment da
 - `m`: the JuMP model instance.
 - `type`: the type for which the absolute CAPEX should be calculated.
 - `r`: the discount rate.
-- `inv_data`: the investment data given as subtype of `GeneralInvData`.
+- `inv_data`: the investment data given as subtype of `AbstractInvData`.
 - `prefix`: the prefix used for variables for this type.
 - `𝒯ᴵⁿᵛ`: the strategic periods structure.
 """

@@ -18,12 +18,12 @@ InvestmentModel
 
 ## Additional Data for Investments
 
-Additional data for investment is specified when creating the nodes through subtypes of the type `InvestmentData` and `GeneralInvData`.
-`GeneralInvData` is introduced in this version to allow for making `EnergyModelsInvestments` independent of `EnergyModelsBase`, although this is not yet implemented in the model.
+Additional data for investment is specified when creating the nodes through subtypes of the type `InvestmentData` and `AbstractInvData`.
+`AbstractInvData` is introduced in this version to allow for making `EnergyModelsInvestments` independent of `EnergyModelsBase`, although this is not yet implemented in the model.
 
 ```@docs
 InvestmentData
-GeneralInvData
+AbstractInvData
 ```
 
 This additional data is node specific, not technology specific.
@@ -33,10 +33,10 @@ Two types are used to define the parameters necessary for production technologie
 The different types are required as the required parameters differ.
 It is also possible for the user to define new subtypes of `InvestmentData` if they require additional parameters for including investments in capacities of technologies.
 
-### `GeneralInvData` subtypes
+### `AbstractInvData` subtypes
 
-`GeneralInvData` is used to add the required investment data to the individual technology capacities.
-The subtypes of `GeneralInvData` are used for all technologies, that is nodes and transmission modes.
+`AbstractInvData` is used to add the required investment data to the individual technology capacities.
+The subtypes of `AbstractInvData` are used for all technologies, that is nodes and transmission modes.
 
 The following fields have to be added for all provided types:
 
@@ -54,7 +54,7 @@ while it utilizes the capacity of the technology if the value is not provided th
 !!! warning
     If you do not use `StartInvData`, you have to provide the function [`EMI.start_cap`](@ref) for your type. Otherwise, `EnergyModelsInvestments` is not able to deduce the starting capcity.
 
-`GeneralInvData` types have constructors that allow ommitting the last field, `life_mode`.
+`AbstractInvData` types have constructors that allow ommitting the last field, `life_mode`.
 
 !!! warning
     All fields that are provided as `TimeProfile` are accessed in strategic periods.
