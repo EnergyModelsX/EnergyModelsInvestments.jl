@@ -318,12 +318,10 @@ Return the lifetime of the investment data `inv_data` in period `t`.
 """
 lifetime(inv_data::GeneralInvData, t) = inv_data.lifetime[t]
 
-start_cap(n::EMB.Node, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
+start_cap(n, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
     inv_data.initial
 start_cap(n::EMB.Node, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
     capacity(n, t_inv)
-start_cap(n::Storage, t_inv, inv_data::StartInvData, field, modeltype::EnergyModel) =
-    inv_data.initial
 start_cap(n::Storage, t_inv, inv_data::NoStartInvData, field, modeltype::EnergyModel) =
     capacity(getproperty(n, field), t_inv)
 

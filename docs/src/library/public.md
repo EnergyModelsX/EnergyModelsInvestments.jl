@@ -45,7 +45,7 @@ It is also possible for the user to define new subtypes of `InvestmentData` if t
     It is planned in a future iteration to revamp how we provide the investment data.
     In a first step, we changed the way how investment data is provided for `Storage` nodes.
     This approach is tested now as well on other `Node`s and will be evaluated for `TransmissionMode`.
-    An advantage of this approach is that we remove repitions from the code base and increase flexbility.
+    An advantage of this approach is that we remove repetitons from the code base and increase flexibility.
 
 ### `InvData`
 

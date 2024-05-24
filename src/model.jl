@@ -115,22 +115,22 @@ function EMB.variables_capex(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentM
     @variable(m, stor_level_current[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ] >= 0)    # Installed capacity
     @variable(m, stor_level_add[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ] >= 0)        # Add capacity
     @variable(m, stor_level_rem[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ] >= 0)        # Remove capacity
-    @variable(m, stor_level_invest_b[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
-    @variable(m, stor_level_remove_b[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
+    @variable(m, stor_level_invest_b[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ] >= 0; container=IndexedVarArray)
+    @variable(m, stor_level_remove_b[𝒩ˡᵉᵛᵉˡ, 𝒯ᴵⁿᵛ] >= 0; container=IndexedVarArray)
 
     @variable(m, stor_charge_capex[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)
     @variable(m, stor_charge_current[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)   # Installed power/rate
     @variable(m, stor_charge_add[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)       # Add power
     @variable(m, stor_charge_rem[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)       # Remove power
-    @variable(m, stor_charge_invest_b[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
-    @variable(m, stor_charge_remove_b[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
+    @variable(m, stor_charge_invest_b[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0; container=IndexedVarArray)
+    @variable(m, stor_charge_remove_b[𝒩ᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0; container=IndexedVarArray)
 
     @variable(m, stor_discharge_capex[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)
     @variable(m, stor_discharge_current[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)   # Installed power/rate
     @variable(m, stor_discharge_add[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)       # Add power
     @variable(m, stor_discharge_rem[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0)       # Remove power
-    @variable(m, stor_discharge_invest_b[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
-    @variable(m, stor_discharge_remove_b[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ]; container=IndexedVarArray)
+    @variable(m, stor_discharge_invest_b[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0; container=IndexedVarArray)
+    @variable(m, stor_discharge_remove_b[𝒩ᵈⁱˢᶜʰᵃʳᵍᵉ, 𝒯ᴵⁿᵛ] >= 0; container=IndexedVarArray)
 end
 
 """
@@ -190,21 +190,21 @@ Set storage-related constraints for nodes `𝒩ˢᵗᵒʳ` for investment time s
 """
 function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, modeltype::AbstractInvestmentModel)
 
-    fields = [:charge, :level, :discharge]
+    cap_fields = [:charge, :level, :discharge]
 
-    for field ∈ fields
-        if !hasfield(typeof(n), field)
-            return
+    for cap ∈ cap_fields
+        if !hasfield(typeof(n), cap)
+            continue
         end
-        stor_par = getfield(n, field)
-        prefix = Symbol(:stor_, field)
+        stor_par = getfield(n, cap)
+        prefix = Symbol(:stor_, cap)
         var_inst = get_var_inst(m, prefix, n)
-        if has_investment(n, field)
+        if has_investment(n, cap)
             # Extract the investment data
-            inv_data = investment_data(n, field)
+            inv_data = investment_data(n, cap)
 
             # Add the investment constraints
-            add_investment_constraints(m, n, inv_data, field, prefix, 𝒯, modeltype)
+            add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype)
 
         elseif isa(stor_par, EMB.UnionCapacity)
             for t ∈ 𝒯
@@ -214,7 +214,7 @@ function EMB.constraints_capacity_installed(m, n::Storage, 𝒯::TimeStructure, 
     end
 end
 
-function add_investment_constraints(m, n, inv_data, field, prefix, 𝒯, modeltype)
+function add_investment_constraints(m, n, inv_data, cap, prefix, 𝒯, modeltype)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Deduce the required variables
@@ -230,7 +230,7 @@ function add_investment_constraints(m, n, inv_data, field, prefix, 𝒯, modelty
         # Capacity updating
         @constraint(m, var_current[t_inv] <= max_installed(inv_data, t_inv))
         if isnothing(t_inv_prev)
-            start_cap_val = start_cap(n, t_inv, inv_data, field, modeltype)
+            start_cap_val = start_cap(n, t_inv, inv_data, cap, modeltype)
             @constraint(m, var_current[t_inv] == start_cap_val + var_add[t_inv])
         else
             @constraint(m,
@@ -243,7 +243,7 @@ function add_investment_constraints(m, n, inv_data, field, prefix, 𝒯, modelty
     set_capacity_cost(m, n, inv_data, prefix, 𝒯ᴵⁿᵛ, modeltype)
 
     # Constraints for minimum investments
-    set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ)
+    set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ)
 end
 
 
@@ -323,10 +323,10 @@ end
 
 Add constraints related to storage installation depending on investment mode of node `n`
 """
-set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ) =
-    set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
+set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ) =
+    set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
 
-function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ, ::Investment)
+function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::Investment)
     # Deduce the required variable
     var_add = get_var_add(m, prefix, n)
 
@@ -335,7 +335,7 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] >= min_add(inv_data, t_inv))
 end
 
-function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
+function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::BinaryInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -347,10 +347,10 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     var_current = get_var_current(m, prefix, n)
 
     # Extract the capacity from the node
-    if isnothing(field)
+    if isnothing(cap)
         cap_used = capacity(n)
     else
-        cap_used = capacity(getproperty(n, field))
+        cap_used = capacity(getproperty(n, cap))
     end
 
     # Set the limits
@@ -360,17 +360,15 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     )
 end
 
-function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
+function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::DiscreteInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     var_remove_b = get_var_remove_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         insertvar!(var_invest_b, n, t_inv)
         set_integer(var_invest_b[n, t_inv])
-        set_lower_bound(var_invest_b[n, t_inv], 0)
         insertvar!(var_remove_b, n, t_inv)
         set_integer(var_remove_b[n, t_inv])
-        set_lower_bound(var_remove_b[n, t_inv], 0)
     end
 
     # Deduce the required variables
@@ -388,7 +386,7 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     )
 end
 
-function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
+function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::SemiContiInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -410,7 +408,7 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     )
 end
 
-function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ, ::FixedInvestment)
+function set_capacity_installation(m, n, inv_data, cap, prefix, 𝒯ᴵⁿᵛ, ::FixedInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -422,10 +420,10 @@ function set_capacity_installation(m, n, inv_data, field, prefix, 𝒯ᴵⁿᵛ,
     var_current = get_var_current(m, prefix, n)
 
     # Extract the capacity from the node
-    if isnothing(field)
+    if isnothing(cap)
         cap_used = capacity(n)
     else
-        cap_used = capacity(getproperty(n, field))
+        cap_used = capacity(getproperty(n, cap))
     end
 
     # Set the limits
