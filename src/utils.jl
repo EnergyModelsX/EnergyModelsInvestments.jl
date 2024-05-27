@@ -158,7 +158,7 @@ function set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
 end
 
 """
-    set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, ::SemiContinuousOffsetInvestment)
+    set_capex_value(m, type, inv_data, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContinuousOffsetInvestment)
 
 When the investment mode is given by [`SemiContinuousOffsetInvestment`](@ref) then there is
 an additional offset for the CAPEX.
@@ -184,7 +184,7 @@ is given by `PeriodLife` and `StudyLife`.
 - `years:`: the remaining years for calculating the discounted value. The years are
   depending on the considered [`LifetimeMode`](@ref), using `remaining(t_inv, 𝒯)` for
   [`StudyLife`](@ref) and `duration(t_inv)` for [`PeriodLife`](@ref).
-- `lifetime`: the lifetime of the ttype.
+- `lifetime`: the lifetime of the type.
 - `disc_rate`: the discount rate.
 """
 function set_capex_discounter(years, lifetime, disc_rate)
