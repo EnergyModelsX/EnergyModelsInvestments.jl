@@ -125,11 +125,11 @@ function SingleInvData(
     )
 end
 """
-    investment_data(type)
+    investment_data(element)
 
-Return the investment data of the type `type`.
+Return the investment data of the type `element`.
 """
-investment_data(type) = filter(data -> typeof(data) <: InvestmentData, type.data)[1]
+investment_data(element) = filter(data -> typeof(data) <: InvestmentData, element.data)[1]
 
 """
 
@@ -140,28 +140,28 @@ Return the investment data of the investment data `SingleInvData`.
 investment_data(inv_data::SingleInvData) = inv_data.cap
 
 """
-    investment_data(type, field::Symbol)
+    investment_data(element, field::Symbol)
 
-Return the investment data of the type `type` of the capacity `field`.
+Return the investment data of the type `element` of the capacity `field`.
 """
-investment_data(type, field::Symbol) =
-    getproperty(investment_data(type), field)
+investment_data(element, field::Symbol) =
+    getproperty(investment_data(element), field)
 
 """
-    has_investment(type)
+    has_investment(element)
 
-For a given `Node`, checks that it contains the required investment data.
+For a given type `element`, checks that it contains the required investment data.
 """
-function has_investment(type)
+function has_investment(element)
     (
-        hasproperty(type, :data) &&
-        !isempty(filter(data -> typeof(data) <: InvestmentData, type.data))
+        hasproperty(element, :data) &&
+        !isempty(filter(data -> typeof(data) <: InvestmentData, element.data))
     )
 end
 """
     has_investment(n::Storage, field::Symbol)
 
-When the type is a `Storage` node, checks that it contains investments for the field
+When the element type is a `Storage` node, checks that it contains investments for the field
 `field`, that is `:charge`, `:level`, or `:discharge`.
 """
 function has_investment(n::Storage, field::Symbol)
