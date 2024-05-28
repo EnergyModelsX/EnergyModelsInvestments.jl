@@ -155,7 +155,7 @@ For a given type `element`, checks that it contains the required investment data
 function has_investment(element)
     (
         hasproperty(element, :data) &&
-        !isempty(filter(data -> typeof(data) <: InvestmentData, element.data))
+        !isnothing(findfirst(data->typeof(data)<:InvestmentData, node_data(element)))
     )
 end
 """
@@ -167,7 +167,7 @@ When the element type is a `Storage` node, checks that it contains investments f
 function has_investment(n::Storage, field::Symbol)
     (
         hasproperty(n, :data) &&
-        !isempty(filter(data -> typeof(data) <: InvestmentData, node_data(n))) &&
+        !isnothing(findfirst(data->typeof(data)<:InvestmentData, node_data(element))) &&
         !isnothing(getproperty(investment_data(n), field))
     )
 end

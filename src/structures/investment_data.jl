@@ -7,10 +7,10 @@ Supertype for investment data for nodal investments.
 abstract type AbstractInvData end
 
 """
-    StartInvData <: AbstractInvData
+    NoStartInvData <: AbstractInvData
 
 Investment data in which the initial capacity is not specified in the `InvestmentData`.
-Instead, the initial capacity is deduced from the capacity of the technology.
+Instead, the initial capacity is inferred  from the capacity of the technology.
 
 # Fields
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
