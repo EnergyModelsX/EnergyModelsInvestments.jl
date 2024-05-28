@@ -18,124 +18,104 @@ InvestmentModel
 
 ## Additional Data for Investments
 
-Additional data for investment is specified when creating the nodes through subtypes of the type `InvestmentData`.
+Additional data for investment is specified when creating the nodes through subtypes of the type `InvestmentData` and `AbstractInvData`.
+`AbstractInvData` is introduced in this version to allow for making `EnergyModelsInvestments` independent of `EnergyModelsBase`, although this is not yet implemented in the model.
 
 ```@docs
 InvestmentData
-GeneralInvData
+AbstractInvData
 ```
 
 This additional data is node specific, not technology specific.
 It is hence possible to provide different values for the same technology through different instances of said technology.
 
-Two types are used to define the parameters necessary for production technologies ([`InvData`](@ref)) and storages ([`StorageInvData`](@ref)), while one is used for transmission modes ([`TransInvData`](@ref)) through the `EMIGeoExt` extension.
+Two types are used to define the parameters necessary for production technologies and transmission modes ([`SingleInvData`](@ref)) and storages ([`StorageInvData`](@ref)).
 The different types are required as the required parameters differ.
-It is also possible for the user to define new subtypes of `InvestmentData` if they require additional parameters for including investments in technologies.
+It is also possible for the user to define new subtypes of `InvestmentData` if they require additional parameters for including investments in capacities of technologies.
 
-!!! note
-    Depending on the chosen investment mode, not all parameters are necessary.
-    It is however possible to set parameters even if they will not be used.
-    This allows for a simple change of the investment mode.
+### `AbstractInvData` subtypes
 
-    The required parameters will be described in *[Investment Types](@ref sec_types_inv_mode)* for each investment option.
-    All `InvestmentData` types use `Base.@kwdef` to simplify the creation of constructors.
-    Hence, it is necessary to specify the the name of the parameters when creating instances of the types.
+`AbstractInvData` is used to add the required investment data to the individual technology capacities.
+The subtypes of `AbstractInvData` are used for all technologies, that is nodes and transmission modes.
 
-!!! note
-    It is planned in a future iteration to revamp how we provide the investment data.
-    In a first step, we changed the way how investment data is provided for `Storage` nodes.
-    This approach is tested now as well on other `Node`s and will be evaluated for `TransmissionMode`.
-    An advantage of this approach is that we remove repetitons from the code base and increase flexibility.
+The following fields have to be added for all provided types:
 
-### `InvData`
-
-`InvData` is used to add the required investment data to the individual technology nodes.
-It is used for almost all technology nodes, except for `Storage` nodes.
-
-The following fields have to be added as keyword arguments:
-
-- `capex_cap::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative costs. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex\_cap} \times x`` where ``x`` corresponds to the invested capacity.
-- `cap_max_inst::TimeProfile`: Maximum installed capacity of the `Node`. The maximum installed capacity is limiting the total installed capacity of the Node. It is possible to have different values for different `Node`s representing the same technology. This can be useful for, *e.g.*, the potential for wind power in different regions.
-- `cap_max_add::TimeProfile`: The maximum added capacity in a strategic period. The maximum added capacity is providing the limit on how fast we can expend a given technology in a strategic period. In general, this value is dependent on the potential construction time and how fast it is possible to build a technology.
-- `cap_min_add::TimeProfile`: The minimum added capacity in a strategic period. The minimum added capacity is providing the lower limit on investments in a strategic period. Its meaning changes, dependent on the chosen investment mode, as outlined in *[Investment types](@ref sec_types_inv_mode)*.
-
-In addition, there are also parameters with a default value.
-These values do not have to be provided, but can be provided, if desired.
-The following parameter can be modified:
-
-- `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref sec_types_inv_mode)*. The default investment mode is [`ContinuousInvestment`](@ref).
-- `cap_start::Union{Real, Nothing}`: Starting capacity of the `Node` in the first strategic period. The starting capacity is only valid for the first strategic period. This capacity will remain present in the simulation horizon, except if retiring is desired by the model. It is not possible to provide a reducing capacity over time for the initial capacity. The model extracts alternatively the value of the capacity in the first strategic period, if no value is provided. This is the default value.
-- `cap_increment::TimeProfile`: Increment in the case of [`DiscreteInvestment`](@ref). The increment corresponds to the potential increase in the case of DiscreteInvestment. Its usage will be explained further in *[Investment types](@ref sec_types_inv_mode)*. The default value is 0 corresponding to no investment possibility.
+- `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative to capacity. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
+- `max_inst::TimeProfile`: Maximum installed capacity of the `Node`. The maximum installed capacity is limiting the total installed capacity of the Node. It is possible to have different values for different `Node`s representing the same technology. This can be useful for, *e.g.*, the potential for wind power in different regions.
+- `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref sec_types_inv_mode)*.
 - `life_mode::LifetimeMode`: Lifetime mode of the `Node`. The lifetime mode is describing how the lifetime of the node is implemented. This includes as well final values and retiring of the individual technologies. The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref life_mode)*.
-- `lifetime::TimeProfile`: Lifetime of the `Node`. The lifetime corresponds to the lifetime of the invested `Node`. Its requirement is dependent on the chosen `LifetimeMode`. The default value is 0 corresponding to no lifetime.
+
+The type `StartInvData` allows in addition for providing the initial capacity in the first year through:
+
+- `initial::Real`: Starting capacity of the technology in the first strategic period. The starting capacity is only valid for the first strategic period. This capacity will remain present in the simulation horizon, except if retiring is desired by the model. It is not possible to provide a reducing capacity over time for the initial capacity.
+
+while it utilizes the capacity of the technology if the value is not provided through the function [`EMI.start_cap`](@ref).
+
+!!! warning
+    If you do not use `StartInvData`, you have to provide the function [`EMI.start_cap`](@ref) for your type. Otherwise, `EnergyModelsInvestments` is not able to deduce the starting capcity.
+
+`AbstractInvData` types have constructors that allow omitting the last field, `life_mode`.
 
 !!! warning
     All fields that are provided as `TimeProfile` are accessed in strategic periods.
     This implies that the provided `TimeProfile`s are not allowed to have any variations below strategic periods through, *e.g.* the application of `OperationalProfile` or `RepresentativeProfile`.
 
 ```@docs
-InvData
-```
-
-### `StorageInvData`
-
-`StorageInvData` is required as `Storage` nodes behave differently compared to the other nodes.
-In `Storage` nodes, it is possible to invest both in the charge capacity for storing energy, the storage capacity, that is the level of a `Storage` node, as well as the discharge capacity, that is how fast energy can be withdrawn.
-Correspondingly, it is necessary to have individual parameters for the potential investments.
-
-`Storage` nodes use the concept introduced through `GeneralInvData`, given by the two types `NoStartInvData` and `StartInvData`.
-The individual fields have the same meaning as in `InvData`, although the names are changed:
-
-- `capex_cap` is named `capex`,
-- `cap_max_inst` is named `max_inst`,
-- `cap_max_add` is named `max_add`,
-- `cap_min_add` is named `min_add`,
-- `cap_start` is named `initial` (only for `StartInvData`), and
-- `cap_increment` is named `increment`.
-
-The required fields are the same as in [`InvData`](@ref).
-
-```@docs
 NoStartInvData
 StartInvData
 ```
 
-In addition, we provide a legacy constructor, `InvDataStorage`, that uses the same input as in version 0.5.x.
+### `InvestmentData` subtypes
+
+`InvestmentData` subtypes are used to provide technologies introduced in `EnergyModelsX` (nodes and transmission modes) a subtype of `Data` that can be used for dispatching.
+Two different types are directly introduced, `SingleInvData` and `StorageInvData`.
+
+`SingleInvData` is providing a composite type with a single field.
+It is used for investments in technologies with a single capacity, that is all nodes except for storage nodes as well as tranmission modes.
+
+`StorageInvData` is required as `Storage` nodes behave differently compared to the other nodes.
+In `Storage` nodes, it is possible to invest both in the charge capacity for storing energy, the storage capacity, that is the level of a `Storage` node, as well as the discharge capacity, that is how fast energy can be withdrawn.
+Correspondingly, it is necessary to have individual parameters for the potential investments in each capacity, that is through the fields `:charge`, `:level`, and `:discharge`.
+
+```@docs
+SingleInvData
+StorageInvData
+```
+
+### Legacy constructors
+
+We provide a legacy constructor, `InvData`, `InvDataStorage`, and `InvDataTrans`, that use the same input as in version 0.5.x.
 If you want to adjust your model to the latest changes, please refer to the section *[Update your model to the latest version](@ref sec_how_to_update)*.
 
 ```@docs
-StorageInvData
+InvData
 InvDataStorage
-```
-
-### `TransInvData`
-
-Similarly as for [`InvData`](@ref), this type defines additional parameters necessary for handling the investment in transmission between geographical areas.
-This type is used in combination with `EnergyModelsGeography` to add investments in transmission.
-
-There are in general not too many changes compared to [`InvData`](@ref).
-The individual fields have however different names:
-
-- `capex_cap` is called `capex_trans`,
-- `cap_max_inst` is called `trans_max_inst`,
-- `cap_max_add` is called `trans_max_add`,
-- `cap_min_add` is called `trans_min_add`,
-- `cap_start` is called `trans_start`, and
-- `cap_increment` is called `trans_increment`.
-
-In addition, the following field is added:
-
-- `capex_trans_offset::TimeProfile`: The offset is a special parameter only required for the [`SemiContinuousOffsetInvestment`](@ref) mode. The offset can be best described with the equation ``y = \texttt{capex\_trans} \times x + \texttt{capex\_trans\_offset}`` where ``x`` corresponds to the invested capacity and ``y`` to the total capital cost.
-
-```@docs
 TransInvData
 ```
 
 ## [Investment modes](@id sec_types_inv_mode)
 
 Different investment modes are available to help represent different situations.
-The investment mode is included in the field `inv_mode` in [`InvData`](@ref), [`NoStartInvData`](@ref), [`StartInvData`](@ref), and [`TransInvData`](@ref).
-The investment mode determines which other parameters are relevant in the investment and how these are treated.
+The investment mode is included in the field `inv_mode` in [`NoStartInvData`](@ref) and [`StartInvData`](@ref).
+The investment mode how the model can invest and which constraints are imposed on the investments.
+
+### Potential fields in investment modes
+
+Investment modes are including the required fields for the investments.
+These fields are given below with a detailed description in the individual subsections.
+
+- `max_add::TimeProfile`: The maximum added capacity in a strategic period.
+  The maximum added capacity is providing the limit on how fast we can expend a given technology in a strategic period.
+  In general, this value is dependent on the potential construction time and how fast it is possible to build a technology.
+  It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
+- `min_add::TimeProfile`: The minimum added capacity in a strategic period.
+  The minimum added capacity is providing the lower limit on investments in a strategic period.
+  Its meaning changes, dependent on the chosen investment mode.
+  It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
+- `capex_offset::TimeProfile`: CAPEX offset for the [`SemiContinuousOffsetInvestment`](@ref) mode.
+  The offset can be best described with the equation ``y = \texttt{capex} \times x + \texttt{capex\_offset}`` where ``x`` corresponds to the invested capacity and ``y`` to the total capital cost.
+- `cap_increment::TimeProfile`: Increment in the case of [`DiscreteInvestment`](@ref).
+  The increment corresponds to the potential increase in the case of `DiscreteInvestment`.
 
 ### `Investment`
 
@@ -150,18 +130,13 @@ Investment
 ### `ContinuousInvestment`
 
 `ContinuousInvestment` is the default investment option for all investments, if no alternative is chosen.
-Continuous investments implies that you can invest in any capacity specified between `cap_min_add` and `cap_max_add`.
-This implies as well that, if `cap_min_add` is specified, it is necessary to invest in every strategic period in at least this capacity.
+Continuous investments implies that you can invest in any capacity specified between `min_add` and `max_add`.
+This implies as well that, if `min_add` is specified, it is necessary to invest in every strategic period in at least this capacity.
 This approach is the standard approach in large energy system models as it avoids binary variables.
-However, it can lead to, *e.g.*, investments into a 10~MW nuclear power plant.
-
-Fields without a meaning in `ContinuousInvestment`:
-
-- `cap_increment`
-- (`trans_capex_offset` if using [`TransInvData`](@ref))
+However, it may lead to nonsensical solutions, *e.g.*, investments into a 10~MW nuclear power plant.
 
 !!! warning
-    Defining `cap_min_add::TimeProfile` for this mode of investment will lead to a forced investment of at least `cap_min_add` in each period.
+    Defining `min_add::TimeProfile` for this mode of investment will lead to a forced investment of at least `min_add` in each period.
 
 ```@docs
 ContinuousInvestment
@@ -169,17 +144,8 @@ ContinuousInvestment
 
 ### `BinaryInvestment`
 
-[`BinaryInvestment`](@ref) implies that one can choose to invest in the specified capacity (field `cap` of the node) in the given strategic period, or not.
+[`BinaryInvestment`](@ref) implies that one can choose to invest to achieve the specified capacity in the given strategic period, or not.
 The capacity of the investment cannot be adjusted by the optimization.
-This implies that the meaning of the capacity of a `Node`, `cap`, is redefined.
-Hence, it is important to specify `cap_start` to avoid issues in the first strategic period.
-
-Fields without a meaning in `BinaryInvestment`:
-
-- `cap_min_add`
-- `cap_max_add`
-- `cap_increment`
-- (`trans_capex_offset` if using [`TransInvData`](@ref))
 
 !!! warning
     This investment type leads to the addition of binary variables.
@@ -192,18 +158,12 @@ BinaryInvestment
 ### `DiscreteInvestment`
 
 `DiscreteInvestment` allow for only a discrete increase in the capacity.
-This increase is specified through the field `cap_increment`.
+This increase is specified through the field `increment`.
 Hence, it can be also dependent on the strategic period.
 
 `DiscreteInvestment` can for example be used to represent investment in modular technologies that can be scaled by adding several modules together.
 In addition, it is beneficial to include for technologies that experience significant economy of scale.
-In this situation, several instances with different `cap_increment` and `capex_cap` can be used
-
-Fields without a meaning in `DiscreteInvestment`:
-
-- `cap_min_add`
-- `cap_max_add`
-- (`trans_capex_offset` if using [`TransInvData`](@ref))
+In this situation, several instances with different `increment` and `capex` can be used
 
 !!! note
     This investment type leads to the addition of integer variables.
@@ -223,17 +183,13 @@ DiscreteInvestment
 These investment modes are similar with respect to how you can increase the capacity.
 They differ however on how the overall cost is calculated.
 Both investment modes are in general similar to [`ContinuousInvestment`](@ref), but the investment is either 0 or between a minimum and maximum value.
-This means you can define the field `cap_min_add::TimeProfile` without forcing investment in the technology.
-Instead, the value determines that **_if_** the model decides to invest, then it has to at leas invest in the value provided through **_`cap_min_add`_**.
+This means you can define the field `min_add::TimeProfile` without forcing investment in the technology.
+Instead, the value determines that **_if_** the model decides to invest, then it has to at least invest in the value provided through **_`min_add`_**.
 This can be also described as:
 
-``x = 0 \lor \texttt{cap\_min\_add} \leq x \leq \texttt{cap\_max\_add}``
+``x = 0 \lor \texttt{_min\_add} \leq x \leq \texttt{max\_add}``
 
 with ``x`` corresponding to the invested capacity
-
-Fields without a meaning in `SemiContiInvestment`:
-
-- `cap_increment`
 
 ```@docs
 SemiContiInvestment
@@ -248,11 +204,7 @@ SemiContiInvestment
 The cost function in `SemiContinuousInvestment` is calculated in the same way as in [`ContinuousInvestment`](@ref).
 The total contribution of invested capacity ``x`` to the objective function ``y`` is given through the equation
 
-``y = \texttt{capex\_cap} \times x``.
-
-Fields without a meaning in `SemiContinuousInvestment`:
-
-- (`trans_capex_offset` if using [`TransInvData`](@ref))
+``y = \texttt{capex} \times x``.
 
 ```@docs
 SemiContinuousInvestment
@@ -262,23 +214,21 @@ SemiContinuousInvestment
 
 [`SemiContinuousOffsetInvestment`](@ref) is a type of investment similar to [`SemiContinuousInvestment`](@ref) and implemented for investments in transmission infrastructure.
 It does differ with respect to how the costs are calculated.
-A `SemiContinuousOffsetInvestment` has an offset in the cost implemented through the the field `Capex_trans_offset`.
+A `SemiContinuousOffsetInvestment` has an offset in the cost implemented through the the field `capex_offset`.
 This offset corresponds to the theoretical cost at an invested capacity of 0.
 
-While  [`SemiContinuousInvestment`](@ref)utilizes the same relative cost, even if a lower limit is specified, `SemiContinuousOffsetInvestment` allows for the specification of an offset in the cost through the field `trans_capex_offset`.
+While  [`SemiContinuousInvestment`](@ref)utilizes the same relative cost, even if a lower limit is specified, `SemiContinuousOffsetInvestment` allows for the specification of an offset in the cost through the field `capex_offset`.
 This offset is an absolute cost.
 It corresponds to the theoretical cost at an invested capacity of 0.
 This changes the contribution to the cost function from
 
-``y = \texttt{capex\_cap} \times x``
+``y = \texttt{capex} \times x``
 
 to
 
-``y = \texttt{capex\_trans} \times x + \texttt{capex\_trans\_offset}``
+``y = \texttt{capex} \times x + \texttt{capex\_offset}``
 
 where ``x`` corresponds to the invested capacity and ``y`` to the total capital cost.
-
-`SemiContinuousOffsetInvestment` is currently only implemented for investments in `TransmissionMode`s as its implementation would interact with the lifetime calculations.
 
 ```@docs
 SemiContinuousOffsetInvestment
@@ -287,18 +237,10 @@ SemiContinuousOffsetInvestment
 ### `FixedInvestment`
 
 `FixedInvestment` is a type of investment where an investment in the given capacity is forced.
-The capacity used is provided through the fields `cap`, `cap_stor`, `cap_rate`, and `trans_cap`.
 It allows to account for the investment cost of known investments.
 In practice, there is however not too much use in including the fixed investment, except if one is interested in the values of the dual variables.
 
 The fields `cap_min_add`, `cap_max_add`, and `cap_increment` do not have a meaning when using `FixedInvestment`.
-
-Fields without a meaning in `DiscreteInvestment`:
-
-- `cap_min_add`
-- `cap_max_add`
-- `cap_increment`
-- (`trans_capex_offset` if using [`TransInvData`](@ref))
 
 ```@docs
 FixedInvestment
@@ -324,8 +266,6 @@ No reinvestment is considered by the optimization and there is also ne salvage v
 Hence, the costs are the same, independent of if the investments in the `Node` are happening in the first strategic period (and the technology is used for, *e.g*, 25 years) or the last strategic period (with a usage of, *e.g.*, 5 years) when excluding discounting effects.
 
 `UnlimitedLife` is the default lifetime mode, if no other mode is specified.
-
-The field `Lifetime` does not have a meaning when using `UnlimitedLife`.
 
 ```@docs
 UnlimitedLife

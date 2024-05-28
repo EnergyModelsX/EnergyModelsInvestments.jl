@@ -72,41 +72,32 @@ function generate_example_data()
     ]
 
     # Create the investment data for the different power line investment modes
-    inv_data_12 = TransInvData(
-        capex_trans = FixedProfile(500),
-        trans_max_inst = FixedProfile(50),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(0),
-        inv_mode = BinaryInvestment(),
-        trans_start = 0,
+    inv_data_12 = SingleInvData(
+        FixedProfile(500),
+        FixedProfile(50),
+        0,
+        BinaryInvestment(FixedProfile(50.0)),
     )
 
-    inv_data_13 = TransInvData(
-        capex_trans = FixedProfile(10),
-        trans_max_inst = FixedProfile(100),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(10),
-        inv_mode = SemiContinuousInvestment(),
-        trans_start = 0,
+    inv_data_13 =  SingleInvData(
+        FixedProfile(10),
+        FixedProfile(100),
+        0,
+        SemiContinuousInvestment(FixedProfile(10), FixedProfile(100)),
     )
 
-    inv_data_23 = TransInvData(
-        capex_trans = FixedProfile(10),
-        trans_max_inst = FixedProfile(50),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(5),
-        inv_mode = DiscreteInvestment(),
-        trans_increment = FixedProfile(6),
-        trans_start = 20,
+    inv_data_23 = SingleInvData(
+        FixedProfile(10),
+        FixedProfile(50),
+        20,
+        DiscreteInvestment(FixedProfile(6)),
     )
 
-    inv_data_34 = TransInvData(
-        capex_trans = FixedProfile(10),
-        trans_max_inst = FixedProfile(50),
-        trans_max_add = FixedProfile(100),
-        trans_min_add = FixedProfile(1),
-        inv_mode = ContinuousInvestment(),
-        trans_start = 0,
+    inv_data_34 = SingleInvData(
+        FixedProfile(10),
+        FixedProfile(50),
+        0,
+        ContinuousInvestment(FixedProfile(1), FixedProfile(100)),
     )
 
     # Create the TransmissionModes and the Transmission corridors
@@ -210,14 +201,11 @@ function get_sub_system_data(
             FixedProfile(30 * mc_scale),
             FixedProfile(100),
             Dict(NG => 1),
-            [InvData(
-                    capex_cap = FixedProfile(1000),
-                    cap_max_inst = FixedProfile(200),
-                    cap_max_add = FixedProfile(200),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
-                    cap_increment = FixedProfile(5),
-                    cap_start = 0,
+            [
+                SingleInvData(
+                    FixedProfile(1000), # capex [€/kW]
+                    FixedProfile(200),  # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(10), FixedProfile(200)), # investment mode
                 ),
             ],
         ),
@@ -227,13 +215,12 @@ function get_sub_system_data(
             FixedProfile(9 * mc_scale),
             FixedProfile(100),
             Dict(Coal => 1),
-            [InvData(
-                    capex_cap = FixedProfile(1000),
-                    cap_max_inst = FixedProfile(200),
-                    cap_max_add = FixedProfile(200),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
-                    cap_start = 0,
+            [
+                SingleInvData(
+                    FixedProfile(1000), # capex [€/kW]
+                    FixedProfile(200),  # max installed capacity [kW]
+                    0,
+                    ContinuousInvestment(FixedProfile(10), FixedProfile(200)), # investment mode
                 ),
             ],
         ),
@@ -245,12 +232,10 @@ function get_sub_system_data(
             Dict(NG => 2),
             Dict(Power => 1, CO2 => 0),
             [
-                InvData(
-                    capex_cap = FixedProfile(600),
-                    cap_max_inst = FixedProfile(25),
-                    cap_max_add = FixedProfile(25),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+                SingleInvData(
+                    FixedProfile(600),  # capex [€/kW]
+                    FixedProfile(25),   # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
                 ),
                 CaptureEnergyEmissions(0.9)
             ],
@@ -262,13 +247,13 @@ function get_sub_system_data(
             FixedProfile(100),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [InvData(
-                    capex_cap = FixedProfile(800),
-                    cap_max_inst = FixedProfile(25),
-                    cap_max_add = FixedProfile(25),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                SingleInvData(
+                    FixedProfile(800),  # capex [€/kW]
+                    FixedProfile(25),   # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
                 ),
+                EmissionsEnergy(),
             ],
         ),
         RefStorage{AccumulatingEmissions}(
@@ -284,13 +269,11 @@ function get_sub_system_data(
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
-                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
-                        UnlimitedLife(),
                     )
                 ),
             ],
@@ -302,13 +285,13 @@ function get_sub_system_data(
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [InvData(
-                    capex_cap = FixedProfile(1000),
-                    cap_max_inst = FixedProfile(25),
-                    cap_max_add = FixedProfile(2),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                SingleInvData(
+                    FixedProfile(10000),    # capex [€/kW]
+                    FixedProfile(25),       # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(2)), # investment mode
                 ),
+                EmissionsEnergy(),
             ],
         ),
         RefStorage{AccumulatingEmissions}(
@@ -324,13 +307,11 @@ function get_sub_system_data(
                         FixedProfile(500),
                         FixedProfile(30),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(3)),
-                        UnlimitedLife(),
                     ),
                     level = NoStartInvData(
                         FixedProfile(500),
                         FixedProfile(50),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(2)),
-                        UnlimitedLife(),
                     )
                 ),
             ],
@@ -342,13 +323,13 @@ function get_sub_system_data(
             FixedProfile(0),
             Dict(Coal => 2.5),
             Dict(Power => 1),
-            [InvData(
-                    capex_cap = FixedProfile(10000),
-                    cap_max_inst = FixedProfile(10000),
-                    cap_max_add = FixedProfile(10000),
-                    cap_min_add = FixedProfile(0),
-                    inv_mode = ContinuousInvestment(),
+            [
+                SingleInvData(
+                    FixedProfile(10000),    # capex [€/kW]
+                    FixedProfile(10000),    # max installed capacity [kW]
+                    ContinuousInvestment(FixedProfile(0), FixedProfile(10000)), # investment mode
                 ),
+                EmissionsEnergy(),
             ],
         ),
     ]

@@ -17,11 +17,11 @@ In the case of `Storage` nodes, they are only defined if the node has investment
 `EnergyModelsInvestments` introduces variables that help extracting the cost of investments in a technology `Node` or `TransmissionMode` at each strategic period.
 The different variables are:
 
-- ``\texttt{capex\_cap}[n_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `Node` ``n_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``,
+- ``\texttt{cap\_capex}[n_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `Node` ``n_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``,
 - ``\texttt{stor\_charge\_capex}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for charge capacity investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
 - ``\texttt{stor\_level\_capex}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for level investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``,
 - ``\texttt{stor\_discharge\_capex}[n_\texttt{stor,inv}, t_\texttt{inv}]``: Undiscounted total CAPEX for discharge capacity investments of `Storage` node ``n_\texttt{stor,inv}`` with investments in strategic period ``t_\texttt{inv}``, and
-- ``\texttt{capex\_trans}[m_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `TransmissionMode` ``m_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``.
+- ``\texttt{trans\_cap\_capex}[m_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `TransmissionMode` ``m_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``.
 
 The total CAPEX takes into account the invested capacity to calculate the total costs as well as the end of horizon value of the individual technologies including discounting.
 The end of horizon value is currently not considered for transmission technologies.
@@ -72,7 +72,8 @@ Early removal of a technology, that is before the end of its lifetime, does not 
 ## [Auxiliary variables](@id var_aux)
 
 Auxiliary variables are variables that are required for certain investment modes.
-The model creates these variables independent of the investment mode, although the meaning of the auxiliary variables changes depending on the investment mode.
+The model creates these variables only if the investment mode requires them.
+The meaning of the auxiliary variables changes depending on the investment mode.
 
 These variables are:
 
@@ -80,11 +81,6 @@ These variables are:
 - ``\texttt{stor\_charge\_invest\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]`` and ``\texttt{stor\_charge\_remove\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]``,
 - ``\texttt{stor\_level\_invest\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]`` and ``\texttt{stor\_level\_remove\_b}[n_\texttt{stor,inv}, t_\texttt{inv}]``, and
 - ``\texttt{trans\_cap\_invest\_b}[m_\texttt{inv}, t_\texttt{inv}]`` and ``\texttt{trans\_cap\_remove\_b}[m_\texttt{inv}, t_\texttt{inv}]``.
-
-### [`ContinuousInvestment`](@ref)
-
-The variable ``\texttt{cap\_invest\_b}`` has a lower bound of 0, but is not included in any constraint.
-The variable ``\texttt{cap\_remove\_b}`` is not included in any constraint.
 
 ### [`BinaryInvestment`](@ref)
 

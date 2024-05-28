@@ -1,5 +1,16 @@
 # Release notes
 
+## Version 0.6.0 (2024-05-24)
+
+### Changes in handling of investments
+
+* Allow investments in all `Storage` capacities introduced in `EnergyModelsBase` v0.6 through new type `StorageInvData`.
+* Changed the structure of investment data to prepare for making `EnergyModelsInvestments` independent from `EnergyModelsBase`.
+* Utilize now the same functions for investment in all type of `Node`s and `TransmissionMode`s.
+* Utilize the same type (`SingleInvData`) for investment data in all type of `Node`s (except `Storage`) and `TransmissionMode`s.
+* Moved parameters that are investment mode specific as fields to the investment mode.
+* Allow for semi-continuous offset investments for `Node`s.
+
 ## Version 0.5.5 (2024-05-02)
 
 ### Bugfix
