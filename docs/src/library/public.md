@@ -40,7 +40,7 @@ The subtypes of `AbstractInvData` are used for all technologies, that is nodes a
 
 The following fields have to be added for all provided types:
 
-- `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative costs. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
+- `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative to capacity. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
 - `max_inst::TimeProfile`: Maximum installed capacity of the `Node`. The maximum installed capacity is limiting the total installed capacity of the Node. It is possible to have different values for different `Node`s representing the same technology. This can be useful for, *e.g.*, the potential for wind power in different regions.
 - `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref sec_types_inv_mode)*.
 - `life_mode::LifetimeMode`: Lifetime mode of the `Node`. The lifetime mode is describing how the lifetime of the node is implemented. This includes as well final values and retiring of the individual technologies. The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref life_mode)*.
@@ -54,7 +54,7 @@ while it utilizes the capacity of the technology if the value is not provided th
 !!! warning
     If you do not use `StartInvData`, you have to provide the function [`EMI.start_cap`](@ref) for your type. Otherwise, `EnergyModelsInvestments` is not able to deduce the starting capcity.
 
-`AbstractInvData` types have constructors that allow ommitting the last field, `life_mode`.
+`AbstractInvData` types have constructors that allow omitting the last field, `life_mode`.
 
 !!! warning
     All fields that are provided as `TimeProfile` are accessed in strategic periods.
@@ -133,7 +133,7 @@ Investment
 Continuous investments implies that you can invest in any capacity specified between `min_add` and `max_add`.
 This implies as well that, if `min_add` is specified, it is necessary to invest in every strategic period in at least this capacity.
 This approach is the standard approach in large energy system models as it avoids binary variables.
-However, it can lead to, *e.g.*, investments into a 10~MW nuclear power plant.
+However, it may lead to nonsensical solutions, *e.g.*, investments into a 10~MW nuclear power plant.
 
 !!! warning
     Defining `min_add::TimeProfile` for this mode of investment will lead to a forced investment of at least `min_add` in each period.
@@ -144,7 +144,7 @@ ContinuousInvestment
 
 ### `BinaryInvestment`
 
-[`BinaryInvestment`](@ref) implies that one can choose to invest to avhieve the specified capacity in the given strategic period, or not.
+[`BinaryInvestment`](@ref) implies that one can choose to invest to achieve the specified capacity in the given strategic period, or not.
 The capacity of the investment cannot be adjusted by the optimization.
 
 !!! warning
@@ -184,7 +184,7 @@ These investment modes are similar with respect to how you can increase the capa
 They differ however on how the overall cost is calculated.
 Both investment modes are in general similar to [`ContinuousInvestment`](@ref), but the investment is either 0 or between a minimum and maximum value.
 This means you can define the field `min_add::TimeProfile` without forcing investment in the technology.
-Instead, the value determines that **_if_** the model decides to invest, then it has to at leas invest in the value provided through **_`min_add`_**.
+Instead, the value determines that **_if_** the model decides to invest, then it has to at least invest in the value provided through **_`min_add`_**.
 This can be also described as:
 
 ``x = 0 \lor \texttt{_min\_add} \leq x \leq \texttt{max\_add}``

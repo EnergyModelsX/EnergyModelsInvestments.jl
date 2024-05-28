@@ -145,7 +145,7 @@ for the capacity expansion. The investment mode and lifetime mode are used for a
 constraints.
 
 The default function only accepts nodes with [`SingleInvData`](@ref). If you have several
-capacities for investments, you have to dispatch specifically on the function. This is
+capacities for investments, you have to dispatch specifically on the node type. This is
 implemented for `Storage` nodes.
 """
 function EMB.constraints_capacity_installed(
@@ -227,9 +227,9 @@ end
 Core function for introducing constraints on the investments. The constraints include
 introducing bounds on the available capacities as well as the calculation of the CAPEX.
 
-The function calls two in addition subroutines, [`set_capacity_installation`](@ref) and
+The function calls two additional subroutines, [`set_capacity_installation`](@ref) and
 [`set_capacity_cost`](@ref) which are used for introducing bounds on the investment
-variables and calculating the CAPEX contribution of each investments. The utilizaiton of
+variables and calculating the CAPEX contribution of each investments. The utilization of
 subroutines allows the introduction of dispatch for the individual investment and lifetime
 options.
 

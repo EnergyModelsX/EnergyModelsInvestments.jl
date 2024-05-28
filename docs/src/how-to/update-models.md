@@ -203,7 +203,7 @@ inv_mode = SemiContinuousOffsetInvestment(trans_min_add, trans_max_add, capex_tr
 
 !!! warning
     We do not provide any constructors for `BinaryInvestment` and `FixedInvestment` as it is not possible to deduce the capacity directly from the provided constructor.
-    Instead, the model will through an error.
+    Instead, the model will throw an error.
 
 `BinaryInvestment` and `FixedInvestment` can be solved using the following approach, outlined for a `Source` node:
 
@@ -245,7 +245,7 @@ investment_data_source = SingleInvData(
 
 ### [Lifetime modes](@ref life_mode)
 
-Investment modes include now the required lifetime.
+Investment modes now include the required lifetime.
 Below, you can find the approach for `InvData` legacy constructors, although the approach is the same for `InvDataStorage` and `TransInvData`.
 
 ```julia
