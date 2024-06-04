@@ -8,7 +8,7 @@ abstract type InvestmentData <: EMB.Data end
 
 Extra investment data for storage investments. The extra investment data for storage
 investments can, but does not require investment data for the charge capacity of the storage
-(**`charge`**), increasing the storage capacity (**`level`**), or the doscharge capacity of
+(**`charge`**), increasing the storage capacity (**`level`**), or the discharge capacity of
 the storage (**`discharge`**).
 
 It uses the macro `@kwdef` to use keyword arguments and default values.
