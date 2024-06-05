@@ -26,8 +26,6 @@ start_cap(element, t_inv, inv_data::StartInvData, cap) =
     inv_data.initial
 start_cap(element, t_inv, inv_data::NoStartInvData, cap) =
     capacity(element, t_inv)
-start_cap(n::Storage, t_inv, inv_data::NoStartInvData, cap) =
-    capacity(getproperty(n, cap), t_inv)
 
 """
     get_var_capex(m, prefix::Symbol)

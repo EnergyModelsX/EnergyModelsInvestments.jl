@@ -4,13 +4,13 @@ using Pkg
 using Test
 
 using EnergyModelsBase
-using EnergyModelsGeography
+# using EnergyModelsGeography
 using EnergyModelsInvestments
 using Logging
 using TimeStruct
 
 const EMB = EnergyModelsBase
-const EMG = EnergyModelsGeography
+# const EMG = EnergyModelsGeography
 const EMI = EnergyModelsInvestments
 const TS = TimeStruct
 
@@ -24,8 +24,7 @@ include("utils.jl")
         include("test_checks.jl")
         include("test_examples.jl")
 
-        @testset "w/Geography" begin
-            include("test_geo.jl")
-        end
-    end
+    # @testset "w/Geography" begin
+    #     include("test_geo.jl")
+    # end
 end

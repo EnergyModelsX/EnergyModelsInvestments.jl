@@ -4,7 +4,7 @@ This abstract model type should be used when creating additional `EnergyModel` t
 should utilize investments.
 An example for additional types is given by the inclusion of, *e.g.*, `SDDP`.
 """
-abstract type AbstractInvestmentModel <: EMB.EnergyModel end
+abstract type AbstractInvestmentModel end
 
 """
 A concrete basic investment model type based on the standard `OperationalModel` as declared
@@ -20,10 +20,10 @@ investments and additional discounting of future years.
 - **`co2_instance`** is a `ResourceEmit` and corresponds to the type used for CO₂.
 - **`r::Float64`** is the discount rate in the investment optimization.
 """
-struct InvestmentModel <: AbstractInvestmentModel
-    emission_limit::Dict{<:ResourceEmit, <:TimeProfile}
-    emission_price::Dict{<:ResourceEmit, <:TimeProfile}
-    co2_instance::ResourceEmit
+struct InvestmentModel{DEL, DEP, CO2} <: AbstractInvestmentModel
+    emission_limit::DEL
+    emission_price::DEP
+    co2_instance::CO2
     r::Float64
 end
 

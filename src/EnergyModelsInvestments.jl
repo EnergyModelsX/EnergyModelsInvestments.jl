@@ -11,12 +11,10 @@ modes as described in `EnergyModelsGeography`.
 """
 module EnergyModelsInvestments
 
-using EnergyModelsBase
 using JuMP
 using TimeStruct
 using SparseVariables
 
-const EMB = EnergyModelsBase
 const TS = TimeStruct
 
 # Different introduced types
@@ -29,7 +27,6 @@ include(joinpath("structures", "model.jl"))
 # Core structure of the code
 include("model.jl")
 include("utils.jl")
-include("checks.jl")
 
 # Legacy constructors for node types
 include("legacy_constructor.jl")
