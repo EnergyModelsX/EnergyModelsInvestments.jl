@@ -31,17 +31,12 @@ struct NoStartInvData <: AbstractInvData
     life_mode::LifetimeMode
 end
 function NoStartInvData(
-        capex_trans::TimeProfile,
-        trans_max_inst::TimeProfile,
-        inv_mode::Investment,
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    inv_mode::Investment,
 )
 
-    return NoStartInvData(
-        capex_trans,
-        trans_max_inst,
-        inv_mode,
-        UnlimitedLife(),
-    )
+    return NoStartInvData(capex_trans, trans_max_inst, inv_mode, UnlimitedLife())
 end
 
 
@@ -63,19 +58,13 @@ struct StartInvData <: AbstractInvData
     life_mode::LifetimeMode
 end
 function StartInvData(
-        capex_trans::TimeProfile,
-        trans_max_inst::TimeProfile,
-        initial::Real,
-        inv_mode::Investment,
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    initial::Real,
+    inv_mode::Investment,
 )
 
-    return StartInvData(
-        capex_trans,
-        trans_max_inst,
-        initial,
-        inv_mode,
-        UnlimitedLife(),
-    )
+    return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, UnlimitedLife())
 end
 
 """
@@ -132,7 +121,8 @@ capex_offset(inv_data::AbstractInvData) = capex_offset(investment_mode(inv_data)
 
 Returns the offset of the CAPEX of the investment data `inv_data` in investment period `t_inv`.
 """
-capex_offset(inv_data::AbstractInvData, t_inv) = capex_offset(investment_mode(inv_data), t_inv)
+capex_offset(inv_data::AbstractInvData, t_inv) =
+    capex_offset(investment_mode(inv_data), t_inv)
 
 """
     max_installed(inv_data::AbstractInvData)

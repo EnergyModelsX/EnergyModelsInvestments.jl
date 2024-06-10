@@ -32,7 +32,7 @@ function InvData(;
     cap_max_add::TimeProfile,
     cap_min_add::TimeProfile,
     inv_mode::Investment = ContinuousInvestment(),
-    cap_start::Union{Real, Nothing} = nothing,
+    cap_start::Union{Real,Nothing} = nothing,
     cap_increment::TimeProfile = FixedProfile(0),
     life_mode::LifetimeMode = UnlimitedLife(),
     lifetime::TimeProfile = FixedProfile(0),
@@ -83,12 +83,7 @@ function InvData(;
 
     # Create the new generalized investment data
     if isnothing(cap_start)
-        return SingleInvData(
-            capex_cap,
-            cap_max_inst,
-            tmp_inv_mode,
-            tmp_life_mode,
-        )
+        return SingleInvData(capex_cap, cap_max_inst, tmp_inv_mode, tmp_life_mode)
     else
         return SingleInvData(
             capex_cap,
@@ -132,7 +127,7 @@ function TransInvData(;
     trans_max_add::TimeProfile,
     trans_min_add::TimeProfile,
     inv_mode::Investment = ContinuousInvestment(),
-    trans_start::Union{Real, Nothing} = nothing,
+    trans_start::Union{Real,Nothing} = nothing,
     trans_increment::TimeProfile = FixedProfile(0),
     capex_trans_offset::TimeProfile = FixedProfile(0),
 )
@@ -158,7 +153,8 @@ function TransInvData(;
     elseif isa(inv_mode, SemiContinuousInvestment)
         tmp_inv_mode = SemiContinuousInvestment(trans_min_add, trans_max_add)
     elseif isa(inv_mode, SemiContinuousOffsetInvestment)
-        tmp_inv_mode = SemiContinuousOffsetInvestment(trans_min_add, trans_max_add, capex_trans_offset)
+        tmp_inv_mode =
+            SemiContinuousOffsetInvestment(trans_min_add, trans_max_add, capex_trans_offset)
     end
 
     @warn(
@@ -172,18 +168,9 @@ function TransInvData(;
 
     # Create the new generalized investment data
     if isnothing(trans_start)
-        return SingleInvData(
-            capex_trans,
-            trans_max_inst,
-            tmp_inv_mode,
-        )
+        return SingleInvData(capex_trans, trans_max_inst, tmp_inv_mode)
     else
-        return SingleInvData(
-            capex_trans,
-            trans_max_inst,
-            trans_start,
-            tmp_inv_mode,
-        )
+        return SingleInvData(capex_trans, trans_max_inst, trans_start, tmp_inv_mode)
     end
 end
 
@@ -224,8 +211,8 @@ function InvDataStorage(;
     stor_max_add::TimeProfile,
     stor_min_add::TimeProfile,
     inv_mode::Investment = ContinuousInvestment(),
-    rate_start::Union{Real, Nothing} = nothing,
-    stor_start::Union{Real, Nothing} = nothing,
+    rate_start::Union{Real,Nothing} = nothing,
+    stor_start::Union{Real,Nothing} = nothing,
     rate_increment::TimeProfile = FixedProfile(0),
     stor_increment::TimeProfile = FixedProfile(0),
     life_mode::LifetimeMode = UnlimitedLife(),
@@ -284,12 +271,8 @@ function InvDataStorage(;
 
     # Create the new generalized investment data
     if isnothing(rate_start)
-        charge_type = NoStartInvData(
-            capex_rate,
-            rate_max_inst,
-            inv_mode_rate,
-            tmp_life_mode,
-        )
+        charge_type =
+            NoStartInvData(capex_rate, rate_max_inst, inv_mode_rate, tmp_life_mode)
     else
         charge_type = StartInvData(
             capex_rate,
@@ -300,26 +283,13 @@ function InvDataStorage(;
         )
     end
     if isnothing(stor_start)
-        level_type = NoStartInvData(
-            capex_stor,
-            stor_max_inst,
-            inv_mode_cap,
-            tmp_life_mode,
-        )
+        level_type = NoStartInvData(capex_stor, stor_max_inst, inv_mode_cap, tmp_life_mode)
     else
-        level_type = StartInvData(
-            capex_stor,
-            stor_max_inst,
-            stor_start,
-            inv_mode_cap,
-            tmp_life_mode,
-        )
+        level_type =
+            StartInvData(capex_stor, stor_max_inst, stor_start, inv_mode_cap, tmp_life_mode)
     end
 
-    return StorageInvData(
-        charge = charge_type,
-        level = level_type,
-    )
+    return StorageInvData(charge = charge_type, level = level_type)
 end
 
 """

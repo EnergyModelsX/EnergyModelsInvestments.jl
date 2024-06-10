@@ -35,8 +35,13 @@ include("legacy_constructor.jl")
 export AbstractInvestmentModel, InvestmentModel
 
 # Export of the types for investment modes
-export Investment, BinaryInvestment, DiscreteInvestment, ContinuousInvestment,
-    SemiContiInvestment, SemiContinuousInvestment, SemiContinuousOffsetInvestment,
+export Investment,
+    BinaryInvestment,
+    DiscreteInvestment,
+    ContinuousInvestment,
+    SemiContiInvestment,
+    SemiContinuousInvestment,
+    SemiContinuousOffsetInvestment,
     FixedInvestment
 
 # Export of the different lifetime modes

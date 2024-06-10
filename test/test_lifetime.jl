@@ -2,10 +2,15 @@ resulting_obj = Dict()
 @testset "Test Lifetime" begin
 
     lifetime = 15
-    for sp_dur ∈ [2,4,6]#,10,15,20]
+    for sp_dur ∈ [2, 4, 6]#,10,15,20]
         push!(resulting_obj, "$(sp_dur) years" => [])
         @testset "Modes - $(sp_dur) years" begin
-            for life_mode ∈ [UnlimitedLife(), StudyLife(FixedProfile(15)), PeriodLife(FixedProfile(15)), RollingLife(FixedProfile(15))]
+            for life_mode ∈ [
+                UnlimitedLife(),
+                StudyLife(FixedProfile(15)),
+                PeriodLife(FixedProfile(15)),
+                RollingLife(FixedProfile(15)),
+            ]
                 @testset "Mode $(life_mode)" begin
                     @debug "~~~~~~~~ $(life_mode) - $(sp_dur) years ~~~~~~~~"
 
@@ -21,8 +26,8 @@ resulting_obj = Dict()
                         "profile" => FixedProfile(20),
                     )
                     T = TwoLevel(4, sp_dur, SimpleTimes(4, 1))
-                    case, modeltype = small_graph(;inv_data, T)
-                    m               = optimize(case, modeltype)
+                    case, modeltype = small_graph(; inv_data, T)
+                    m = optimize(case, modeltype)
 
                     general_tests(m)
 
@@ -39,11 +44,16 @@ resulting_obj = Dict()
 
                     @testset "cap_inst" begin
                         # Check that cap_inst is less than node.data.Cap_max_inst at all times.
-                        @test sum(value.(m[:cap_inst][source, t]) <= EMI.max_installed(inv_data, t) for t ∈ 𝒯) == length(𝒯)
+                        @test sum(
+                            value.(m[:cap_inst][source, t]) <=
+                            EMI.max_installed(inv_data, t) for t ∈ 𝒯
+                        ) == length(𝒯)
 
                         for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                             # Check the initial installed capacity is correct set.
-                            @test value.(m[:cap_inst][source, t]) == EMB.capacity(source, t_inv) + value.(m[:cap_add][source, t_inv])
+                            @test value.(m[:cap_inst][source, t]) ==
+                                  EMB.capacity(source, t_inv) +
+                                  value.(m[:cap_add][source, t_inv])
                             break
                         end
                     end
@@ -52,13 +62,17 @@ resulting_obj = Dict()
         end
         @testset "Cost comparisons - $(sp_dur) years" begin
             if sp_dur > lifetime
-                @test floor(resulting_obj["$(sp_dur) years"][3]) == floor(resulting_obj["$(sp_dur) years"][4])
+                @test floor(resulting_obj["$(sp_dur) years"][3]) ==
+                      floor(resulting_obj["$(sp_dur) years"][4])
             elseif sp_dur == lifetime
-                @test floor(resulting_obj["$(sp_dur) years"][3]) == floor(resulting_obj["$(sp_dur) years"][4])
-                @test floor(resulting_obj["$(sp_dur) years"][2]) == floor(resulting_obj["$(sp_dur) years"][3])
+                @test floor(resulting_obj["$(sp_dur) years"][3]) ==
+                      floor(resulting_obj["$(sp_dur) years"][4])
+                @test floor(resulting_obj["$(sp_dur) years"][2]) ==
+                      floor(resulting_obj["$(sp_dur) years"][3])
             end
-            if sp_dur*4 < lifetime #4 corresponds to the len of T, i.e. the number of strategic periods.
-                @test floor(resulting_obj["$(sp_dur) years"][2]) ≈ floor(resulting_obj["$(sp_dur) years"][4])
+            if sp_dur * 4 < lifetime #4 corresponds to the len of T, i.e. the number of strategic periods.
+                @test floor(resulting_obj["$(sp_dur) years"][2]) ≈
+                      floor(resulting_obj["$(sp_dur) years"][4])
             end
         end
     end

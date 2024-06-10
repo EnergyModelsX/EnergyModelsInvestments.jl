@@ -56,9 +56,10 @@ function add_investment_constraints(
             start_cap_val = start_cap(element, t_inv, inv_data, cap)
             @constraint(m, var_current[t_inv] == start_cap_val + var_add[t_inv])
         else
-            @constraint(m,
+            @constraint(
+                m,
                 var_current[t_inv] ==
-                    var_current[t_inv_prev] + var_add[t_inv] - var_rem[t_inv_prev]
+                var_current[t_inv_prev] + var_add[t_inv] - var_rem[t_inv_prev]
             )
         end
     end
@@ -95,7 +96,9 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_current = get_var_current(m, prefix, element)
 
     # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current[t_inv] ==
         invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
@@ -116,13 +119,15 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_rem = get_var_rem(m, prefix, element)
 
     # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_add[t_inv] ==
-            increment(inv_mode, t_inv) * var_invest_b[element, t_inv]
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_add[t_inv] == increment(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_rem[t_inv] ==
-            increment(inv_mode, t_inv) * var_remove_b[element, t_inv]
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_rem[t_inv] == increment(inv_mode, t_inv) * var_remove_b[element, t_inv]
     )
 end
 function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
@@ -137,13 +142,15 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_add = get_var_add(m, prefix, element)
 
     # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_add[t_inv] <=
-            max_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_add[t_inv] <= max_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_add[t_inv] >=
-            min_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_add[t_inv] >= min_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
 end
 function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::FixedInvestment)
@@ -151,16 +158,18 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         insertvar!(var_invest_b, element, t_inv)
-        fix(var_invest_b[element, t_inv], 1; force=true)
+        fix(var_invest_b[element, t_inv], 1; force = true)
     end
 
     # Deduce the required variables
     var_current = get_var_current(m, prefix, element)
 
     # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current[t_inv] ==
-            invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
+        invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
 end
 
@@ -180,8 +189,15 @@ It implements different versions of the lifetime implementation:
                     retired at the end of its lifetime or the end of the previous sp if \
                     its lifetime ends between two sp.
 """
-set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate) =
-    set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, lifetime_mode(inv_data))
+set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate) = set_capacity_cost(
+    m,
+    element,
+    inv_data,
+    prefix,
+    𝒯ᴵⁿᵛ,
+    disc_rate,
+    lifetime_mode(inv_data),
+)
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::UnlimitedLife)
     # Deduce the required variables
     var_capex = get_var_capex(m, prefix, element)
@@ -193,7 +209,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # Fix the binary variable
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        fix(var_rem[t_inv], 0; force=true)
+        fix(var_rem[t_inv], 0; force = true)
     end
 end
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::StudyLife)
@@ -203,24 +219,18 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # The capacity is limited to the end of the study. Reinvestments are included
     # No capacity removed as there are reinvestments according to the study length
-    capex_disc = StrategicProfile(
-        [
-            set_capex_discounter(
-                remaining(t_inv, 𝒯ᴵⁿᵛ),
-                lifetime(inv_data, t_inv),
-                disc_rate,
-            ) for t_inv ∈ 𝒯ᴵⁿᵛ
-        ]
-    )
+    capex_disc = StrategicProfile([
+        set_capex_discounter(remaining(t_inv, 𝒯ᴵⁿᵛ), lifetime(inv_data, t_inv), disc_rate) for t_inv ∈ 𝒯ᴵⁿᵛ
+    ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
 
     # Fix the binary variable
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        fix(var_rem[t_inv], 0; force=true)
+        fix(var_rem[t_inv], 0; force = true)
     end
 end
-function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ,  disc_rate, ::PeriodLife)
+function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::PeriodLife)
     # Deduce the required variables
     var_capex = get_var_capex(m, prefix, element)
     var_add = get_var_add(m, prefix, element)
@@ -229,15 +239,9 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ,  disc_ra
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The capacity removal variable is corresponding to the removal of the capacity at the
     # end of the strategic period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
-    capex_disc = StrategicProfile(
-        [
-            set_capex_discounter(
-            duration_strat(t_inv),
-            lifetime(inv_data, t_inv),
-            disc_rate,
-            ) for t_inv ∈ 𝒯ᴵⁿᵛ
-        ]
-    )
+    capex_disc = StrategicProfile([
+        set_capex_discounter(duration_strat(t_inv), lifetime(inv_data, t_inv), disc_rate) for t_inv ∈ 𝒯ᴵⁿᵛ
+    ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_rem[t_inv] == var_add[t_inv])
@@ -260,13 +264,13 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         if lifetime_val < duration_strat(t_inv)
             set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, PeriodLife())
 
-        # If lifetime is equal to sp duration we only need to invest once and there is no
-        # rest value. The invested capacity is removed at the end of the strategic period
+            # If lifetime is equal to sp duration we only need to invest once and there is no
+            # rest value. The invested capacity is removed at the end of the strategic period
         elseif lifetime_val == duration_strat(t_inv)
             @constraint(m, var_capex[t_inv] == capex_val)
             @constraint(m, var_rem[t_inv] == var_add[t_inv])
 
-        # If lifetime is longer than sp duration, the capacity can roll over to the next sp
+            # If lifetime is longer than sp duration, the capacity can roll over to the next sp
         elseif lifetime_val > duration_strat(t_inv)
             # Initialization of the ante_sp and the remaining lifetime
             # ante_sp represents the last sp in which the remaining lifetime is sufficient
@@ -287,8 +291,9 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
             # Calculation of cost and rest value
             capex_disc = (
-                1 - (remaining_lifetime / lifetime_val) *
-                (1 + disc_rate) ^ (-(lifetime_val - remaining_lifetime))
+                1 -
+                (remaining_lifetime / lifetime_val) *
+                (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
             )
             @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
 

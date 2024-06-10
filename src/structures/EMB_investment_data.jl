@@ -21,9 +21,9 @@ Hence, the names of the parameters have to be specified.
   discharge capacity.
 """
 @kwdef struct StorageInvData <: InvestmentData
-    charge::Union{AbstractInvData, Nothing} = nothing
-    level::Union{AbstractInvData, Nothing} = nothing
-    discharge::Union{AbstractInvData, Nothing} = nothing
+    charge::Union{AbstractInvData,Nothing} = nothing
+    level::Union{AbstractInvData,Nothing} = nothing
+    discharge::Union{AbstractInvData,Nothing} = nothing
 end
 
 """
@@ -61,34 +61,21 @@ struct SingleInvData <: InvestmentData
     cap::AbstractInvData
 end
 function SingleInvData(
-        capex_trans::TimeProfile,
-        trans_max_inst::TimeProfile,
-        inv_mode::Investment,
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    inv_mode::Investment,
 )
 
-    return SingleInvData(
-        NoStartInvData(
-            capex_trans,
-            trans_max_inst,
-            inv_mode,
-        )
-    )
+    return SingleInvData(NoStartInvData(capex_trans, trans_max_inst, inv_mode))
 end
 function SingleInvData(
-        capex_trans::TimeProfile,
-        trans_max_inst::TimeProfile,
-        inv_mode::Investment,
-        life_mode::LifetimeMode,
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    inv_mode::Investment,
+    life_mode::LifetimeMode,
 )
 
-    return SingleInvData(
-        NoStartInvData(
-            capex_trans,
-            trans_max_inst,
-            inv_mode,
-            life_mode,
-        )
-    )
+    return SingleInvData(NoStartInvData(capex_trans, trans_max_inst, inv_mode, life_mode))
 end
 function SingleInvData(
     capex_trans::TimeProfile,
@@ -97,14 +84,7 @@ function SingleInvData(
     inv_mode::Investment,
 )
 
-    return SingleInvData(
-        StartInvData(
-            capex_trans,
-            trans_max_inst,
-            initial,
-            inv_mode,
-        )
-    )
+    return SingleInvData(StartInvData(capex_trans, trans_max_inst, initial, inv_mode))
 end
 function SingleInvData(
     capex_trans::TimeProfile,
@@ -115,13 +95,7 @@ function SingleInvData(
 )
 
     return SingleInvData(
-        StartInvData(
-            capex_trans,
-            trans_max_inst,
-            initial,
-            inv_mode,
-            life_mode,
-        )
+        StartInvData(capex_trans, trans_max_inst, initial, inv_mode, life_mode),
     )
 end
 """
@@ -144,8 +118,7 @@ investment_data(inv_data::SingleInvData) = inv_data.cap
 
 Return the investment data of the type `element` of the capacity `field`.
 """
-investment_data(element, field::Symbol) =
-    getproperty(investment_data(element), field)
+investment_data(element, field::Symbol) = getproperty(investment_data(element), field)
 
 """
     has_investment(element)
@@ -155,6 +128,6 @@ For a given type `element`, checks that it contains the required investment data
 function has_investment(element)
     (
         hasproperty(element, :data) &&
-        !isnothing(findfirst(data->typeof(data)<:InvestmentData, element.data))
+        !isnothing(findfirst(data -> typeof(data) <: InvestmentData, element.data))
     )
 end

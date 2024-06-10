@@ -20,7 +20,7 @@ investments and additional discounting of future years.
 - **`co2_instance`** is a `ResourceEmit` and corresponds to the type used for CO₂.
 - **`r::Float64`** is the discount rate in the investment optimization.
 """
-struct InvestmentModel{DEL, DEP, CO2} <: AbstractInvestmentModel
+struct InvestmentModel{DEL,DEP,CO2} <: AbstractInvestmentModel
     emission_limit::DEL
     emission_price::DEP
     co2_instance::CO2

@@ -22,8 +22,7 @@ Returns the starting capacity of the type `element` in the first investment peri
 If [`NoStartInvData`](@ref) is used for the starting capacity, it deduces the value from the
 provided initial capacity.
 """
-start_cap(element, t_inv, inv_data::StartInvData, cap) =
-    inv_data.initial
+start_cap(element, t_inv, inv_data::StartInvData, cap) = inv_data.initial
 
 
 """
@@ -38,7 +37,7 @@ get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_capex(m, prefix::Symbol, element)  = m[Symbol(prefix, :_capex)][element, :]
+get_var_capex(m, prefix::Symbol, element) = m[Symbol(prefix, :_capex)][element, :]
 
 """
     get_var_inst(m, prefix::Symbol)
@@ -52,7 +51,7 @@ get_var_inst(m, prefix::Symbol) = m[Symbol(prefix, :_inst)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_inst(m, prefix::Symbol, element)  = m[Symbol(prefix, :_inst)][element, :]
+get_var_inst(m, prefix::Symbol, element) = m[Symbol(prefix, :_inst)][element, :]
 
 """
     get_var_current(m, prefix::Symbol)
@@ -66,7 +65,7 @@ get_var_current(m, prefix::Symbol) = m[Symbol(prefix, :_current)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_current(m, prefix::Symbol, element)  = m[Symbol(prefix, :_current)][element, :]
+get_var_current(m, prefix::Symbol, element) = m[Symbol(prefix, :_current)][element, :]
 
 """
     get_var_add(m, prefix::Symbol)
@@ -80,7 +79,7 @@ get_var_add(m, prefix::Symbol) = m[Symbol(prefix, :_add)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_add(m, prefix::Symbol, element)  = m[Symbol(prefix, :_add)][element, :]
+get_var_add(m, prefix::Symbol, element) = m[Symbol(prefix, :_add)][element, :]
 
 """
     get_var_rem(m, prefix::Symbol)
@@ -94,7 +93,7 @@ get_var_rem(m, prefix::Symbol) = m[Symbol(prefix, :_rem)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_rem(m, prefix::Symbol, element)  = m[Symbol(prefix, :_rem)][element, :]
+get_var_rem(m, prefix::Symbol, element) = m[Symbol(prefix, :_rem)][element, :]
 
 """
     get_var_invest_b(m, prefix::Symbol)
@@ -108,7 +107,7 @@ get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_invest_b(m, prefix::Symbol, element)  = m[Symbol(prefix, :_invest_b)][element, :]
+get_var_invest_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_invest_b)][element, :]
 
 """
     get_var_remove_b(m, prefix::Symbol)
@@ -122,7 +121,7 @@ get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
 When the type `element` is used as conditional input, it extracts only the variable for
 the specified node.
 """
-get_var_remove_b(m, prefix::Symbol, element)  = m[Symbol(prefix, :_remove_b)][element, :]
+get_var_remove_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_remove_b)][element, :]
 
 """
     set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
@@ -160,12 +159,21 @@ end
 When the investment mode is given by [`SemiContinuousOffsetInvestment`](@ref) then there is
 an additional offset for the CAPEX.
 """
-function set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContinuousOffsetInvestment)
+function set_capex_value(
+    m,
+    element,
+    inv_data,
+    prefix,
+    𝒯ᴵⁿᵛ,
+    inv_mode::SemiContinuousOffsetInvestment,
+)
     # Deduce the required variables
     var_add = get_var_add(m, prefix, element)
     var_invest_b = get_var_invest_b(m, prefix)
 
-    return @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    return @expression(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         capex(inv_data, t_inv) * var_add[t_inv] +
         capex_offset(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
@@ -185,8 +193,9 @@ is given by `PeriodLife` and `StudyLife`.
 - `disc_rate`: the discount rate.
 """
 function set_capex_discounter(years, lifetime, disc_rate)
-    N_inv = ceil(years/lifetime)
-    capex_disc = sum((1 + disc_rate)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
-                 ((N_inv * lifetime - years)/lifetime) * (1 + disc_rate)^(-years)
+    N_inv = ceil(years / lifetime)
+    capex_disc =
+        sum((1 + disc_rate)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
+        ((N_inv * lifetime - years) / lifetime) * (1 + disc_rate)^(-years)
     return capex_disc
 end
