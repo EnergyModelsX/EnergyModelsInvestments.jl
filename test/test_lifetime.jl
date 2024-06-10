@@ -43,7 +43,7 @@ resulting_obj = Dict()
 
                         for t_inv in 𝒯ⁱⁿᵛ, t ∈ t_inv
                             # Check the initial installed capacity is correct set.
-                            @test value.(m[:cap_inst][source, t]) == capacity(source, t_inv) + value.(m[:cap_add][source, t_inv])
+                            @test value.(m[:cap_inst][source, t]) == EMB.capacity(source, t_inv) + value.(m[:cap_add][source, t_inv])
                             break
                         end
                     end

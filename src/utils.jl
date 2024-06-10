@@ -24,8 +24,7 @@ provided initial capacity.
 """
 start_cap(element, t_inv, inv_data::StartInvData, cap) =
     inv_data.initial
-start_cap(element, t_inv, inv_data::NoStartInvData, cap) =
-    capacity(element, t_inv)
+
 
 """
     get_var_capex(m, prefix::Symbol)

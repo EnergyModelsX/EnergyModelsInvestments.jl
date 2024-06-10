@@ -48,13 +48,13 @@ end
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Test the initial installed capacity is correct set.
                 @test value.(m[:cap_inst][source, t]) ==
-                            capacity(source, t) + value.(m[:cap_add][source, t_inv])
+                            EMB.capacity(source, t) + value.(m[:cap_add][source, t_inv])
                 break
             end
 
             # Test that cap_inst is larger or equal to demand profile in sink and deficit
             @test sum(value.(m[:cap_inst][source, t]) + value.(m[:sink_deficit][sink, t])
-                        ≥ capacity(sink, t) for t ∈ 𝒯) == length(𝒯)
+                        ≥ EMB.capacity(sink, t) for t ∈ 𝒯) == length(𝒯)
         end
         @test sum(value.(m[:cap_add][source, t_inv]) ≥
                     EMI.min_add(inv_data, t_inv) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
@@ -95,13 +95,13 @@ end
             for t_inv in 𝒯ᴵⁿᵛ, t ∈ t_inv
                 # Test the initial installed capacity is correct set.
                 @test value.(m[:cap_inst][source, t]) ==
-                            capacity(source, t) + value.(m[:cap_add][source, t_inv])
+                            EMB.capacity(source, t) + value.(m[:cap_add][source, t_inv])
                 break
             end
 
             # Test that cap_inst is larger or equal to demand profile in sink and deficit
             @test sum(value.(m[:cap_inst][source, t])+value.(m[:sink_deficit][sink, t])
-                        ≥ capacity(sink, t) for t ∈ 𝒯) == length(𝒯)
+                        ≥ EMB.capacity(sink, t) for t ∈ 𝒯) == length(𝒯)
         end
 
         # Test that the semi continuous bound is always followed

@@ -91,7 +91,7 @@ function EMG.constraints_capacity_installed(
         EMI.add_investment_constraints(m, tm, inv_data, :cap, :trans_cap, 𝒯ᴵⁿᵛ, disc_rate)
     else
         for t ∈ 𝒯
-            fix(m[:trans_cap][tm, t], capacity(tm, t); force=true)
+            fix(m[:trans_cap][tm, t], EMB.capacity(tm, t); force=true)
         end
     end
 end
