@@ -28,9 +28,9 @@ include("utils.jl")
             include("test_lifetime.jl")
         end
 
-        # @testset "Investments | checks" begin
-        #     include("test_checks.jl")
-        # end
+        @testset "Investments | checks" begin
+            include("test_checks.jl")
+        end
 
         @testset "Investments | examples" begin
             include("test_examples.jl")
