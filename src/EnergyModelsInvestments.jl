@@ -21,8 +21,6 @@ const TS = TimeStruct
 include(joinpath("structures", "investment_mode.jl"))
 include(joinpath("structures", "lifetime_mode.jl"))
 include(joinpath("structures", "investment_data.jl"))
-include(joinpath("structures", "EMB_investment_data.jl"))
-include(joinpath("structures", "model.jl"))
 
 # Core structure of the code
 include("model.jl")
@@ -30,9 +28,6 @@ include("utils.jl")
 
 # Legacy constructors for node types
 include("legacy_constructor.jl")
-
-# Export of the types for investment models
-export AbstractInvestmentModel, InvestmentModel
 
 # Export of the types for investment modes
 export Investment,
@@ -49,9 +44,10 @@ export LifetimeMode
 export UnlimitedLife, StudyLife, PeriodLife, RollingLife
 
 # Export of the types for the additional investment data
-export InvestmentData
-export InvData, InvDataStorage, SingleInvData, StorageInvData
 export AbstractInvData, NoStartInvData, StartInvData
+
+# Export of the types for extracting fields
+export investment_data, investment_mode
 
 # Geographical investment data
 export TransInvData

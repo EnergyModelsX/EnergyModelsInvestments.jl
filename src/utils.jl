@@ -1,29 +1,27 @@
 """
-    investment_mode(element)
+    investment_data(element)
 
-Return the investment mode of the type `element`. By default, all investments are continuous.
+Return the investment data of the element.
+
+The default implementation results in an error as this function requires an additional
+method for the individual elements.
 """
-investment_mode(element) = investment_data(element).inv_mode
-
-"""
-    investment_mode(element, cap::Symbol)
-
-Return the investment mode of the type `element` and the capacity `cap`.
-
-This function utilizes the function [`investment_mode(investment_mode(inv_data::AbstractInvData))`](@ref)
-for the [`AbstractInvData`](@ref) of the capacity `cap`
-"""
-investment_mode(element, cap::Symbol) = investment_mode(investment_data(element, cap))
+investment_data(element) = error(
+    "The function `investment_data` is not implemented for $(typeof(element))",
+)
 
 """
     start_cap(element, t_inv, inv_data::AbstractInvData, cap)
 
 Returns the starting capacity of the type `element` in the first investment period.
-If [`NoStartInvData`](@ref) is used for the starting capacity, it deduces the value from the
-provided initial capacity.
+If [`NoStartInvData`](@ref) is used for the starting capacity, it requires the definition
+of a method for the corresponding `element`.
 """
 start_cap(element, t_inv, inv_data::StartInvData, cap) = inv_data.initial
-
+start_cap(element, t_inv, inv_data::NoStartInvData, cap) = error(
+    "The function `investment_data` is not implemented for $(typeof(element)) and " *
+    "`NoStartInvData`",
+)
 
 """
     get_var_capex(m, prefix::Symbol)

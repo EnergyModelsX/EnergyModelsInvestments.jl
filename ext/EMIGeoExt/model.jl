@@ -13,9 +13,9 @@ function EMG.update_objective(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentMod
 
     # Extraction of data
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    ℳᴵⁿᵛ = filter(EMI.has_investment, ℳ)
+    ℳᴵⁿᵛ = filter(has_investment, ℳ)
     obj  = JuMP.objective_function(m)
-    disc = Discounter(EMI.discount_rate(modeltype), 𝒯)
+    disc = Discounter(discount_rate(modeltype), 𝒯)
 
     # Update of the cost function for modes with investments
     for t_inv ∈  𝒯ᴵⁿᵛ, tm ∈ ℳ
@@ -47,7 +47,7 @@ Additional variables for investment in capacity:
 """
 function EMG.variables_trans_capex(m, 𝒯, ℳ, modeltype::EMI.AbstractInvestmentModel)
 
-    ℳᴵⁿᵛ = filter(EMI.has_investment, ℳ)
+    ℳᴵⁿᵛ = filter(has_investment, ℳ)
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Add transmission specific investment variables for each strategic period:
@@ -81,9 +81,9 @@ function EMG.constraints_capacity_installed(
     𝒯::TimeStructure,
     modeltype::AbstractInvestmentModel,
 )
-    if EMI.has_investment(tm)
+    if has_investment(tm)
         # Extract the investment data and the discount rate
-        disc_rate = EMI.discount_rate(modeltype)
+        disc_rate = discount_rate(modeltype)
         inv_data = EMI.investment_data(tm, :cap)
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 

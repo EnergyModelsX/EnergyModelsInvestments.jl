@@ -64,7 +64,7 @@ function add_investment_constraints(
         end
     end
     # Constraints for investments
-    set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, investment_mode(element, cap))
+    set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
 
     # Constraints for the CAPEX calculation
     set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate)
