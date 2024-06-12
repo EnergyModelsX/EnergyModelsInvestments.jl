@@ -19,14 +19,14 @@ const EMI = EnergyModelsInvestments
 const TS = TimeStruct
 
 """
-    generate_example_data()
+    generate_ss_example_data()
 
 Generate the data for an example consisting of an electricity source and sink.
 The electricity source has initially no capacity. Hence, investments are required.
 
 The example is partly based on the provided example `sink_source.jl` in `EnergyModelsBase`.
 """
-function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
+function generate_ss_example_data(lifemode = RollingLife; discount_rate = 0.05)
     @info "Generate case data - Simple sink-source example"
 
     # Define the different resources and their emission intensity in tCO2/MWh
@@ -97,7 +97,7 @@ function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
 end
 
 # Create the case and model data and run the model
-case, model = generate_example_data()
+case, model = generate_ss_example_data()
 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMB.run_model(case, model, optimizer)
 
