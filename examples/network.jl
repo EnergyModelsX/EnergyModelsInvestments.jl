@@ -53,7 +53,7 @@ function generate_example_data_network()
     T = TwoLevel(4, sp_duration, operational_periods; op_per_strat)
 
     # Create the global data
-    em_limits = Dict(CO2 => StrategicProfile([450, 400, 350, 300]*365))   # Emission cap for CO2 in t/year
+    em_limits = Dict(CO2 => StrategicProfile([450, 400, 350, 300] * 365))   # Emission cap for CO2 in t/year
     em_cost = Dict(CO2 => FixedProfile(0))  # Emission price for CO2 in EUR/t
     discount_rate = 0.07                    # Discount rate in absolute value
     model = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
@@ -61,7 +61,32 @@ function generate_example_data_network()
     # Create the individual test nodes, corresponding to a system with an electricity demand/sink,
     # coal and nautral gas sources, coal and natural gas (with CCS) power plants and CO2 storage.
     # Only the natural gas power plant and the CO2 storage nodes have ivnestment options
-    op_profile = OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20])
+    op_profile = OperationalProfile([
+        20,
+        20,
+        20,
+        20,
+        25,
+        30,
+        35,
+        35,
+        40,
+        40,
+        40,
+        40,
+        40,
+        35,
+        35,
+        30,
+        25,
+        30,
+        35,
+        30,
+        25,
+        20,
+        20,
+        20,
+    ])
     nodes = [
         GenAvailability(1, products),   # Routing Node
         RefSource(                      # Natural gas source
@@ -91,7 +116,7 @@ function generate_example_data_network()
             # value does not matter
             [
                 SingleInvData(
-                    FixedProfile(600*1e3),  # Capex in EUR/MW
+                    FixedProfile(600 * 1e3),  # Capex in EUR/MW
                     FixedProfile(40),       # Max installed capacity [MW]
                     SemiContinuousInvestment(FixedProfile(5), FixedProfile(40)),
                     # Line above: Investment mode with the following arguments:
@@ -115,7 +140,7 @@ function generate_example_data_network()
             StorCapOpex(
                 FixedProfile(0),        # Charge capacity in t/h
                 FixedProfile(9.1),      # Storage variable OPEX for the charging in EUR/t
-                FixedProfile(15*1e3),   # Storage fixed OPEX for the charging in EUR/(t/h 8h)
+                FixedProfile(15 * 1e3),   # Storage fixed OPEX for the charging in EUR/(t/h 8h)
             ),
             StorCap(FixedProfile(1e8)), # Storage capacity in t
             CO2,                        # Stored resource
@@ -126,15 +151,15 @@ function generate_example_data_network()
             [
                 StorageInvData(
                     charge = NoStartInvData(
-                        FixedProfile(200*1e3),  # CAPEX [EUR/(t/h)]
+                        FixedProfile(200 * 1e3),  # CAPEX [EUR/(t/h)]
                         FixedProfile(60),       # Max installed capacity [EUR/(t/h)]
                         ContinuousInvestment(FixedProfile(0), FixedProfile(5)),
                         # Line above: Investment mode with the following arguments:
                         # 1. argument: min added capactity per sp [t/h]
                         # 2. argument: max added capactity per sp [t/h]
                         UnlimitedLife(),        # Lifetime mode
-                    )
-                )
+                    ),
+                ),
             ],
         ),
         RefSink(                        # Demand Node
@@ -160,12 +185,7 @@ function generate_example_data_network()
     ]
 
     # WIP case structure
-    case = Dict(
-        :nodes => nodes,
-        :links => links,
-        :products => products,
-        :T => T,
-    )
+    case = Dict(:nodes => nodes, :links => links, :products => products, :T => T)
     return case, model
 end
 

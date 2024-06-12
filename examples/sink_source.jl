@@ -60,7 +60,7 @@ function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
 
     # Create the investment data for the source node
     investment_data_source = SingleInvData(
-        FixedProfile(300*1e3),  # capex [€/MW]
+        FixedProfile(300 * 1e3),  # capex [€/MW]
         FixedProfile(30),       # max installed capacity [MW]
         ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
         # Line above: Investment mode with the following arguments:
@@ -89,17 +89,10 @@ function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
     nodes = [source, sink]
 
     # Connect the two ndoes
-    links = [
-        Direct("source-demand", nodes[1], nodes[2], Linear())
-    ]
+    links = [Direct("source-demand", nodes[1], nodes[2], Linear())]
 
     # WIP data structure
-    case = Dict(
-        :nodes => nodes,
-        :links => links,
-        :products => products,
-        :T => T,
-    )
+    case = Dict(:nodes => nodes, :links => links, :products => products, :T => T)
     return case, model
 end
 

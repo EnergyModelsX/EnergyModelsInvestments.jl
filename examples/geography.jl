@@ -81,7 +81,7 @@ function generate_example_data_geo()
         BinaryInvestment(FixedProfile(50.0)),
     )
 
-    inv_data_13 =  SingleInvData(
+    inv_data_13 = SingleInvData(
         FixedProfile(10),
         FixedProfile(100),
         0,
@@ -103,40 +103,68 @@ function generate_example_data_geo()
     )
 
     # Create the TransmissionModes and the Transmission corridors
-    OverheadLine_50MW_12 = RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_12])
-    OverheadLine_50MW_13 = RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_13])
-    OverheadLine_50MW_23 = RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_23])
-    OverheadLine_50MW_34 = RefStatic("PowerLine_50", Power, FixedProfile(50.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [inv_data_34])
-    LNG_Ship_100MW = RefDynamic("LNG_100", NG, FixedProfile(100.0), FixedProfile(0.05), FixedProfile(0), FixedProfile(0), 2, [])
+    OverheadLine_50MW_12 = RefStatic(
+        "PowerLine_50",
+        Power,
+        FixedProfile(50.0),
+        FixedProfile(0.05),
+        FixedProfile(0),
+        FixedProfile(0),
+        2,
+        [inv_data_12],
+    )
+    OverheadLine_50MW_13 = RefStatic(
+        "PowerLine_50",
+        Power,
+        FixedProfile(50.0),
+        FixedProfile(0.05),
+        FixedProfile(0),
+        FixedProfile(0),
+        2,
+        [inv_data_13],
+    )
+    OverheadLine_50MW_23 = RefStatic(
+        "PowerLine_50",
+        Power,
+        FixedProfile(50.0),
+        FixedProfile(0.05),
+        FixedProfile(0),
+        FixedProfile(0),
+        2,
+        [inv_data_23],
+    )
+    OverheadLine_50MW_34 = RefStatic(
+        "PowerLine_50",
+        Power,
+        FixedProfile(50.0),
+        FixedProfile(0.05),
+        FixedProfile(0),
+        FixedProfile(0),
+        2,
+        [inv_data_34],
+    )
+    LNG_Ship_100MW = RefDynamic(
+        "LNG_100",
+        NG,
+        FixedProfile(100.0),
+        FixedProfile(0.05),
+        FixedProfile(0),
+        FixedProfile(0),
+        2,
+        [],
+    )
 
     transmission = [
-        Transmission(
-            areas[1],
-            areas[2],
-            [OverheadLine_50MW_12],
-        ),
-        Transmission(
-            areas[1],
-            areas[3],
-            [OverheadLine_50MW_13],
-        ),
-        Transmission(
-            areas[2],
-            areas[3],
-            [OverheadLine_50MW_23],
-        ),
-        Transmission(
-            areas[3],
-            areas[4],
-            [OverheadLine_50MW_34],
-        ),
+        Transmission(areas[1], areas[2], [OverheadLine_50MW_12]),
+        Transmission(areas[1], areas[3], [OverheadLine_50MW_13]),
+        Transmission(areas[2], areas[3], [OverheadLine_50MW_23]),
+        Transmission(areas[3], areas[4], [OverheadLine_50MW_34]),
         Transmission(areas[4], areas[2], [LNG_Ship_100MW]),
     ]
 
     # Creation of the time structure and global data
     T = TwoLevel(4, 1, SimpleTimes(24, 1))
-    em_limits =
-        Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
+    em_limits = Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
     em_cost = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
     modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 
@@ -168,22 +196,122 @@ end
 
 
 function get_sub_system_data(
-        i,
-        products;
-        gen_scale::Float64 = 1.0,
-        mc_scale::Float64 = 1.0,
-        d_scale::Float64 = 1.0,
-        demand = false,
-    )
+    i,
+    products;
+    gen_scale::Float64 = 1.0,
+    mc_scale::Float64 = 1.0,
+    d_scale::Float64 = 1.0,
+    demand = false,
+)
 
     NG, Coal, Power, CO2 = products
 
     if demand == false
         demand = [
-            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20]),
-            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20]),
-            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20]),
-            OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20])
+            OperationalProfile([
+                20,
+                20,
+                20,
+                20,
+                25,
+                30,
+                35,
+                35,
+                40,
+                40,
+                40,
+                40,
+                40,
+                35,
+                35,
+                30,
+                25,
+                30,
+                35,
+                30,
+                25,
+                20,
+                20,
+                20,
+            ]),
+            OperationalProfile([
+                20,
+                20,
+                20,
+                20,
+                25,
+                30,
+                35,
+                35,
+                40,
+                40,
+                40,
+                40,
+                40,
+                35,
+                35,
+                30,
+                25,
+                30,
+                35,
+                30,
+                25,
+                20,
+                20,
+                20,
+            ]),
+            OperationalProfile([
+                20,
+                20,
+                20,
+                20,
+                25,
+                30,
+                35,
+                35,
+                40,
+                40,
+                40,
+                40,
+                40,
+                35,
+                35,
+                30,
+                25,
+                30,
+                35,
+                30,
+                25,
+                20,
+                20,
+                20,
+            ]),
+            OperationalProfile([
+                20,
+                20,
+                20,
+                20,
+                25,
+                30,
+                35,
+                35,
+                40,
+                40,
+                40,
+                40,
+                40,
+                35,
+                35,
+                30,
+                25,
+                30,
+                35,
+                30,
+                25,
+                20,
+                20,
+                20,
+            ]),
         ]
         demand *= d_scale
     end
@@ -239,7 +367,7 @@ function get_sub_system_data(
                     FixedProfile(25),   # max installed capacity [kW]
                     ContinuousInvestment(FixedProfile(0), FixedProfile(25)), # investment mode
                 ),
-                CaptureEnergyEmissions(0.9)
+                CaptureEnergyEmissions(0.9),
             ],
         ),
         RefNetworkNode(
@@ -276,7 +404,7 @@ function get_sub_system_data(
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
-                    )
+                    ),
                 ),
             ],
         ),
@@ -314,7 +442,7 @@ function get_sub_system_data(
                         FixedProfile(500),
                         FixedProfile(50),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(2)),
-                    )
+                    ),
                 ),
             ],
         ),
