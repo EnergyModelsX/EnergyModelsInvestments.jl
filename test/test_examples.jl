@@ -6,7 +6,9 @@ ENV["EMX_TEST"] = true # Set flag for example scripts to check if they are run a
     filter!(!startswith("geo"), files) # Skip geo temporarily
     for file in files
         @testset "Example $file" begin
-            include(joinpath(exdir, file))
+            redirect_stdio(stdout=devnull, stderr=devnull) do
+                include(joinpath(exdir, file))
+            end
             @test termination_status(m) == MOI.OPTIMAL
         end
     end
