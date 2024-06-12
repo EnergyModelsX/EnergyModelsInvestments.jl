@@ -74,8 +74,7 @@ EMB.TEST_ENV = true
             "when testing new components. In all other instances, it is recommended to " *
             "provide the correct timeprofiles using a preprocessing routine.\n\n" *
             "If timeprofiles are not checked, inconsistencies can occur."
-        # @test_logs (:warn, msg) run_simple_graph(max_add; check_timeprofiles = false)
-        @test_broken "reenable test above when investment data issue is fixed" == false
+        @test_logs (:warn, msg) run_simple_graph(max_add; check_timeprofiles = false)
 
         # Check that we receive an error if the capacity is an operational profile
         investment_data_source = [
