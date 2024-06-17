@@ -1,5 +1,6 @@
 using HiGHS
 using JuMP
+using Pkg
 using Test
 
 using EnergyModelsBase

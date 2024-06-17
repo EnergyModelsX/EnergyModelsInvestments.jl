@@ -1,4 +1,3 @@
-using Pkg
 ENV["EMX_TEST"] = true # Set flag for example scripts to check if they are run as part of the tests
 
 @testset "Run examples" begin
