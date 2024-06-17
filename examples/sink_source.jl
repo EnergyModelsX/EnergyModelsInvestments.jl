@@ -1,6 +1,8 @@
 using Pkg
 # Activate the local environment including EnergyModelsInvestments, HiGHS, PrettyTables
 Pkg.activate(@__DIR__)
+# Use dev version if run as part of tests
+haskey(ENV, "EMX_TEST") && Pkg.develop(path=joinpath(@__DIR__,".."))
 # Install the dependencies.
 Pkg.instantiate()
 
@@ -107,20 +109,22 @@ optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMB.run_model(case, model, optimizer)
 
 # Display some results
-source, sink = case[:nodes]
-@info "Invested capacity for the source in the beginning of the individual strategic periods"
-pretty_table(
-    JuMP.Containers.rowtable(
-        value,
-        m[:cap_add][source, :];
-        header = [:StrategicPeriod, :InvestCapacity],
-    ),
-)
-@info "Retired capacity of the source at the end of the individual strategic periods"
-pretty_table(
-    JuMP.Containers.rowtable(
-        value,
-        m[:cap_rem][source, :];
-        header = [:StrategicPeriod, :InvestCapacity],
-    ),
-)
+if !haskey(ENV, "EMX_TEST")
+    source, sink = case[:nodes]
+    @info "Invested capacity for the source in the beginning of the individual strategic periods"
+    pretty_table(
+        JuMP.Containers.rowtable(
+            value,
+            m[:cap_add][source, :];
+            header = [:StrategicPeriod, :InvestCapacity],
+        ),
+    )
+    @info "Retired capacity of the source at the end of the individual strategic periods"
+    pretty_table(
+        JuMP.Containers.rowtable(
+            value,
+            m[:cap_rem][source, :];
+            header = [:StrategicPeriod, :InvestCapacity],
+        ),
+    )
+end
