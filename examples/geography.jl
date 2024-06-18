@@ -1,6 +1,8 @@
 using Pkg
 # Activate the local environment including EnergyModelsInvestments, HiGHS, PrettyTables
 Pkg.activate(@__DIR__)
+# Use dev version if run as part of tests
+haskey(ENV, "EMX_TEST") && Pkg.develop(path=joinpath(@__DIR__,".."))
 # Install the dependencies.
 Pkg.instantiate()
 
@@ -17,7 +19,7 @@ const EMG = EnergyModelsGeography
 const EMI = EnergyModelsInvestments
 
 """
-    generate_example_data()
+    generate_example_data_geo()
 
 Generate the data for an example consisting of a simple electricity network. The simple \
 network is existing within 5 regions with differing demand. Each region has the same \
@@ -27,7 +29,7 @@ The example is partly based on the provided example `network.jl` in `EnergyModel
 It will be repalced in the near future with a simplified example.
 """
 
-function generate_example_data()
+function generate_example_data_geo()
     @debug "Generate case data"
     @info "Generate data coded dummy model for now (Investment Model)"
 
@@ -356,7 +358,7 @@ end
 
 
 # Generate case data
-case, model = generate_example_data()
+case, model = generate_example_data_geo()
 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMG.create_model(case, model)
 set_optimizer(m, optimizer)

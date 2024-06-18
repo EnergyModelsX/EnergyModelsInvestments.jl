@@ -1,9 +1,9 @@
 """
-    optimize(cases)
+    optimize_geo(case)
 
 Optimize the `case`.
 """
-function optimize(case, modeltype)
+function optimize_geo(case, modeltype)
     m = EMG.create_model(case, modeltype)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
@@ -15,7 +15,7 @@ end
 
     # Creation and run of the optimization problem
     case, modeltype = small_graph_geo()
-    m               = optimize(case, modeltype)
+    m               = optimize_geo(case, modeltype)
 
     general_tests(m)
 
@@ -52,7 +52,7 @@ end
     )
 
     case, modeltype = small_graph_geo(;inv_data)
-    m               = optimize(case, modeltype)
+    m               = optimize_geo(case, modeltype)
 
     general_tests(m)
 
@@ -101,7 +101,7 @@ end
     )
 
     case, modeltype = small_graph_geo(;inv_data)
-    m               = optimize(case, modeltype)
+    m               = optimize_geo(case, modeltype)
 
     general_tests(m)
 
@@ -162,7 +162,7 @@ end
     )
 
     case, modeltype = small_graph_geo(;inv_data)
-    m               = optimize(case, modeltype)
+    m               = optimize_geo(case, modeltype)
 
     general_tests(m)
 
@@ -229,7 +229,7 @@ end
     )
 
     case, modeltype = small_graph_geo(;inv_data)
-    m               = optimize(case, modeltype)
+    m               = optimize_geo(case, modeltype)
 
     general_tests(m)
 

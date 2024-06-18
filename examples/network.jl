@@ -1,6 +1,8 @@
 using Pkg
 # Activate the local environment including EnergyModelsInvestments, HiGHS, PrettyTables
 Pkg.activate(@__DIR__)
+# Use dev version if run as part of tests
+haskey(ENV, "EMX_TEST") && Pkg.develop(path=joinpath(@__DIR__,".."))
 # Install the dependencies.
 Pkg.instantiate()
 
@@ -16,7 +18,7 @@ const EMB = EnergyModelsBase
 const EMI = EnergyModelsInvestments
 
 """
-    generate_example_data()
+    generate_example_data_network()
 
 Generate the data for an example consisting of a simple electricity network.
 The more stringent CO₂ emission in latter investment periods force the investment into both
@@ -24,7 +26,7 @@ the natural gas power plant with CCS and the CO₂ storage node.
 
 The example is partly based on the provided example `network.jl` in `EnergyModelsBase`.
 """
-function generate_example_data()
+function generate_example_data_network()
     @info "Generate case data - Simple network example"
 
     # Define the different resources and their emission intensity in tCO2/MWh
@@ -168,27 +170,29 @@ function generate_example_data()
 end
 
 # Generate the case and model data and run the model
-case, model = generate_example_data()
+case, model = generate_example_data_network()
 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMB.run_model(case, model, optimizer)
 
 # Display some results
-ng_ccs_pp, CO2_stor,  = case[:nodes][[4,6]]
-@info "Invested capacity for the natural gas plant in the beginning of the \
-individual strategic periods"
-pretty_table(
-    JuMP.Containers.rowtable(
-        value,
-        m[:cap_add][ng_ccs_pp, :];
-        header = [:StrategicPeriod, :InvestCapacity],
-    ),
-)
-@info "Invested capacity for the CO2 storage in the beginning of the
-individual strategic periods"
-pretty_table(
-    JuMP.Containers.rowtable(
-        value,
-        m[:stor_charge_add][CO2_stor, :];
-        header = [:StrategicPeriod, :InvestCapacity],
-    ),
-)
+if !haskey(ENV, "EMX_TEST")
+    ng_ccs_pp, CO2_stor,  = case[:nodes][[4,6]]
+    @info "Invested capacity for the natural gas plant in the beginning of the \
+    individual strategic periods"
+    pretty_table(
+        JuMP.Containers.rowtable(
+            value,
+            m[:cap_add][ng_ccs_pp, :];
+            header = [:StrategicPeriod, :InvestCapacity],
+        ),
+    )
+    @info "Invested capacity for the CO2 storage in the beginning of the
+    individual strategic periods"
+    pretty_table(
+        JuMP.Containers.rowtable(
+            value,
+            m[:stor_charge_add][CO2_stor, :];
+            header = [:StrategicPeriod, :InvestCapacity],
+        ),
+    )
+end
