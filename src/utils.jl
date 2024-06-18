@@ -19,8 +19,9 @@ of a method for the corresponding `element`.
 """
 start_cap(element, t_inv, inv_data::StartInvData, cap) = inv_data.initial
 start_cap(element, t_inv, inv_data::NoStartInvData, cap) = error(
-    "The function `investment_data` is not implemented for $(typeof(element)) and " *
-    "`NoStartInvData`",
+    "The function `start_cap` is not implemented for $(typeof(element)) and " *
+    "`NoStartInvData`. If you want to use `NoStartInvData` as investment data, " *
+    "you have create this function for your type $(typeof(element)).",
 )
 
 """
