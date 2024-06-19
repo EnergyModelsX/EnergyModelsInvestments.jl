@@ -195,24 +195,22 @@ optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMB.run_model(case, model, optimizer)
 
 # Display some results
-if !haskey(ENV, "EMX_TEST")
-    ng_ccs_pp, CO2_stor,  = case[:nodes][[4,6]]
-    @info "Invested capacity for the natural gas plant in the beginning of the \
-    individual strategic periods"
-    pretty_table(
-        JuMP.Containers.rowtable(
-            value,
-            m[:cap_add][ng_ccs_pp, :];
-            header = [:StrategicPeriod, :InvestCapacity],
-        ),
-    )
-    @info "Invested capacity for the CO2 storage in the beginning of the
-    individual strategic periods"
-    pretty_table(
-        JuMP.Containers.rowtable(
-            value,
-            m[:stor_charge_add][CO2_stor, :];
-            header = [:StrategicPeriod, :InvestCapacity],
-        ),
-    )
-end
+ng_ccs_pp, CO2_stor,  = case[:nodes][[4,6]]
+@info "Invested capacity for the natural gas plant in the beginning of the \
+individual strategic periods"
+pretty_table(
+    JuMP.Containers.rowtable(
+        value,
+        m[:cap_add][ng_ccs_pp, :];
+        header = [:StrategicPeriod, :InvestCapacity],
+    ),
+)
+@info "Invested capacity for the CO2 storage in the beginning of the
+individual strategic periods"
+pretty_table(
+    JuMP.Containers.rowtable(
+        value,
+        m[:stor_charge_add][CO2_stor, :];
+        header = [:StrategicPeriod, :InvestCapacity],
+    ),
+)

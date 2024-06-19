@@ -102,22 +102,20 @@ optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMB.run_model(case, model, optimizer)
 
 # Display some results
-if !haskey(ENV, "EMX_TEST")
-    source, sink = case[:nodes]
-    @info "Invested capacity for the source in the beginning of the individual strategic periods"
-    pretty_table(
-        JuMP.Containers.rowtable(
-            value,
-            m[:cap_add][source, :];
-            header = [:StrategicPeriod, :InvestCapacity],
-        ),
-    )
-    @info "Retired capacity of the source at the end of the individual strategic periods"
-    pretty_table(
-        JuMP.Containers.rowtable(
-            value,
-            m[:cap_rem][source, :];
-            header = [:StrategicPeriod, :InvestCapacity],
-        ),
-    )
-end
+source, sink = case[:nodes]
+@info "Invested capacity for the source in the beginning of the individual strategic periods"
+pretty_table(
+    JuMP.Containers.rowtable(
+        value,
+        m[:cap_add][source, :];
+        header = [:StrategicPeriod, :InvestCapacity],
+    ),
+)
+@info "Retired capacity of the source at the end of the individual strategic periods"
+pretty_table(
+    JuMP.Containers.rowtable(
+        value,
+        m[:cap_rem][source, :];
+        header = [:StrategicPeriod, :InvestCapacity],
+    ),
+)
