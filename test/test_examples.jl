@@ -1,7 +1,7 @@
 ENV["EMX_TEST"] = true # Set flag for example scripts to check if they are run as part of the tests
 
 @testset "Run examples" begin
-    exdir = joinpath(@__DIR__, "../examples")
+    exdir = joinpath(@__DIR__, "..", "examples")
     files = filter(endswith(".jl"), readdir(exdir))
     filter!(!startswith("geo"), files) # Skip geo temporarily
     for file in files
