@@ -4,22 +4,17 @@ using Pkg
 using Test
 
 using EnergyModelsBase
-# using EnergyModelsGeography
 using EnergyModelsInvestments
-using Logging
 using TimeStruct
 
 const EMB = EnergyModelsBase
-# const EMG = EnergyModelsGeography
 const EMI = EnergyModelsInvestments
 const TS = TimeStruct
 
 include("utils.jl")
 
 @testset "Investments" begin
-    nologger = ConsoleLogger(devnull, Logging.Debug)
-    with_logger(nologger) do
-
+    redirect_stdio(stdout=devnull) do
         @testset "Investments | model" begin
             include("test_model.jl")
         end
@@ -35,9 +30,5 @@ include("utils.jl")
         @testset "Investments | examples" begin
             include("test_examples.jl")
         end
-
-        # @testset "w/Geography" begin
-        #         include("test_geo.jl")
-        # end
     end
 end
