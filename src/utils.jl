@@ -198,3 +198,12 @@ function set_capex_discounter(years, lifetime, disc_rate)
         ((N_inv * lifetime - years) / lifetime) * (1 + disc_rate)^(-years)
     return capex_disc
 end
+
+
+
+"""
+    has_investment(element) 
+
+Return boolean indicating whether an `element` shall have variables and constraints contstructed for investments.
+"""
+function has_investment end

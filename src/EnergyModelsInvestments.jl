@@ -52,4 +52,8 @@ export investment_data, investment_mode
 # Geographical investment data
 export TransInvData
 
+# Utility functions
+export has_investment
+
+
 end # module
