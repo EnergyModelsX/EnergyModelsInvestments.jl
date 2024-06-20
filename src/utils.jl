@@ -1,30 +1,4 @@
 """
-    investment_data(element)
-
-Return the investment data of the element.
-
-The default implementation results in an error as this function requires an additional
-method for the individual elements.
-"""
-investment_data(element) = error(
-    "The function `investment_data` is not implemented for $(typeof(element))",
-)
-
-"""
-    start_cap(element, t_inv, inv_data::AbstractInvData, cap)
-
-Returns the starting capacity of the type `element` in the first investment period.
-If [`NoStartInvData`](@ref) is used for the starting capacity, it requires the definition
-of a method for the corresponding `element`.
-"""
-start_cap(element, t_inv, inv_data::StartInvData, cap) = inv_data.initial
-start_cap(element, t_inv, inv_data::NoStartInvData, cap) = error(
-    "The function `start_cap` is not implemented for $(typeof(element)) and " *
-    "`NoStartInvData`. If you want to use `NoStartInvData` as investment data, " *
-    "you have create this function for your type $(typeof(element)).",
-)
-
-"""
     get_var_capex(m, prefix::Symbol)
 
 Extracts the CAPEX variable with a given `prefix` from the model.
@@ -198,12 +172,3 @@ function set_capex_discounter(years, lifetime, disc_rate)
         ((N_inv * lifetime - years) / lifetime) * (1 + disc_rate)^(-years)
     return capex_disc
 end
-
-
-
-"""
-    has_investment(element) 
-
-Return boolean indicating whether an `element` shall have variables and constraints contstructed for investments.
-"""
-function has_investment end

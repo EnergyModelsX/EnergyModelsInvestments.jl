@@ -26,6 +26,9 @@ include(joinpath("structures", "investment_data.jl"))
 include("model.jl")
 include("utils.jl")
 
+# Functions to be extended by users of EnergyModelsInvestments
+include("interface.jl")
+
 # Legacy constructors for node types
 include("legacy_constructor.jl")
 
