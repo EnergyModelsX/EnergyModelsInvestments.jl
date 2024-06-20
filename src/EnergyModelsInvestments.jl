@@ -29,9 +29,6 @@ include("utils.jl")
 # Functions to be extended by users of EnergyModelsInvestments
 include("interface.jl")
 
-# Legacy constructors for node types
-include("legacy_constructor.jl")
-
 # Export of the types for investment modes
 export Investment,
     BinaryInvestment,
