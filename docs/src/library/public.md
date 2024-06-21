@@ -184,10 +184,10 @@ These investment modes are similar with respect to how you can increase the capa
 They differ however on how the overall cost is calculated.
 Both investment modes are in general similar to [`ContinuousInvestment`](@ref), but the investment is either 0 or between a minimum and maximum value.
 This means you can define the field `min_add::TimeProfile` without forcing investment in the technology.
-Instead, the value determines that **_if_** the model decides to invest, then it has to at least invest in the value provided through **_`min_add`_**.
+Instead, the value determines that **_if_** the model decides to invest, then it has to at least invest in the value provided through **`min_add`**.
 This can be also described as:
 
-``x = 0 \lor \texttt{_min\_add} \leq x \leq \texttt{max\_add}``
+``x = 0 \lor \texttt{min\_add} \leq x \leq \texttt{max\_add}``
 
 with ``x`` corresponding to the invested capacity
 
