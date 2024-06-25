@@ -1,13 +1,13 @@
 """
 Main module for `EnergyModelsInvestments`.
 
-This module implements functionalities allowing to run investment analysis.
+This module implements functionalities allowing to run investment analysis for energymodelsx
+system optimization models.
 
-It is in its current version extending `EnergyModelsBase` and cannot be used as a
-stand-alone module.
-
-The extension `EMIGeoExt` includes furthermore the investment options for transmission
-modes as described in `EnergyModelsGeography`.
+`EnergyModelsInvestments` cannot be used as stand-alone model. Instead, it extends existing
+models and simplifies the incorporation of investment decisions. It can be used to any JuMP
+model as long as certain functions are declared. One example is given by
+[`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/).
 """
 module EnergyModelsInvestments
 

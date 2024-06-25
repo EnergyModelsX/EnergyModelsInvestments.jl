@@ -1,46 +1,31 @@
 # [Public interface](@id sec_lib_public)
 
-## `InvestmentModel`
-
-An `AbstractInvestmentModel` is a subtype of an `EnergyModel` as declared in `EnergyModelsBase`
-This new type allows for the introduction of investment options to the energy system model.
-
-The composite type `InvestmentModel` contains some key information for the model such as the emissions limits and penalties for each `ResourceEmit`, as well as the `ResourceEmit` instance of CO₂.
-It uses hence the same fields as an `OperationalModel` as declared in `EnergyModelsBase`.
-In addition, it takes as input the `discount_rate`.
-The `discount_rate` is an important element of investment analysis needed to represent the present value of future cash flows.
-It is provided to the model as a value between 0 and 1 (*e.g.* a discount rate of 5 % is 0.05).
-
-```@docs
-AbstractInvestmentModel
-InvestmentModel
-```
-
 ## Additional Data for Investments
 
-Additional data for investment is specified when creating the nodes through subtypes of the type `InvestmentData` and `AbstractInvData`.
-`AbstractInvData` is introduced in this version to allow for making `EnergyModelsInvestments` independent of `EnergyModelsBase`, although this is not yet implemented in the model.
+### General type structure
+
+Additional data for investment is specified when creating the nodes through subtypes of the type `AbstractInvData`.
 
 ```@docs
-InvestmentData
 AbstractInvData
 ```
 
 This additional data is node specific, not technology specific.
 It is hence possible to provide different values for the same technology through different instances of said technology.
+`EnergyModelsInvestments` provides two subtypes for `AbstractInvData`, `NoStartInvData` and `StartInvData` as exlained in the following subsection.
 
-Two types are used to define the parameters necessary for production technologies and transmission modes ([`SingleInvData`](@ref)) and storages ([`StorageInvData`](@ref)).
-The different types are required as the required parameters differ.
-It is also possible for the user to define new subtypes of `InvestmentData` if they require additional parameters for including investments in capacities of technologies.
+It is also possible to create new subtypes with changing parameters.
+
+!!! warning "Introducing new subtypes"
+    If you introduce new subtypes to `AbstractInvData`, it is necessary that you either incorporate the fields outlined in the following subsection with the same names, or alternatively declare methods for the functions [`investment_mode`](@ref), [`EMI.lifetime_mode`](@ref), [`EMI.lifetime`](@ref), [`EMI.max_installed`](@ref), [`EMI.capex`](@ref), and [`EMI.capex_offset`](@ref) for the new type.
 
 ### `AbstractInvData` subtypes
 
-`AbstractInvData` is used to add the required investment data to the individual technology capacities.
-The subtypes of `AbstractInvData` are used for all technologies, that is nodes and transmission modes.
+`AbstractInvData` subtypes area used to add the required investment data to the individual technology capacities.
 
 The following fields have to be added for all provided types:
 
-- `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative to capacity. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
+- `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative to the capacity. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
 - `max_inst::TimeProfile`: Maximum installed capacity of the `Node`. The maximum installed capacity is limiting the total installed capacity of the Node. It is possible to have different values for different `Node`s representing the same technology. This can be useful for, *e.g.*, the potential for wind power in different regions.
 - `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref sec_types_inv_mode)*.
 - `life_mode::LifetimeMode`: Lifetime mode of the `Node`. The lifetime mode is describing how the lifetime of the node is implemented. This includes as well final values and retiring of the individual technologies. The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref life_mode)*.
@@ -59,49 +44,39 @@ while it utilizes the capacity of the technology if the value is not provided th
 !!! warning
     All fields that are provided as `TimeProfile` are accessed in strategic periods.
     This implies that the provided `TimeProfile`s are not allowed to have any variations below strategic periods through, *e.g.* the application of `OperationalProfile` or `RepresentativeProfile`.
+    `EnergyModelsBase` provides explicit checks for the time profiles which is a beneficial approach if you use `EnergyModelsInvestments` without `EnergyModelsBase`.
 
 ```@docs
 NoStartInvData
 StartInvData
 ```
 
-### `InvestmentData` subtypes
+### Additional functions
 
-`InvestmentData` subtypes are used to provide technologies introduced in `EnergyModelsX` (nodes and transmission modes) a subtype of `Data` that can be used for dispatching.
-Two different types are directly introduced, `SingleInvData` and `StorageInvData`.
-
-`SingleInvData` is providing a composite type with a single field.
-It is used for investments in technologies with a single capacity, that is all nodes except for storage nodes as well as tranmission modes.
-
-`StorageInvData` is required as `Storage` nodes behave differently compared to the other nodes.
-In `Storage` nodes, it is possible to invest both in the charge capacity for storing energy, the storage capacity, that is the level of a `Storage` node, as well as the discharge capacity, that is how fast energy can be withdrawn.
-Correspondingly, it is necessary to have individual parameters for the potential investments in each capacity, that is through the fields `:charge`, `:level`, and `:discharge`.
+`EnergyModelsInvestments` provides additional functions for extracting field informations from the investment data:
 
 ```@docs
-SingleInvData
-StorageInvData
+investment_mode
 ```
 
-### Legacy constructors
-
-We provide a legacy constructor, `InvData`, `InvDataStorage`, and `InvDataTrans`, that use the same input as in version 0.5.x.
-If you want to adjust your model to the latest changes, please refer to the section *[Update your model to the latest version](@ref sec_how_to_update)*.
+In addition, it provides shell functions that can be used by the user for identifying nodes with investments or extracting the investments from a given element:
 
 ```@docs
-InvData
-InvDataStorage
-TransInvData
+has_investment
+investment_data
 ```
+
+These shell functions are not directly used by EnergyModelsInvestments, but can be useful.
 
 ## [Investment modes](@id sec_types_inv_mode)
 
 Different investment modes are available to help represent different situations.
 The investment mode is included in the field `inv_mode` in [`NoStartInvData`](@ref) and [`StartInvData`](@ref).
-The investment mode how the model can invest and which constraints are imposed on the investments.
+The investment mode determines how the model can invest and which constraints are imposed on the investments.
 
 ### Potential fields in investment modes
 
-Investment modes are including the required fields for the investments.
+Investment modes are including the required fields.
 These fields are given below with a detailed description in the individual subsections.
 
 - `max_add::TimeProfile`: The maximum added capacity in a strategic period.

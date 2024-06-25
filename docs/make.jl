@@ -1,6 +1,5 @@
 using Documenter
 
-using EnergyModelsGeography
 using EnergyModelsInvestments
 const EMI = EnergyModelsInvestments
 
@@ -16,10 +15,7 @@ makedocs(
         assets=String[],
     ),
     modules = [
-        EMI,
-        isdefined(Base, :get_extension) ?
-        Base.get_extension(EMI, :EMIGeoExt) :
-        EMI.EMIGeoExt,
+        EMI
     ],
     pages = [
         "Home" => "index.md",
@@ -32,6 +28,7 @@ makedocs(
         ],
         "How to" => Any[
             "Update models" => "how-to/update-models.md",
+            "Use EMI" => "how-to/use-emi.md",
             "Contribute to EnergyModelsInvestments" => "how-to/contribute.md",
         ],
         "Library" => Any[

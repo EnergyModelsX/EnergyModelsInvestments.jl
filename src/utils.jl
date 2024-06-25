@@ -8,7 +8,7 @@ get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
     get_var_capex(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_capex(m, prefix::Symbol, element) = m[Symbol(prefix, :_capex)][element, :]
 
@@ -22,7 +22,7 @@ get_var_inst(m, prefix::Symbol) = m[Symbol(prefix, :_inst)]
     get_var_inst(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_inst(m, prefix::Symbol, element) = m[Symbol(prefix, :_inst)][element, :]
 
@@ -36,7 +36,7 @@ get_var_current(m, prefix::Symbol) = m[Symbol(prefix, :_current)]
     get_var_current(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_current(m, prefix::Symbol, element) = m[Symbol(prefix, :_current)][element, :]
 
@@ -50,7 +50,7 @@ get_var_add(m, prefix::Symbol) = m[Symbol(prefix, :_add)]
     get_var_add(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_add(m, prefix::Symbol, element) = m[Symbol(prefix, :_add)][element, :]
 
@@ -64,7 +64,7 @@ get_var_rem(m, prefix::Symbol) = m[Symbol(prefix, :_rem)]
     get_var_rem(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_rem(m, prefix::Symbol, element) = m[Symbol(prefix, :_rem)][element, :]
 
@@ -78,7 +78,7 @@ get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
     get_var_invest_b(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_invest_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_invest_b)][element, :]
 
@@ -92,7 +92,7 @@ get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
     get_var_remove_b(m, prefix::Symbol, element)
 
 When the type `element` is used as conditional input, it extracts only the variable for
-the specified node.
+the specified element.
 """
 get_var_remove_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_remove_b)][element, :]
 

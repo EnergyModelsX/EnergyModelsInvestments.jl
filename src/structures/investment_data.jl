@@ -9,8 +9,9 @@ abstract type AbstractInvData end
 """
     NoStartInvData <: AbstractInvData
 
-Investment data in which the initial capacity is not specified in the `InvestmentData`.
-Instead, the initial capacity is inferred  from the capacity of the technology.
+Investment data in which the initial capacity is not specified in the `AbstractInvData`.
+Instead, the initial capacity is inferred  from the capacity of the technology through the
+function [`start_cap(element, t_inv, inv_data::AbstractInvData, cap)`](@ref).
 
 # Fields
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
@@ -43,7 +44,7 @@ end
 """
     StartInvData <: AbstractInvData
 
-Investment data in which the initial capacity is specified in the `InvestmentData`.
+Investment data in which the initial capacity is specified in the `AbstractInvData`.
 The structure is similiar to [`NoStartInvData`](@ref) with the addition of the field
 **`initial::Real`**, see below.
 

@@ -16,7 +16,7 @@ We decided to use this requirement as an approach for a full rework of the inves
 The key changes are:
 
 - All parameters for investment or lifetime modes are incorporated in the respective investment or lifetime mode.
-- The previously used investment data, [`InvData`](@ref), [`InvDataStorage`](@ref), and [`TransInvData`](@ref), are replaced by [`SingleInvData`](@ref) (for standard node and transmission mode investments) and [`StorageInvData`](@ref) (for storage investments).
+- The previously used investment data, `InvData`, `InvDataStorage`, and `TransInvData`, are replaced by `SingleInvData` (for standard node and transmission mode investments) and `StorageInvData` (for storage investments).
 - CAPEX cariables are renamed:
   - `:capex_cap` is now `:cap_capex`,
   - `:capex_rate` is now given by `:stor_charge_capex` and `:stor_discharge_capex`,
@@ -26,7 +26,7 @@ The key changes are:
 !!! note
     The legacy constructors for calls of the composite type of version 0.5 will be included at least until version 0.7.
 
-### [`InvData`](@ref) and [`TransInvData`](@ref)
+### `InvData` and `TransInvData`
 
 The following changes are written down for `InvData`, but are equivalent for `TransInvData`.
 The previous description for nodal investments was given by:
@@ -99,7 +99,7 @@ SingleInvData(
 The translation of the parameters `cap_max_add`, `cap_min_add`, and `cap_increment` is dependent on the chosen investment mode, see below.
 This makes the legacy constructor slightly more complex as it is necessary to check for the individual type.
 
-### [`InvDataStorage`](@ref)
+### `InvDataStorage`
 
 `InvDataStorage` was significantly reworked since version 0.5.
 The total rework is provided below.
