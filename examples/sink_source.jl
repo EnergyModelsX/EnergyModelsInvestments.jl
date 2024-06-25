@@ -19,14 +19,14 @@ const EMI = EnergyModelsInvestments
 const TS = TimeStruct
 
 """
-    generate_example_data()
+    generate_ss_example_data()
 
 Generate the data for an example consisting of an electricity source and sink.
 The electricity source has initially no capacity. Hence, investments are required.
 
 The example is partly based on the provided example `sink_source.jl` in `EnergyModelsBase`.
 """
-function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
+function generate_ss_example_data(lifemode = RollingLife; discount_rate = 0.05)
     @info "Generate case data - Simple sink-source example"
 
     # Define the different resources and their emission intensity in tCO2/MWh
@@ -60,7 +60,7 @@ function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
 
     # Create the investment data for the source node
     investment_data_source = SingleInvData(
-        FixedProfile(300*1e3),  # capex [€/MW]
+        FixedProfile(300 * 1e3),  # capex [€/MW]
         FixedProfile(30),       # max installed capacity [MW]
         ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
         # Line above: Investment mode with the following arguments:
@@ -89,42 +89,33 @@ function generate_example_data(lifemode = RollingLife; discount_rate = 0.05)
     nodes = [source, sink]
 
     # Connect the two ndoes
-    links = [
-        Direct("source-demand", nodes[1], nodes[2], Linear())
-    ]
+    links = [Direct("source-demand", nodes[1], nodes[2], Linear())]
 
     # WIP data structure
-    case = Dict(
-        :nodes => nodes,
-        :links => links,
-        :products => products,
-        :T => T,
-    )
+    case = Dict(:nodes => nodes, :links => links, :products => products, :T => T)
     return case, model
 end
 
 # Create the case and model data and run the model
-case, model = generate_example_data()
+case, model = generate_ss_example_data()
 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 m = EMB.run_model(case, model, optimizer)
 
 # Display some results
-if !haskey(ENV, "EMX_TEST")
-    source, sink = case[:nodes]
-    @info "Invested capacity for the source in the beginning of the individual strategic periods"
-    pretty_table(
-        JuMP.Containers.rowtable(
-            value,
-            m[:cap_add][source, :];
-            header = [:StrategicPeriod, :InvestCapacity],
-        ),
-    )
-    @info "Retired capacity of the source at the end of the individual strategic periods"
-    pretty_table(
-        JuMP.Containers.rowtable(
-            value,
-            m[:cap_rem][source, :];
-            header = [:StrategicPeriod, :InvestCapacity],
-        ),
-    )
-end
+source, sink = case[:nodes]
+@info "Invested capacity for the source in the beginning of the individual strategic periods"
+pretty_table(
+    JuMP.Containers.rowtable(
+        value,
+        m[:cap_add][source, :];
+        header = [:StrategicPeriod, :InvestCapacity],
+    ),
+)
+@info "Retired capacity of the source at the end of the individual strategic periods"
+pretty_table(
+    JuMP.Containers.rowtable(
+        value,
+        m[:cap_rem][source, :];
+        header = [:StrategicPeriod, :InvestCapacity],
+    ),
+)

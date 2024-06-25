@@ -16,9 +16,4 @@ exdir = joinpath(pkgdir(EnergyModelsInvestments), "examples")
 # Include the code into the Julia REPL to run the individual examples
 include(joinpath(exdir, "sink_source.jl"))
 include(joinpath(exdir, "network.jl"))
-include(joinpath(exdir, "geography.jl"))
 ```
-
-The *[geography example](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/blob/main/examples/geography.jl)* will be simplified in a future version.
-It shows however how investments in transmission mdoes can be included.
-It is hence not as commented as the other examples.

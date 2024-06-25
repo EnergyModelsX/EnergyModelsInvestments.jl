@@ -9,8 +9,9 @@ abstract type AbstractInvData end
 """
     NoStartInvData <: AbstractInvData
 
-Investment data in which the initial capacity is not specified in the `InvestmentData`.
-Instead, the initial capacity is inferred  from the capacity of the technology.
+Investment data in which the initial capacity is not specified in the `AbstractInvData`.
+Instead, the initial capacity is inferred  from the capacity of the technology through the
+function [`start_cap(element, t_inv, inv_data::AbstractInvData, cap)`](@ref).
 
 # Fields
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
@@ -31,24 +32,19 @@ struct NoStartInvData <: AbstractInvData
     life_mode::LifetimeMode
 end
 function NoStartInvData(
-        capex_trans::TimeProfile,
-        trans_max_inst::TimeProfile,
-        inv_mode::Investment,
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    inv_mode::Investment,
 )
 
-    return NoStartInvData(
-        capex_trans,
-        trans_max_inst,
-        inv_mode,
-        UnlimitedLife(),
-    )
+    return NoStartInvData(capex_trans, trans_max_inst, inv_mode, UnlimitedLife())
 end
 
 
 """
     StartInvData <: AbstractInvData
 
-Investment data in which the initial capacity is specified in the `InvestmentData`.
+Investment data in which the initial capacity is specified in the `AbstractInvData`.
 The structure is similiar to [`NoStartInvData`](@ref) with the addition of the field
 **`initial::Real`**, see below.
 
@@ -63,19 +59,13 @@ struct StartInvData <: AbstractInvData
     life_mode::LifetimeMode
 end
 function StartInvData(
-        capex_trans::TimeProfile,
-        trans_max_inst::TimeProfile,
-        initial::Real,
-        inv_mode::Investment,
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    initial::Real,
+    inv_mode::Investment,
 )
 
-    return StartInvData(
-        capex_trans,
-        trans_max_inst,
-        initial,
-        inv_mode,
-        UnlimitedLife(),
-    )
+    return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, UnlimitedLife())
 end
 
 """
@@ -132,7 +122,8 @@ capex_offset(inv_data::AbstractInvData) = capex_offset(investment_mode(inv_data)
 
 Returns the offset of the CAPEX of the investment data `inv_data` in investment period `t_inv`.
 """
-capex_offset(inv_data::AbstractInvData, t_inv) = capex_offset(investment_mode(inv_data), t_inv)
+capex_offset(inv_data::AbstractInvData, t_inv) =
+    capex_offset(investment_mode(inv_data), t_inv)
 
 """
     max_installed(inv_data::AbstractInvData)

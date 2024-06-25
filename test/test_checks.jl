@@ -7,7 +7,7 @@ EMB.TEST_ENV = true
     # - EMB.check_node_data(n::EMB.Node, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
     @testset "SingleInvData" begin
 
-        function run_simple_graph(max_add; check_timeprofiles=true)
+        function run_simple_graph(max_add; check_timeprofiles = true)
             investment_data_source = [
                 SingleInvData(
                     FixedProfile(1000),     # capex [€/kW]
@@ -17,9 +17,9 @@ EMB.TEST_ENV = true
             ]
             inv_data = Dict(
                 "investment_data" => investment_data_source,
-                "profile"         => demand_profile,
+                "profile" => demand_profile,
             )
-            case, modeltype = small_graph(;inv_data)
+            case, modeltype = small_graph(; inv_data)
 
             return optimize(case, modeltype; check_timeprofiles)
         end
@@ -38,11 +38,9 @@ EMB.TEST_ENV = true
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
             ),
         ]
-        inv_data = Dict(
-            "investment_data" => investment_data_source,
-            "profile"         => demand_profile,
-        )
-        case, modeltype = small_graph(;inv_data)
+        inv_data =
+            Dict("investment_data" => investment_data_source, "profile" => demand_profile)
+        case, modeltype = small_graph(; inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if the profiles are wrong
@@ -67,15 +65,16 @@ EMB.TEST_ENV = true
         @test_throws AssertionError run_simple_graph(max_add)
 
         max_add = StrategicProfile([4])
-        msg = "Checking of the time profiles is deactivated:\n" *
-        "Deactivating the checks for the time profiles is strongly discouraged. " *
-        "While the model will still run, unexpected results can occur, as well as " *
-        "inconsistent case data.\n\n" *
-        "Deactivating the checks for the timeprofiles should only be considered, " *
-        "when testing new components. In all other instances, it is recommended to " *
-        "provide the correct timeprofiles using a preprocessing routine.\n\n" *
-        "If timeprofiles are not checked, inconsistencies can occur."
-        @test_logs (:warn, msg) run_simple_graph(max_add; check_timeprofiles=false)
+        msg =
+            "Checking of the time profiles is deactivated:\n" *
+            "Deactivating the checks for the time profiles is strongly discouraged. " *
+            "While the model will still run, unexpected results can occur, as well as " *
+            "inconsistent case data.\n\n" *
+            "Deactivating the checks for the timeprofiles should only be considered, " *
+            "when testing new components. In all other instances, it is recommended to " *
+            "provide the correct timeprofiles using a preprocessing routine.\n\n" *
+            "If timeprofiles are not checked, inconsistencies can occur."
+        @test_logs (:warn, msg) run_simple_graph(max_add; check_timeprofiles = false)
 
         # Check that we receive an error if the capacity is an operational profile
         investment_data_source = [
@@ -93,11 +92,9 @@ EMB.TEST_ENV = true
             Dict(Power => 1),
             investment_data_source,
         )
-        inv_data = Dict(
-            "investment_data" => investment_data_source,
-            "profile"         => demand_profile,
-        )
-        case, modeltype = small_graph(;source, inv_data)
+        inv_data =
+            Dict("investment_data" => investment_data_source, "profile" => demand_profile)
+        case, modeltype = small_graph(; source, inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if the initial capacity is higher than the
@@ -117,11 +114,9 @@ EMB.TEST_ENV = true
             Dict(Power => 1),
             investment_data_source,
         )
-        inv_data = Dict(
-            "investment_data" => investment_data_source,
-            "profile"         => demand_profile,
-        )
-        case, modeltype = small_graph(;source, inv_data)
+        inv_data =
+            Dict("investment_data" => investment_data_source, "profile" => demand_profile)
+        case, modeltype = small_graph(; source, inv_data)
         @test_throws AssertionError optimize(case, modeltype)
         investment_data_source = [
             StartInvData(
@@ -131,11 +126,9 @@ EMB.TEST_ENV = true
                 ContinuousInvestment(FixedProfile(0), FixedProfile(20)),   # investment mode
             ),
         ]
-        inv_data = Dict(
-            "investment_data" => investment_data_source,
-            "profile"         => demand_profile,
-        )
-        case, modeltype = small_graph(;source, inv_data)
+        inv_data =
+            Dict("investment_data" => investment_data_source, "profile" => demand_profile)
+        case, modeltype = small_graph(; source, inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if we provide a larger min_add than max_add
@@ -146,11 +139,9 @@ EMB.TEST_ENV = true
                 ContinuousInvestment(FixedProfile(15), FixedProfile(10)),   # investment mode
             ),
         ]
-        inv_data = Dict(
-            "investment_data" => investment_data_source,
-            "profile"         => demand_profile,
-        )
-        case, modeltype = small_graph(;inv_data)
+        inv_data =
+            Dict("investment_data" => investment_data_source, "profile" => demand_profile)
+        case, modeltype = small_graph(; inv_data)
         @test_throws AssertionError optimize(case, modeltype)
     end
 
@@ -158,7 +149,7 @@ EMB.TEST_ENV = true
     # - EMB.check_node_data(n::EMB.Storage, data::InvestmentData, 𝒯, modeltype::AbstractInvestmentModel)
     @testset "StorageInvData" begin
 
-        function run_simple_graph(charge_max_add, level_max_add; check_timeprofiles=true)
+        function run_simple_graph(charge_max_add, level_max_add; check_timeprofiles = true)
             inv_data = [
                 StorageInvData(
                     charge = NoStartInvData(
@@ -170,10 +161,10 @@ EMB.TEST_ENV = true
                         FixedProfile(500),
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(5), level_max_add),
-                    )
-                )
+                    ),
+                ),
             ]
-            case, modeltype = small_graph_stor(;inv_data)
+            case, modeltype = small_graph_stor(; inv_data)
 
             return optimize(case, modeltype; check_timeprofiles)
         end
@@ -184,9 +175,9 @@ EMB.TEST_ENV = true
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(30),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(5), FixedProfile(20)),
-            )
+            ),
         ]
-        case, modeltype = small_graph_stor(;inv_data)
+        case, modeltype = small_graph_stor(; inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if we provide the wrong `InvestmentData`
@@ -201,7 +192,7 @@ EMB.TEST_ENV = true
                     FixedProfile(500),
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                )
+                ),
             ),
             StorageInvData(
                 charge = NoStartInvData(
@@ -213,10 +204,10 @@ EMB.TEST_ENV = true
                     FixedProfile(500),
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                )
+                ),
             ),
         ]
-        case, modeltype = small_graph_stor(;inv_data)
+        case, modeltype = small_graph_stor(; inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if the profiles are wrong
@@ -261,29 +252,34 @@ EMB.TEST_ENV = true
         @test_throws AssertionError run_simple_graph(charge_max_add, level_max_add)
 
         level_max_add = StrategicProfile([6])
-        msg = "Checking of the time profiles is deactivated:\n" *
-        "Deactivating the checks for the time profiles is strongly discouraged. " *
-        "While the model will still run, unexpected results can occur, as well as " *
-        "inconsistent case data.\n\n" *
-        "Deactivating the checks for the timeprofiles should only be considered, " *
-        "when testing new components. In all other instances, it is recommended to " *
-        "provide the correct timeprofiles using a preprocessing routine.\n\n" *
-        "If timeprofiles are not checked, inconsistencies can occur."
-        @test_logs (:warn, msg) run_simple_graph(charge_max_add, level_max_add; check_timeprofiles=false)
+        msg =
+            "Checking of the time profiles is deactivated:\n" *
+            "Deactivating the checks for the time profiles is strongly discouraged. " *
+            "While the model will still run, unexpected results can occur, as well as " *
+            "inconsistent case data.\n\n" *
+            "Deactivating the checks for the timeprofiles should only be considered, " *
+            "when testing new components. In all other instances, it is recommended to " *
+            "provide the correct timeprofiles using a preprocessing routine.\n\n" *
+            "If timeprofiles are not checked, inconsistencies can occur."
+        @test_logs (:warn, msg) run_simple_graph(
+            charge_max_add,
+            level_max_add;
+            check_timeprofiles = false,
+        )
 
 
         # Check that we receive an error if the capacity is an operational profile
         rate_cap = OperationalProfile(ones(4))
-        case, modeltype = small_graph_stor(;rate_cap)
+        case, modeltype = small_graph_stor(; rate_cap)
         @test_throws AssertionError optimize(case, modeltype)
         stor_cap = OperationalProfile(ones(4))
-        case, modeltype = small_graph_stor(;stor_cap)
+        case, modeltype = small_graph_stor(; stor_cap)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if the initial capacity is higher than the
         # allowed maximum installed
         rate_cap = FixedProfile(60)
-        case, modeltype = small_graph_stor(;rate_cap)
+        case, modeltype = small_graph_stor(; rate_cap)
         @test_throws AssertionError optimize(case, modeltype)
         inv_data = [
             StorageInvData(
@@ -297,13 +293,13 @@ EMB.TEST_ENV = true
                     FixedProfile(500),
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                )
-            )
+                ),
+            ),
         ]
-        case, modeltype = small_graph_stor(;inv_data)
+        case, modeltype = small_graph_stor(; inv_data)
         @test_throws AssertionError optimize(case, modeltype)
         stor_cap = FixedProfile(700)
-        case, modeltype = small_graph_stor(;stor_cap)
+        case, modeltype = small_graph_stor(; stor_cap)
         @test_throws AssertionError optimize(case, modeltype)
         inv_data = [
             StorageInvData(
@@ -317,18 +313,18 @@ EMB.TEST_ENV = true
                     FixedProfile(600),
                     700,
                     ContinuousInvestment(FixedProfile(5), FixedProfile(600)),
-                )
-            )
+                ),
+            ),
         ]
-        case, modeltype = small_graph_stor(;inv_data)
+        case, modeltype = small_graph_stor(; inv_data)
         @test_throws AssertionError optimize(case, modeltype)
 
         # Check that we receive an error if we provide a larger min_add than max_add
         rate_min_add = 40
-        case, modeltype = small_graph_stor(;rate_min_add)
+        case, modeltype = small_graph_stor(; rate_min_add)
         @test_throws AssertionError optimize(case, modeltype)
         stor_min_add = 700
-        case, modeltype = small_graph_stor(;stor_min_add)
+        case, modeltype = small_graph_stor(; stor_min_add)
         @test_throws AssertionError optimize(case, modeltype)
     end
 end

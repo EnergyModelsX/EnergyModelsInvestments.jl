@@ -1,5 +1,5 @@
 const TEST_ATOL = 1e-6
-⪆(x,y) = x > y || isapprox(x,y;atol=TEST_ATOL)
+⪆(x, y) = x > y || isapprox(x, y; atol = TEST_ATOL)
 const OPTIMIZER = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 
 """
@@ -7,7 +7,7 @@ const OPTIMIZER = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => tru
 
 Optimize the `case`.
 """
-function optimize(case, modeltype; check_timeprofiles=true)
+function optimize(case, modeltype; check_timeprofiles = true)
     m = EMB.create_model(case, modeltype; check_timeprofiles)
     set_optimizer(m, OPTIMIZER)
     optimize!(m)
@@ -46,12 +46,14 @@ function general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 
     @testset "cap_inst" begin
         # Test that cap_inst is less than node.data.cap_max_inst at all times.
-        @test sum(value.(m[:stor_level_inst][stor, t]) ≤
-                    EMI.max_installed(EMI.investment_data(stor, :level), t) for t ∈ 𝒯) ==
-                length(𝒯)
-        @test sum(value.(m[:stor_charge_inst][stor, t]) ≤
-                    EMI.max_installed(EMI.investment_data(stor, :charge), t) for t ∈ 𝒯) ==
-                length(𝒯)
+        @test sum(
+            value.(m[:stor_level_inst][stor, t]) ≤
+            EMI.max_installed(EMI.investment_data(stor, :level), t) for t ∈ 𝒯
+        ) == length(𝒯)
+        @test sum(
+            value.(m[:stor_charge_inst][stor, t]) ≤
+            EMI.max_installed(EMI.investment_data(stor, :charge), t) for t ∈ 𝒯
+        ) == length(𝒯)
     end
     @testset "cap_add" begin
         # Test that the capacity is at least added once
@@ -61,8 +63,8 @@ function general_tests_stor(m, stor, 𝒯, 𝒯ᴵⁿᵛ)
 end
 
 # Declaration of the required resources
-CO2 = ResourceEmit("CO2", 1.)
-Power = ResourceCarrier("Power", 0.)
+CO2 = ResourceEmit("CO2", 1.0)
+Power = ResourceCarrier("Power", 0.0)
 products = [Power, CO2]
 
 """
@@ -73,12 +75,12 @@ investments in capacity of the source if provided with investments through the
 argument `inv_data`.
 """
 function small_graph(;
-                    source=nothing,
-                    sink=nothing,
-                    inv_data=nothing,
-                    T=TwoLevel(4, 10, SimpleTimes(4, 1)),
-                    discount_rate = 0.05,
-                    )
+    source = nothing,
+    sink = nothing,
+    inv_data = nothing,
+    T = TwoLevel(4, 10, SimpleTimes(4, 1)),
+    discount_rate = 0.05,
+)
 
     if isnothing(inv_data)
         investment_data_source = [
@@ -86,37 +88,41 @@ function small_graph(;
                 FixedProfile(1000),     # capex [€/kW]
                 FixedProfile(30),       # max installed capacity [kW]
                 ContinuousInvestment(FixedProfile(5), FixedProfile(20)), # investment mode
-            )
+            ),
         ]
         demand_profile = FixedProfile(20)
     else
         investment_data_source = inv_data["investment_data"]
-        demand_profile         = inv_data["profile"]
+        demand_profile = inv_data["profile"]
     end
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
-        source = RefSource("-src", FixedProfile(0), FixedProfile(10),
-                               FixedProfile(5), Dict(Power => 1),
-                               investment_data_source)
+        source = RefSource(
+            "-src",
+            FixedProfile(0),
+            FixedProfile(10),
+            FixedProfile(5),
+            Dict(Power => 1),
+            investment_data_source,
+        )
     end
     if isnothing(sink)
-        sink = RefSink("-snk", demand_profile,
+        sink = RefSink(
+            "-snk",
+            demand_profile,
             Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e4)),
-            Dict(Power => 1))
+            Dict(Power => 1),
+        )
     end
     nodes = [source, sink]
     links = [Direct("scr-sink", nodes[1], nodes[2], Linear())]
 
-    em_limits   = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
-    em_cost     = Dict(CO2 => FixedProfile(0))
-    modeltype  = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
+    em_limits = Dict(CO2 => StrategicProfile([450, 400, 350, 300]))
+    em_cost = Dict(CO2 => FixedProfile(0))
+    modeltype = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
-    case = Dict(:nodes       => nodes,
-                :links       => links,
-                :products    => products,
-                :T           => T,
-                )
+    case = Dict(:nodes => nodes, :links => links, :products => products, :T => T)
     return case, modeltype
 end
 
@@ -128,13 +134,13 @@ investments in capacity of the storage if provided with investments through the
 argument `inv_data`.
 """
 function small_graph_stor(;
-                    inv_data=nothing,
-                    rate_cap = FixedProfile(0),
-                    stor_cap = FixedProfile(0),
-                    rate_min_add = 5,
-                    stor_min_add = 5,
-                    op_dur = 10
-                    )
+    inv_data = nothing,
+    rate_cap = FixedProfile(0),
+    stor_cap = FixedProfile(0),
+    rate_min_add = 5,
+    stor_min_add = 5,
+    op_dur = 10,
+)
 
     if isnothing(inv_data)
         inv_data = [
@@ -150,8 +156,8 @@ function small_graph_stor(;
                     FixedProfile(600),
                     ContinuousInvestment(FixedProfile(stor_min_add), FixedProfile(600)),
                     UnlimitedLife(),
-                )
-            )
+                ),
+            ),
         ]
     end
 
@@ -177,7 +183,7 @@ function small_graph_stor(;
         FixedProfile(20),
         Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e5)),
         Dict(Power => 1),
-        )
+    )
     nodes = [source, storage, sink]
     links = [
         Direct("src-stor", nodes[1], nodes[2], Linear())
@@ -185,17 +191,13 @@ function small_graph_stor(;
         Direct("stor-snk", nodes[2], nodes[3], Linear())
     ]
 
-    em_limits   = Dict(CO2 => StrategicProfile([450, 400]))
-    em_cost     = Dict(CO2 => FixedProfile(0))
-    modeltype  = InvestmentModel(em_limits, em_cost, CO2, 0.05)
+    em_limits = Dict(CO2 => StrategicProfile([450, 400]))
+    em_cost = Dict(CO2 => FixedProfile(0))
+    modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.05)
 
     T = TwoLevel(2, 5, SimpleTimes(4, op_dur))
 
-    case = Dict(:nodes       => nodes,
-                :links       => links,
-                :products    => products,
-                :T           => T,
-                )
+    case = Dict(:nodes => nodes, :links => links, :products => products, :T => T)
     return case, modeltype
 end
 
@@ -205,36 +207,40 @@ end
 Creates a simple geography test case with the potential for investments in transmission
     infrastructure if provided with transmission investments through the argument `inv_data`.
 """
-function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
+function small_graph_geo(; source = nothing, sink = nothing, inv_data = nothing)
 
     # Creation of the source and sink module as well as the arrays used for nodes and links
     if isnothing(source)
         source = RefSource(
-                    "-src",
-                    FixedProfile(50),
-                    FixedProfile(10),
-                    FixedProfile(5),
-                    Dict(Power => 1),
-                    Array{Data}([]),
-                )
+            "-src",
+            FixedProfile(50),
+            FixedProfile(10),
+            FixedProfile(5),
+            Dict(Power => 1),
+            Array{Data}([]),
+        )
     end
 
     if isnothing(sink)
         sink = RefSink(
-                    "-snk",
-                    StrategicProfile([20, 25, 30, 35]),
-                    Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
-                    Dict(Power => 1),
-                )
+            "-snk",
+            StrategicProfile([20, 25, 30, 35]),
+            Dict(:surplus => FixedProfile(0), :deficit => FixedProfile(1e6)),
+            Dict(Power => 1),
+        )
     end
 
     nodes = [GeoAvailability(1, products), GeoAvailability(2, products), source, sink]
-    links = [Direct(31, nodes[3], nodes[1], Linear())
-             Direct(24, nodes[2], nodes[4], Linear())]
+    links = [
+        Direct(31, nodes[3], nodes[1], Linear())
+        Direct(24, nodes[2], nodes[4], Linear())
+    ]
 
     # Creation of the two areas and potential transmission lines
-    areas = [RefArea(1, "Oslo", 10.751, 59.921, nodes[1]),
-             RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2])]
+    areas = [
+        RefArea(1, "Oslo", 10.751, 59.921, nodes[1]),
+        RefArea(2, "Trondheim", 10.398, 63.4366, nodes[2]),
+    ]
 
 
     if isnothing(inv_data)
@@ -258,21 +264,21 @@ function small_graph_geo(; source=nothing, sink=nothing, inv_data=nothing)
     # Creation of the time structure and the used global data
     T = TwoLevel(4, 1, SimpleTimes(1, 1))
     modeltype = InvestmentModel(
-                            Dict(CO2 => StrategicProfile([450, 400, 350, 300])),
-                            Dict(CO2 => StrategicProfile([0, 0, 0, 0])),
-                            CO2,
-                            0.07
-                        )
+        Dict(CO2 => StrategicProfile([450, 400, 350, 300])),
+        Dict(CO2 => StrategicProfile([0, 0, 0, 0])),
+        CO2,
+        0.07,
+    )
 
     # Creation of the case dictionary
     case = Dict(
-                :nodes          => nodes,
-                :links          => links,
-                :products       => products,
-                :areas          => areas,
-                :transmission   => transmissions,
-                :T              => T,
-                )
+        :nodes => nodes,
+        :links => links,
+        :products => products,
+        :areas => areas,
+        :transmission => transmissions,
+        :T => T,
+    )
 
     return case, modeltype
 end
@@ -284,13 +290,38 @@ Creates a more complex case to test several potential errors
 """
 function network_graph()
     # Define the different resources
-    NG       = ResourceEmit("NG", 0.2)
-    Coal     = ResourceCarrier("Coal", 0.35)
-    Power    = ResourceCarrier("Power", 0.)
-    CO2      = ResourceEmit("CO2",1.)
+    NG = ResourceEmit("NG", 0.2)
+    Coal = ResourceCarrier("Coal", 0.35)
+    Power = ResourceCarrier("Power", 0.0)
+    CO2 = ResourceEmit("CO2", 1.0)
     products = [NG, Coal, Power, CO2]
 
-    op_profile = OperationalProfile([20, 20, 20, 20, 25, 30, 35, 35, 40, 40, 40, 40, 40, 35, 35, 30, 25, 30, 35, 30, 25, 20, 20, 20])
+    op_profile = OperationalProfile([
+        20,
+        20,
+        20,
+        20,
+        25,
+        30,
+        35,
+        35,
+        40,
+        40,
+        40,
+        40,
+        40,
+        35,
+        35,
+        30,
+        25,
+        30,
+        35,
+        30,
+        25,
+        20,
+        20,
+        20,
+    ])
 
     nodes = [
         GenAvailability(1, products),
@@ -381,7 +412,7 @@ function network_graph()
                         FixedProfile(600),
                         ContinuousInvestment(FixedProfile(0), FixedProfile(600)),
                         UnlimitedLife(),
-                    )
+                    ),
                 ),
             ],
         ),
@@ -421,7 +452,7 @@ function network_graph()
                         FixedProfile(50),
                         ContinuousInvestment(FixedProfile(5), FixedProfile(5)),
                         UnlimitedLife(),
-                    )
+                    ),
                 ),
             ],
         ),
@@ -443,35 +474,30 @@ function network_graph()
         ),
     ]
     links = [
-        Direct(15,nodes[1],nodes[5],Linear())
-        Direct(16,nodes[1],nodes[6],Linear())
-        Direct(17,nodes[1],nodes[7],Linear())
-        Direct(18,nodes[1],nodes[8],Linear())
-        Direct(19,nodes[1],nodes[9],Linear())
-        Direct(110,nodes[1],nodes[10],Linear())
-        Direct(12,nodes[1],nodes[2],Linear())
-        Direct(31,nodes[3],nodes[1],Linear())
-        Direct(41,nodes[4],nodes[1],Linear())
-        Direct(51,nodes[5],nodes[1],Linear())
-        Direct(61,nodes[6],nodes[1],Linear())
-        Direct(71,nodes[7],nodes[1],Linear())
-        Direct(81,nodes[8],nodes[1],Linear())
-        Direct(91,nodes[9],nodes[1],Linear())
-        Direct(101,nodes[10],nodes[1],Linear())
+        Direct(15, nodes[1], nodes[5], Linear())
+        Direct(16, nodes[1], nodes[6], Linear())
+        Direct(17, nodes[1], nodes[7], Linear())
+        Direct(18, nodes[1], nodes[8], Linear())
+        Direct(19, nodes[1], nodes[9], Linear())
+        Direct(110, nodes[1], nodes[10], Linear())
+        Direct(12, nodes[1], nodes[2], Linear())
+        Direct(31, nodes[3], nodes[1], Linear())
+        Direct(41, nodes[4], nodes[1], Linear())
+        Direct(51, nodes[5], nodes[1], Linear())
+        Direct(61, nodes[6], nodes[1], Linear())
+        Direct(71, nodes[7], nodes[1], Linear())
+        Direct(81, nodes[8], nodes[1], Linear())
+        Direct(91, nodes[9], nodes[1], Linear())
+        Direct(101, nodes[10], nodes[1], Linear())
     ]
 
     # Creation of the time structure and global data
-    T           = TwoLevel(4, 1, SimpleTimes(24, 1), op_per_strat=24)
-    em_limits   = Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
-    em_cost     = Dict(NG => FixedProfile(0),   CO2 => FixedProfile(0))
+    T = TwoLevel(4, 1, SimpleTimes(24, 1), op_per_strat = 24)
+    em_limits = Dict(NG => FixedProfile(1e6), CO2 => StrategicProfile([450, 400, 350, 300]))
+    em_cost = Dict(NG => FixedProfile(0), CO2 => FixedProfile(0))
     modeltype = InvestmentModel(em_limits, em_cost, CO2, 0.07)
 
     # WIP case structure
-    case = Dict(
-                :nodes       => nodes,
-                :links       => links,
-                :products    => products,
-                :T           => T,
-                )
+    case = Dict(:nodes => nodes, :links => links, :products => products, :T => T)
     return case, modeltype
 end
