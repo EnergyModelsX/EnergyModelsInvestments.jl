@@ -12,7 +12,7 @@ AbstractInvData
 
 This additional data is node specific, not technology specific.
 It is hence possible to provide different values for the same technology through different instances of said technology.
-`EnergyModelsInvestments` provides two subtypes for `AbstractInvData`, `NoStartInvData` and `StartInvData` as exlained in the following subsection.
+`EnergyModelsInvestments` provides two subtypes for `AbstractInvData`, `NoStartInvData` and `StartInvData` as explained in the following subsection.
 
 It is also possible to create new subtypes with changing parameters.
 
@@ -233,6 +233,12 @@ In practice, this requires only the introduction of a new subtype to `LifetimeMo
 ```@docs
 LifetimeMode
 ```
+
+!!! warning "Existing capacity and lifetime"
+    The current implementation does not provide a lifetime for the existing capacity, independently if you use [`NoStartInvData`](@Ref) or [`StartInvData`](@Ref).
+    This is caused by the background of development of `EnergyModelsInvestments`.
+    However, we are aware of this situation and look into potential approaches for including it.
+    One such approach is outlined in [Issue 30](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/issues/30).
 
 ### `UnlimitedLife`
 
