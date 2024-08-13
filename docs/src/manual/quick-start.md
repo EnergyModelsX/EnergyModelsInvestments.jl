@@ -1,4 +1,4 @@
-# Quick Start
+# [Quick Start](@id man-quick)
 
 To start using the package, refer to the installation instructions on the README page from the git repository.
 

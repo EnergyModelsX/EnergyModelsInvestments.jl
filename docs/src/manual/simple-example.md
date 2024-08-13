@@ -1,6 +1,7 @@
-# [Examples](@id examples)
+# [Examples](@id man-exampl)
 
 For the content of the individual examples, see the [examples](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/tree/main/examples) directory in the project repository.
+These examples are based on the applicatoin of [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/).
 
 ## The package is installed with `] add`
 

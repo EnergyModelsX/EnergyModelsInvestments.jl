@@ -1,12 +1,11 @@
-# [Optimization variables](@id optimization_variables)
+# [Optimization variables](@id man-opt_var)
 
 `EnergyModelsInvestments` requires that variables are declared by the package which uses it.
-These variables are required for being able to extend the model with the potential for investments.
-The variables are required to follow a given nomenclature utilizing a `prefix` symbol.
+These variables are required for being able to extend the model with the potential for investments and to follow a given nomenclature utilizing a `prefix` symbol.
 
-The individual variables can be differentiated in *[Cost variables](@ref var_cost)*, *[Capacity variables](@ref var_capacity)*, and *[Auxiliary variables](@ref var_aux)*.
+The individual variables can be differentiated in *[Cost variables](@ref man-opt_var-cost)*, *[Capacity variables](@ref man-opt_var-cap)*, and *[Auxiliary variables](@ref man-opt_var-aux)*.
 
-## General structure of variables
+## [General structure of variables](@id man-opt_var-gen)
 
 As an example, consider the capex variables.
 The capex variables with a prefix `:cap` are given by ``\texttt{cap\_capex}[n_\texttt{inv}, t_\texttt{inv}]`` for `Node` ``n_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``.
@@ -15,7 +14,7 @@ They are extracted using the functions functions [`EMI.get_var_capex(m, prefix::
 They are **not** declared within `EnergyModelsInvestments`, but have to be declared within the model using `EnergyModelsInvestments`.
 This is illustrated in the `EMIExt` of `EnergyModelsBase`.
 
-## [Cost variables](@id var_cost)
+## [Cost variables](@id man-opt_var-cost)
 
 `EnergyModelsInvestments` requires the introduction of variables that help extracting the cost of investments in an element at each strategic period.
 One example is given through `EnergyModelsBase`:
@@ -30,7 +29,7 @@ The variable is extracted using the functions [`EMI.get_var_capex(m, prefix::Sym
     Cost variables provide the absolute costs within a strategic period ``t_\texttt{inv}``.
     An example unit would be € or $.
 
-## [Capacity variables](@id var_capacity)
+## [Capacity variables](@id man-opt_var-cap)
 
 Capacity variables are variables that manipulate the installed capacity.
 In general, we can differentiate in installed capacity variables and change of capacity variables.
@@ -39,7 +38,7 @@ The installed capacity variables are:
 - ``\texttt{cap\_inst}[n, t]``: Installed capacity of `Node` ``n`` with investments in operational period ``t`` and
 - ``\texttt{cap\_current}[n_\texttt{inv}, t_\texttt{inv}]``: Installed capacity of `Node` ``n_\texttt{inv}`` with investments in strategic period ``t_\texttt{inv}``.
 
-The approach is similar to the *[Cost variables](@ref var_cost)* as variables are created for each of the individual elements.
+The approach is similar to the *[Cost variables](@ref man-opt_var-cost)* as variables are created for each of the individual elements.
 They are extracted using the functions functions [`EMI.get_var_inst(m, prefix::Symbol)`](@ref) and [`EMI.get_var_inst(m, prefix::Symbol, element)`](@ref) as well as [`EMI.get_var_current(m, prefix::Symbol)`](@ref) and [`EMI.get_var_current(m, prefix::Symbol, element)`](@ref).
 
 !!! info "Why two capacity variables"
@@ -73,7 +72,7 @@ The variables are extracted using the functions functions [`EMI.get_var_rem(m, p
     Within `EnergyModelsBase`, we use both rates (normal nodes as well as charge and discharge capacity of `Storage` nodes) and energy/mass (level capacity of `Storage` nodes).
     Hence, it is important to consider the requirement of the model when deciding the unit.
 
-## [Auxiliary variables](@id var_aux)
+## [Auxiliary variables](@id man-opt_var-aux)
 
 Auxiliary variables are variables that are required for certain investment modes.
 The model creates these variables only if the investment mode requires them.

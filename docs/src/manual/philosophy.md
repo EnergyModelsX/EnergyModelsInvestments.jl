@@ -1,10 +1,10 @@
-# Philosophy
+# [Philosophy](@id man-phil)
 
-## General design philosophy
+## [General design philosophy](@id man-phil-gen)
 
 `EnergyModelsInvestments` is a package that calculates the capital expenditures through investments in technologies.
-It cannot be used as a stand-alone package, but simplfieis the incorporation of investment options into energy system models.
-The user still has to define several functions within their own package, as outlined in *[Use `EnergyModelsInvestments`](@ref sec_how_to_use)*.
+It cannot be used as a stand-alone package, but simplifies the incorporation of investment options into energy system models.
+The user still has to define several functions within their own package, as outlined in *[Use `EnergyModelsInvestments`](@ref how_to-use_emi)*.
 
 The aim in the package development is to provide the user with maximum flexibility on how to incorporate investment decisions.
 In the case of investments, the flexibility is required for selecting:
@@ -12,9 +12,9 @@ In the case of investments, the flexibility is required for selecting:
 1. the investment mode for a given technology in a given region and
 2. the lifetime description for a given technology in a given region.
 
-The model is also compatible with `EnergyModelsGeography` to extend its concept to investment in `TransmissionMode`s.
+The model is also compatible with [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/stable/) to extend its concept to investment in `TransmissionMode`s.
 
-## Investment modes
+## [Investment modes](@id man-phil-inv_mode)
 
 Investment modes are different approaches for implementing investments in technologies.
 They are explained in detail in *[Investment Types](@ref sec_types_inv_mode)*.
@@ -34,15 +34,15 @@ If a second region allows as well for wind turbine investments, however at signi
 
 Allowing for differing investment modes results in a reduction in the computational demand while simultaneously allowing for improved description of certain technologies.
 
-## Lifetime modes
+## [Lifetime modes](@id man-phil-life_mode)
 
 Lifetime modes can be used for describing how the lifetime of a technology should be handled.
 In practice, models either do not consider the lifetime, include annualized costs for each year, or use the total costs with a potential final value, if the technology still has a remaining lifetime at the end of the optimizaztion horizon.
 `EnergyModelsInvestments` allows to choose as well differing lifetime modes for the individual technologies.
 
-## As extension to `EnergyModelsBase`
+## [As extension to `EnergyModelsBase`](@id man-phil-EMB_ext)
 
-An example on the application of `EnergyModelsInvestments` is given by the `EMIEXt` in `EnergyModelsBase` which provide the operational model with the potential for investments.
+An example on the application of `EnergyModelsInvestments` is given by the `EMIEXt` in `EnergyModelsBase` which provides an operational model with the potential for investments.
 The extension is achieved through providing a new `InvestmentModel` which is subsequently used for dispatching on several core functions within `EnergyModelsBase`.
 Hence, its application does not require any changes to the model itself.
 This corresponds to the 3ʳᵈ bullet point in the list of *[Extensions to the model](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/manual/philosophy/#sec_phil_ext)*.

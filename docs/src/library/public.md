@@ -1,8 +1,8 @@
-# [Public interface](@id sec_lib_public)
+# [Public interface](@id lib-pub)
 
-## Additional Data for Investments
+## [Additional Data for Investments](@id lib-pub-data)
 
-### General type structure
+### [General type structure](@id lib-pub-data-abstract)
 
 Additional data for investment is specified when creating the nodes through subtypes of the type `AbstractInvData`.
 
@@ -19,7 +19,7 @@ It is also possible to create new subtypes with changing parameters.
 !!! warning "Introducing new subtypes"
     If you introduce new subtypes to `AbstractInvData`, it is necessary that you either incorporate the fields outlined in the following subsection with the same names, or alternatively declare methods for the functions [`investment_mode`](@ref), [`EMI.lifetime_mode`](@ref), [`EMI.lifetime`](@ref), [`EMI.max_installed`](@ref), [`EMI.capex`](@ref), and [`EMI.capex_offset`](@ref) for the new type.
 
-### `AbstractInvData` subtypes
+### [`AbstractInvData` subtypes](@id lib-pub-data-conc)
 
 `AbstractInvData` subtypes area used to add the required investment data to the individual technology capacities.
 
@@ -51,7 +51,7 @@ NoStartInvData
 StartInvData
 ```
 
-### Additional functions
+### [Additional functions](@id lib-pub-data-func)
 
 `EnergyModelsInvestments` provides additional functions for extracting field informations from the investment data:
 
@@ -68,13 +68,13 @@ investment_data
 
 These shell functions are not directly used by EnergyModelsInvestments, but can be useful.
 
-## [Investment modes](@id sec_types_inv_mode)
+## [Investment modes](@id lib-pub-inv_mode)
 
 Different investment modes are available to help represent different situations.
 The investment mode is included in the field `inv_mode` in [`NoStartInvData`](@ref) and [`StartInvData`](@ref).
 The investment mode determines how the model can invest and which constraints are imposed on the investments.
 
-### Potential fields in investment modes
+### [Potential fields in investment modes](@id lib-pub-inv_mode-fields)
 
 Investment modes are including the required fields.
 These fields are given below with a detailed description in the individual subsections.
@@ -221,7 +221,7 @@ The fields `cap_min_add`, `cap_max_add`, and `cap_increment` do not have a meani
 FixedInvestment
 ```
 
-## [`LifetimeMode`](@id life_mode)
+## [`LifetimeMode`](@id lib-pub-life_mode)
 
 `EnergyModelsInvestments` allows for differing descriptions for the lifetime of a technology.
 A key problem is when the lifetime of a technology is not equal to the duration of strategic periods.

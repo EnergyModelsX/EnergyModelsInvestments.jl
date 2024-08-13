@@ -1,4 +1,4 @@
-# [Use `EnergyModelsInvestments`](@id sec_how_to_use)
+# [Use `EnergyModelsInvestments`](@id how_to-use_emi)
 
 `EnergyModelsInvestments` was initially designed as extension package for [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/).
 Hence, many design choices are impacted by the requirements of `EnergyModelsBase`.
@@ -9,13 +9,13 @@ Using `EnergyModelsInvestments` requires the following implementations in your m
 !!! tip "Implementation"
     If you are uncertain on how to best implement investment options, it can be beneficial to investigate the appraoches chosen in [`EnergyModelsBase`](https://github.com/EnergyModelsX/EnergyModelsBase.jl/tree/main/ext/EMIExt) and [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsGeography.jl/tree/main/ext/EMIExt).
 
-## Auxiliary functions
+## [Auxiliary functions](@id how_to-use_emi-aux_fun)
 
 The are several additional functions which are specific for the individual types.
 This functions are either used as example for a simplified interface or alternatively required in `EnergyModelsInvestments`.
 The latter requires you to implement these methods within your model through multiple dispatch as they are called within `EnergyModelsInvestments`.
 
-### Required methods
+### [Required methods](@id how_to-use_emi-aux_fun-req_met)
 
 When you are using the type [`NoStartInvData`](@ref), you have to specify the function
 
@@ -37,7 +37,7 @@ EMI.start_cap(n::Storage, t_inv, inv_data::NoStartInvData, cap) =
 
 and the application of the internal function `capacity()`.
 
-### Simplified interface functions
+### [Simplified interface functions](@id how_to-use_emi-aux_fun-sim_int)
 
 `EnergyModelsBase` creates new types for the investment data instead of using [`NoStartInvData`](@ref) and [`StartInvData`](@ref).
 The background for this approach is that we like to have the potential for multiple capacities within a node, *e.g.*, charge, level, and discharge capacities in `Storage` nodes as well as the potential for investments in the individual capacities.
@@ -48,9 +48,9 @@ of the nodes.
 Both functions are not directly used in `EnergyModelsInvestments` in this context.
 Hence, it is not required to declare new methods for these functions. It can however be beneficial to create methods as it may simplify the subsequent structure.
 
-## Variable declarations
+## [Variable declarations](@id how_to-use_emi-var_dec)
 
-As outlined in *[Optimization variables](@ref optimization_variables)*, we require that the user follows a given variable naming convention.
+As outlined in *[Optimization variables](@ref man-opt_var)*, we require that the user follows a given variable naming convention.
 The variables used within `EnergyModelsInvestments` are extracted with the help of the following functions:
 
 - [`EMI.get_var_capex`](@ref) for capital expenses variables, declared over strategic periods,
@@ -62,9 +62,9 @@ The variables used within `EnergyModelsInvestments` are extracted with the help 
 - [`EMI.get_var_remove_b`](@ref) for helper variables for removals, declared over strategic periods.
 
 The provided functions utilize a `prefix::Symbol` argument which is the corresponding prefix for all variables.
-*[Optimization variables](@ref optimization_variables)* explains the required names for the variables with `prefix = :cap`.
+*[Optimization variables](@ref man-opt_var)* explains the required names for the variables with `prefix = :cap`.
 
-Although it is in general possible to provide dispatch on these functions for new types, we unfortunately require in the current implementation that the naming convention has to be followed at least for the *[Auxiliary variables](@ref var_aux)* as [`SparseVariables`](https://github.com/sintefore/SparseVariables.jl) requires the extraction of all variables with a given name before the insertion.
+Although it is in general possible to provide dispatch on these functions for new types, we unfortunately require in the current implementation that the naming convention has to be followed at least for the *[Auxiliary variables](@ref man-opt_var-aux)* as [`SparseVariables`](https://github.com/sintefore/SparseVariables.jl) requires the extraction of all variables with a given name before the insertion.
 
 Hence, it is best to declare all variables as, *e.g.* using the prefix `:cap`:
 
@@ -83,7 +83,7 @@ Hence, it is best to declare all variables as, *e.g.* using the prefix `:cap`:
 
 with `𝒩ᴵⁿᵛ` corresponding to nodes with investments.
 
-## Inclusion of investment constraints
+## [Inclusion of investment constraints](@id how_to-use_emi-inc_inv)
 
 Investment constraints are included through the function
 
@@ -125,7 +125,7 @@ end
 
 Note that we included in this example a method for `investment_data()` as outlined above.
 
-## Updating the objective function
+## [Updating the objective function](@id how_to-use_emi-up_obj)
 
 `EnergyModelsInvestments` does not change the objective function.
 This would require detailed knowledge regarding the individual contributing factors.

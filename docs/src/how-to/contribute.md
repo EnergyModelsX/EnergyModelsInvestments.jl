@@ -1,8 +1,8 @@
-# Contribute to EnergyModelsInvestments
+# [Contribute to EnergyModelsInvestments](@id how_to-con)
 
 Contributing to `EnergyModelsInvestments` can be achieved in several different ways.
 
-## File a bug report
+## [File a bug report](@id how_to-con-bug_rep)
 
 Another approach to contributing to `EnergyModelsInvestments` is through filing a bug report as an [_issue_](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/issues/new) when unexpected behaviour is occuring.
 
@@ -27,13 +27,13 @@ When filing a bug report, please follow the following guidelines:
 
     In order to improve the code, we welcome any reports of potential method ambiguities to help us improving the structure of the framework.
 
-## Feature requests
+## [Feature requests](@id how_to-feat_req)
 
 `EnergyModelsInvestments` includes several `Investment` options and `LifetimeMode`s.
 However, not all potential options are included.
 Hence, if you require a new investment or lifetime mode, it is best to provide a feature request.
 
-Feature requests for `EnergyModelsInvestments` should follow the guidelines developed for [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/how-to/contribute/).
+Feature requests for `EnergyModelsInvestments` should follow the guidelines developed for [_`EnergyModelsBase`_](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/how-to/contribute/).
 
 !!! note
     `EnergyModelsInvestments` is slightly different than `EnergyModelsBase`.

@@ -1,7 +1,7 @@
 """
 Main module for `EnergyModelsInvestments`.
 
-This module implements functionalities allowing to run investment analysis for energymodelsx
+This module implements functionalities allowing to run investment analysis for [EnergyModelsX](https://github.com/EnergyModelsX)
 system optimization models.
 
 `EnergyModelsInvestments` cannot be used as stand-alone model. Instead, it extends existing
