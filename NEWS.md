@@ -2,7 +2,15 @@
 
 ## Unversioned
 
-* Use dev version of EMI for examples when running as part of tests, similar to [PR #33 of EMB](https://github.com/EnergyModelsX/EnergyModelsBase.jl/pull/33).
+### Making `EnergyModelsInvestments` independent of `EnergyModelsBase`
+
+* [Version 0.6 of `EMI`](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/releases/tag/v0.6.0) provided the base for making `EMI` independent of `EMB`.
+* This approach was now utilized for moving all `EMB` specific functions to an extension of `EMB`.
+* In the new version, `EMI` can be used in any model with investments, given that some functions are provided by the developer of said models.
+
+### Other
+
+* Use dev version of `EMI` for examples when running as part of tests, similar to [PR #33 of EMB](https://github.com/EnergyModelsX/EnergyModelsBase.jl/pull/33).
 
 ## Version 0.6.0 (2024-05-24)
 

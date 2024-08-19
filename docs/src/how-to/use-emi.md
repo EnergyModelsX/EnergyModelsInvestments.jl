@@ -7,13 +7,13 @@ We realized however that it can be beneficial to make it independent of `EnergyM
 Using `EnergyModelsInvestments` requires the following implementations in your model.
 
 !!! tip "Implementation"
-    If you are uncertain on how to best implement investment options, it can be beneficial to investigate the appraoches chosen in [`EnergyModelsBase`](https://github.com/EnergyModelsX/EnergyModelsBase.jl/tree/main/ext/EMIExt) and [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsGeography.jl/tree/main/ext/EMIExt).
+    If you are uncertain on how to best implement investment options, it can be beneficial to investigate the approaches chosen in [`EnergyModelsBase`](https://github.com/EnergyModelsX/EnergyModelsBase.jl/tree/main/ext/EMIExt) and [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsGeography.jl/tree/main/ext/EMIExt).
 
 ## [Auxiliary functions](@id how_to-use_emi-aux_fun)
 
 The are several additional functions which are specific for the individual types.
 This functions are either used as example for a simplified interface or alternatively required in `EnergyModelsInvestments`.
-The latter requires you to implement these methods within your model through multiple dispatch as they are called within `EnergyModelsInvestments`.
+The latter requires you to implement methods within your model through multiple dispatch as they are called within `EnergyModelsInvestments`.
 
 ### [Required methods](@id how_to-use_emi-aux_fun-req_met)
 
