@@ -27,8 +27,8 @@ The following fields have to be added for all provided types:
 
 - `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative to the capacity. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
 - `max_inst::TimeProfile`: Maximum installed capacity of the `Node`. The maximum installed capacity is limiting the total installed capacity of the Node. It is possible to have different values for different `Node`s representing the same technology. This can be useful for, *e.g.*, the potential for wind power in different regions.
-- `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref sec_types_inv_mode)*.
-- `life_mode::LifetimeMode`: Lifetime mode of the `Node`. The lifetime mode is describing how the lifetime of the node is implemented. This includes as well final values and retiring of the individual technologies. The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref life_mode)*.
+- `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref lib-pub-inv_mode)*.
+- `life_mode::LifetimeMode`: Lifetime mode of the `Node`. The lifetime mode is describing how the lifetime of the node is implemented. This includes as well final values and retiring of the individual technologies. The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref lib-pub-life_mode)*.
 
 The type `StartInvData` allows in addition for providing the initial capacity in the first year through:
 

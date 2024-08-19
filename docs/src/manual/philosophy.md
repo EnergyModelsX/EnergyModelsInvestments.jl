@@ -17,7 +17,7 @@ The model is also compatible with [`EnergyModelsGeography`](https://energymodels
 ## [Investment modes](@id man-phil-inv_mode)
 
 Investment modes are different approaches for implementing investments in technologies.
-They are explained in detail in *[Investment Types](@ref sec_types_inv_mode)*.
+They are explained in detail in *[Investment Types](@ref lib-pub-inv_mode)*.
 `EnergyModelsInvestments` allows for different investment modes for technologies, both for different technologies, but also for the same technology implemented through different instances.
 
 Different technologies require different descriptions of the investments.
