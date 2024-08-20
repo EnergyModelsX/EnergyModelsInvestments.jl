@@ -1,6 +1,6 @@
 # Release notes
 
-## Unversioned
+## Version 0.7.0 (2024-08-20)
 
 ### Making `EnergyModelsInvestments` independent of `EnergyModelsBase`
 
