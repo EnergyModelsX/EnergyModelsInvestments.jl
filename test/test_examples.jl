@@ -3,8 +3,7 @@ ENV["EMX_TEST"] = true # Set flag for example scripts to check if they are run a
 @testset "Run examples" begin
     exdir = joinpath(@__DIR__, "..", "examples")
     files = filter(endswith(".jl"), readdir(exdir))
-    filter!(!startswith("geo"), files) # Skip geo temporarily
-    for file in files
+    for file ∈ files
         @testset "Example $file" begin
             redirect_stdio(stdout=devnull, stderr=devnull) do
                 include(joinpath(exdir, file))

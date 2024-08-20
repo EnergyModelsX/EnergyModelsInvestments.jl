@@ -14,21 +14,19 @@ const TS = TimeStruct
 include("utils.jl")
 
 @testset "Investments" begin
-    redirect_stdio(stdout=devnull) do
-        @testset "Investments | model" begin
-            include("test_model.jl")
-        end
+    @testset "Investments | model" begin
+        include("test_model.jl")
+    end
 
-        @testset "Investments | lifetime" begin
-            include("test_lifetime.jl")
-        end
+    @testset "Investments | lifetime" begin
+        include("test_lifetime.jl")
+    end
 
-        @testset "Investments | checks" begin
-            include("test_checks.jl")
-        end
+    @testset "Investments | checks" begin
+        include("test_checks.jl")
+    end
 
-        @testset "Investments | examples" begin
-            include("test_examples.jl")
-        end
+    @testset "Investments | examples" begin
+        include("test_examples.jl")
     end
 end
