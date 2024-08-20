@@ -1,7 +1,15 @@
 # EnergyModelsInvestments
 
-This Julia package provides investment options for the operational, multi carrier energy model [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/).
-It furthermore adds investment options for the transmission modes introduced in [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/), if the package is loaded.
+This Julia package provides the description of different investment options for energy system models.
+Initially, it was an extension package to the operational, multi carrier energy model [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/) with an additional extension for geographical investments if [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/) was used.
+
+However, since Version 0.7, `EnergyModelsInvestments` can be used independently from [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/) to provide different investment options to existing energy system models written in [`JuMP`](https://jump.dev/JuMP.jl/stable/).
+In this case, `EnergyModelsInvestments` provides a mathematical formulation for both different investement modes (_e.g._, discrete investments or semi-continuous investments) and lifetime modes (_e.g._, for the whole study period or only for a limitid number of years).
+A detailed description on how you can use `EnergyModelsInvestments` can be found in *[Use `EnergyModelsInvestments`](@ref how_to-use_emi)*.
+
+!!! info
+    The documentation is currently in the transition from the case in which `EnergyModelsInvestments` was an extension of `EnergyModelsBase`.
+    Hence, we do not provide as many links to the individual types and how to apply `EnergyModelsInvestments` as we plan for in the near future.
 
 ```@docs
 EnergyModelsInvestments
@@ -27,6 +35,7 @@ Depth = 1
 ```@contents
 Pages = [
     "how-to/update-models.md",
+    "how-to/use-emi.md",
     "how-to/contribute.md",
 ]
 Depth = 1

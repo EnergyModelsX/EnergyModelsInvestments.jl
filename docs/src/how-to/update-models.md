@@ -1,13 +1,16 @@
-# [Update your model to the latest versions](@id sec_how_to_update)
+# [Update your model to the latest versions](@id how_to-update)
 
 `EnergyModelsInvestments` is still in a pre-release version.
 Hence, there are frequently breaking changes occuring, although we plan to keep backwards compatibility.
 This document is designed to provide users with information regarding how they have to adjust their models to keep compatibility to the latest changes.
 We will as well implement information regarding the adjustment of extension packages, although this is more difficult due to the vast majority of potential changes.
 
-## Adjustments from 0.5.x
+## [Adjustments from 0.5.x](@id how_to-update-05)
 
-### Key changes for investment type descriptions
+The following changes obly affect older models using `EnergyModelsBase` and `EnergyModelsGeography`.
+They are not relevant if you do not use `EnergyModelsBase`.
+
+### [Key changes for investment type descriptions](@id how_to-update-05-key)
 
 Version 0.7 in `EnergyModelsBase` introduced the potential to have charge and discharge capacities through _storage parameters_.
 This required hence a rework of how we model investments into storage nodes.
@@ -16,7 +19,7 @@ We decided to use this requirement as an approach for a full rework of the inves
 The key changes are:
 
 - All parameters for investment or lifetime modes are incorporated in the respective investment or lifetime mode.
-- The previously used investment data, [`InvData`](@ref), [`InvDataStorage`](@ref), and [`TransInvData`](@ref), are replaced by [`SingleInvData`](@ref) (for standard node and transmission mode investments) and [`StorageInvData`](@ref) (for storage investments).
+- The previously used investment data, `InvData`, `InvDataStorage`, and `TransInvData`, are replaced by `SingleInvData` (for standard node and transmission mode investments) and `StorageInvData` (for storage investments).
 - CAPEX cariables are renamed:
   - `:capex_cap` is now `:cap_capex`,
   - `:capex_rate` is now given by `:stor_charge_capex` and `:stor_discharge_capex`,
@@ -25,8 +28,9 @@ The key changes are:
 
 !!! note
     The legacy constructors for calls of the composite type of version 0.5 will be included at least until version 0.7.
+    They are located [within the extension](https://github.com/EnergyModelsX/EnergyModelsBase.jl/blob/main/ext/EMIExt/structures/legacy_constructor.jl) from version 0.7 onwards.
 
-### [`InvData`](@ref) and [`TransInvData`](@ref)
+### [`InvData` and `TransInvData`](@id how_to-update-05-inv_data)
 
 The following changes are written down for `InvData`, but are equivalent for `TransInvData`.
 The previous description for nodal investments was given by:
@@ -99,7 +103,7 @@ SingleInvData(
 The translation of the parameters `cap_max_add`, `cap_min_add`, and `cap_increment` is dependent on the chosen investment mode, see below.
 This makes the legacy constructor slightly more complex as it is necessary to check for the individual type.
 
-### [`InvDataStorage`](@ref)
+### `InvDataStorage`
 
 `InvDataStorage` was significantly reworked since version 0.5.
 The total rework is provided below.
@@ -181,9 +185,9 @@ StorageInvData(
 The translation of the parameters `rate_max_add`, `rate_min_add`, `rate_increment`, `stor_max_add`, `stor_min_add`,  `stor_increment` is dependent on the chosen investment mode, see below.
 This makes the legacy constructor slightly more complex as it is necessary to check for the individual type.
 
-### [Investment modes](@ref sec_types_inv_mode)
+### [Investment modes](@id how_to-update-05-inv_modes)
 
-Investment modes include now the required data.
+*[Investment modes](@ref man-phil-inv_mode)* include now the required data.
 This implies that the direct translation is now dependent on the individual investment mode.
 Below, you can find the approach for `InvData` legacy constructors, although the approach is the same for `InvDataStorage` and `TransInvData`.
 
@@ -243,9 +247,9 @@ investment_data_source = SingleInvData(
 )
 ```
 
-### [Lifetime modes](@ref life_mode)
+### [Lifetime modes](@id how_to-update-05-life_modes)
 
-Investment modes now include the required lifetime.
+*[Lifetime modes](@ref man-phil-life_mode)* now include the required lifetime.
 Below, you can find the approach for `InvData` legacy constructors, although the approach is the same for `InvDataStorage` and `TransInvData`.
 
 ```julia
