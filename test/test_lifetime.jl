@@ -2,7 +2,7 @@ resulting_obj = Dict()
 @testset "Test Lifetime" begin
 
     lifetime = 15
-    for sp_dur ∈ [2,4,6]#,10,15,20]
+    for sp_dur ∈ [2, 4, 6, 15]#,10,15,20]
         push!(resulting_obj, "$(sp_dur) years" => [])
         @testset "Modes - $(sp_dur) years" begin
             for life_mode ∈ [UnlimitedLife(), StudyLife(FixedProfile(15)), PeriodLife(FixedProfile(15)), RollingLife(FixedProfile(15))]
