@@ -76,7 +76,7 @@ function generate_ss_example_data(lifemode = RollingLife; discount_rate = 0.05)
         FixedProfile(0),            # Capacity in MW
         FixedProfile(10),           # Variable OPEX in EUR/MW
         FixedProfile(5),            # Fixed OPEX in EUR/year
-        Dict(Power => 1),           # Output from the Node, in this gase, Power
+        Dict(Power => 1),           # Output from the Node, in this case, Power
         [investment_data_source],   # Additional data used for adding the investment data
     )
     sink = RefSink(
