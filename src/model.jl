@@ -478,7 +478,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         # If lifetime is equal to sp duration we only need to invest once and there is no
         # rest value. The invested capacity is removed at the end of the strategic period
         elseif lifetime_val == duration_strat(t_inv)
-            @constraint(m, var_capex[t_inv] == capex_val)
+            @constraint(m, var_capex[t_inv] == capex_val[t_inv])
             @constraint(m, var_rem[t_inv] == var_add[t_inv])
 
         # If lifetime is longer than sp duration, the capacity can roll over to the next sp
