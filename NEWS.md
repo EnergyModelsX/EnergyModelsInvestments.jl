@@ -1,5 +1,10 @@
 # Release notes
 
+## Version 0.7.1 (2024-08-26)
+
+* Bugfix in `RollingLife` in a situation, in which the duration of a strategic period equals the lifetime of the technology.
+  A test was added to avoid this type of problem in the future
+
 ## Version 0.7.0 (2024-08-20)
 
 ### Making `EnergyModelsInvestments` independent of `EnergyModelsBase`
