@@ -27,7 +27,7 @@ When filing a bug report, please follow the following guidelines:
 
     In order to improve the code, we welcome any reports of potential method ambiguities to help us improving the structure of the framework.
 
-## [Feature requests](@id how_to-feat_req)
+## [Feature requests](@id how_to-con-feat_req)
 
 `EnergyModelsInvestments` includes several `Investment` options and `LifetimeMode`s.
 However, not all potential options are included.
