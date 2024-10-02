@@ -85,115 +85,83 @@ are unlimited.
 lifetime_mode(inv_data::AbstractInvData) = inv_data.life_mode
 
 """
+    lifetime(inv_data::AbstractInvData)
     lifetime(inv_data::AbstractInvData, t_inv)
 
-Return the lifetime of the investment data `inv_data` in investment period `t_inv`.
+Return the lifetime of the investment data `inv_data` as `TimeProfile` or in investment
+period `t_inv`.
 """
+lifetime(inv_data::AbstractInvData) = lifetime(lifetime_mode(inv_data))
 lifetime(inv_data::AbstractInvData, t_inv) = lifetime(lifetime_mode(inv_data), t_inv)
 
 """
-    lifetime(inv_data::AbstractInvData)
-
-Return the lifetime of the investment data `inv_data` as `TimeProfile`.
-"""
-lifetime(inv_data::AbstractInvData) = lifetime(lifetime_mode(inv_data))
-
-"""
     capex(inv_data::AbstractInvData)
-
-Returns the CAPEX of the investment data `inv_data` as `TimeProfile`.
-"""
-capex(inv_data::AbstractInvData) = inv_data.capex
-"""
     capex(n::AbstractInvData, t_inv)
 
-Returns the CAPEX of the investment data `inv_data` in investment period `t_inv`.
+Returns the CAPEX of the investment data `inv_data` as `TimeProfile` or in investment
+period `t_inv`.
 """
+capex(inv_data::AbstractInvData) = inv_data.capex
 capex(inv_data::AbstractInvData, t_inv) = inv_data.capex[t_inv]
 
 """
     capex_offset(inv_data::AbstractInvData)
-
-Returns the offset of the CAPEX of the investment data `inv_data` as `TimeProfile`.
-"""
-capex_offset(inv_data::AbstractInvData) = capex_offset(investment_mode(inv_data))
-"""
     capex_offset(inv_data::AbstractInvData, t_inv)
 
-Returns the offset of the CAPEX of the investment data `inv_data` in investment period `t_inv`.
+Returns the offset of the CAPEX of the investment data `inv_data` as `TimeProfile` or in
+investment period `t_inv`.
 """
+capex_offset(inv_data::AbstractInvData) = capex_offset(investment_mode(inv_data))
 capex_offset(inv_data::AbstractInvData, t_inv) =
     capex_offset(investment_mode(inv_data), t_inv)
 
 """
     max_installed(inv_data::AbstractInvData)
-
-Returns the maximum allowed installed capacity the investment data `inv_data` as
-`TimeProfile`.
-"""
-max_installed(inv_data::AbstractInvData) = inv_data.max_inst
-"""
     max_installed(inv_data::AbstractInvData, t_inv)
 
-Returns the maximum allowed installed capacity of the investment data `inv_data` in
-investment period `t_inv`.
+Returns the maximum allowed installed capacity the investment data `inv_data` as
+`TimeProfile` or in investment period `t_inv`.
 """
+max_installed(inv_data::AbstractInvData) = inv_data.max_inst
 max_installed(inv_data::AbstractInvData, t_inv) = inv_data.max_inst[t_inv]
 
 """
     max_add(inv_data::AbstractInvData)
-
-Returns the maximum allowed added capacity of the investment data `inv_data` as
-`TimeProfile`.
-"""
-max_add(inv_data::AbstractInvData) = max_add(investment_mode(inv_data))
-"""
     max_add(inv_data::AbstractInvData, t_inv)
 
-Returns the maximum allowed added capacity of the investment data `inv_data` in investment
-period `t_inv`.
+Returns the maximum allowed added capacity of the investment data `inv_data` as
+`TimeProfile` or in investment period `t_inv`.
 """
+max_add(inv_data::AbstractInvData) = max_add(investment_mode(inv_data))
 max_add(inv_data::AbstractInvData, t_inv) = max_add(investment_mode(inv_data), t_inv)
 
 """
     min_add(inv_data::AbstractInvData)
-
-Returns the minimum allowed added capacity of the investment data `inv_data` as
-`TimeProfile`.
-"""
-min_add(inv_data::AbstractInvData) = min_add(investment_mode(inv_data))
-"""
     min_add(inv_data::AbstractInvData, t_inv)
 
-Returns the minimum allowed added capacity of the investment data `inv_data` in investment
-period `t_inv`.
+Returns the minimum allowed added capacity of the investment data `inv_data` as
+`TimeProfile` or in investment period `t_inv`.
 """
+min_add(inv_data::AbstractInvData) = min_add(investment_mode(inv_data))
 min_add(inv_data::AbstractInvData, t_inv) = min_add(investment_mode(inv_data), t_inv)
 
 """
     increment(inv_data::AbstractInvData)
-
-Returns the capacity increment of the investment data `inv_data` as `TimeProfile`.
-"""
-increment(inv_data::AbstractInvData) = increment(investment_mode(inv_data))
-"""
     increment(inv_data::AbstractInvData, t_inv)
 
-Returns the capacity increment of the investment data `inv_data` in investment period `t_inv`.
+Returns the capacity increment of the investment data `inv_data` as `TimeProfile` or in
+investment period `t_inv`.
 """
+increment(inv_data::AbstractInvData) = increment(investment_mode(inv_data))
 increment(inv_data::AbstractInvData, t_inv) = increment(investment_mode(inv_data), t_inv)
 
 """
     invest_capacity(inv_data::AbstractInvData)
-
-Returns the capacity investments of the investment data `inv_data` as `TimeProfile`.
-"""
-invest_capacity(inv_data::AbstractInvData) = invest_capacity(investment_mode(inv_data))
-"""
     invest_capacity(inv_data::AbstractInvData, t_inv)
 
-Returns the capacity profile for investments of the investment data `inv_data` in investment
-period `t_inv`.
+Returns the capacity investments of the investment data `inv_data` as `TimeProfile` or in
+investment period `t_inv`.
 """
+invest_capacity(inv_data::AbstractInvData) = invest_capacity(investment_mode(inv_data))
 invest_capacity(inv_data::AbstractInvData, t_inv) =
     invest_capacity(investment_mode(inv_data), t_inv)

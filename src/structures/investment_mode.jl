@@ -125,70 +125,50 @@ end
 
 """
     capex_offset(inv_mode::SemiContinuousOffsetInvestment)
-
-Returns the offset of the CAPEX of the investment mode `inv_mode` as `TimeProfile`.
-"""
-capex_offset(inv_mode::SemiContinuousOffsetInvestment) = inv_mode.capex_offset
-"""
     capex_offset(inv_mode::SemiContinuousOffsetInvestment, t_inv)
 
-Returns the offset of the CAPEX of the investment mode `inv_mode` in investment period `t_inv`.
+Returns the offset of the CAPEX of the investment mode `inv_mode` as `TimeProfile` or in
+investment period `t_inv`.
 """
+capex_offset(inv_mode::SemiContinuousOffsetInvestment) = inv_mode.capex_offset
 capex_offset(inv_mode::SemiContinuousOffsetInvestment, t_inv) = inv_mode.capex_offset[t_inv]
 
 """
     min_add(inv_mode::Investment)
-
-Returns the minimum allowed added capacity of the investment mode `inv_mode` as
-`TimeProfile`.
-"""
-min_add(inv_mode::Investment) = inv_mode.min_add
-"""
     min_add(inv_mode::Investment, t_inv)
 
-Returns the minimum allowed added capacity of the investment mode `inv_mode` in investment
-period `t_inv`.
+Returns the minimum allowed added capacity of the investment mode `inv_mode` as
+`TimeProfile` or in investment period `t_inv`.
 """
+min_add(inv_mode::Investment) = inv_mode.min_add
 min_add(inv_mode::Investment, t_inv) = inv_mode.min_add[t_inv]
 
 """
     max_add(inv_mode::Investment)
-
-Returns the maximum allowed added capacity of the investment mode `inv_mode` as
-`TimeProfile`.
-"""
-max_add(inv_mode::Investment) = inv_mode.max_add
-"""
     max_add(inv_mode::Investment, t_inv)
 
-Returns the maximum allowed added capacity of the investment mode `inv_mode` investment
-period `t_inv`.
+Returns the maximum allowed added capacity of the investment mode `inv_mode` as
+`TimeProfile` or in investment period `t_inv`.
 """
+max_add(inv_mode::Investment) = inv_mode.max_add
 max_add(inv_mode::Investment, t_inv) = inv_mode.max_add[t_inv]
 
 """
     increment(inv_mode::Investment)
-
-Returns the capacity increment of the investment mode `inv_mode` as `TimeProfile`.
-"""
-increment(inv_mode::Investment) = inv_mode.increment
-"""
     increment(inv_mode::Investment, t_inv)
 
-Returns the capacity increment of the investment mode `inv_mode` in investment period `t_inv`.
+Returns the capacity increment of the investment mode `inv_mode` as `TimeProfile` or in
+investment period `t_inv`.
 """
+increment(inv_mode::Investment) = inv_mode.increment
 increment(inv_mode::Investment, t_inv) = inv_mode.increment[t_inv]
 
 """
     invest_capacity(inv_mode::Investment)
-
-Returns the capacity investments of the investment mode `inv_mode` as `TimeProfile`.
-"""
-invest_capacity(inv_mode::Investment) = inv_mode.cap
-"""
     invest_capacity(inv_mode::Investment, t_inv)
 
-Returns the capacity profile for investments of the investment mode `inv_mode` in investment
-period `t_inv`.
+Returns the capacity investments of the investment mode `inv_mode` as `TimeProfile` or in
+investment period `t_inv`.
 """
+invest_capacity(inv_mode::Investment) = inv_mode.cap
 invest_capacity(inv_mode::Investment, t_inv) = inv_mode.cap[t_inv]

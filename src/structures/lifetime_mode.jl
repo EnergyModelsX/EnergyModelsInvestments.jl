@@ -55,13 +55,10 @@ end
 
 """
     lifetime(lifetime_mode::LifetimeMode)
-
-Return the lifetime of the lifetime mode `lifetime_mode` as `TimeProfile`.
-"""
-lifetime(lifetime_mode::LifetimeMode) = lifetime_mode.lifetime
-"""
     lifetime(lifetime_mode::LifetimeMode, t_inv)
 
-Return the lifetime of the lifetime mode `lifetime_mode` in investment period `t_inv`.
+Return the lifetime of the lifetime mode `lifetime_mode` as `TimeProfile` or in
+investment period `t_inv`.
 """
+lifetime(lifetime_mode::LifetimeMode) = lifetime_mode.lifetime
 lifetime(lifetime_mode::LifetimeMode, t_inv) = lifetime_mode.lifetime[t_inv]

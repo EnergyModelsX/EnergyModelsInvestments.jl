@@ -51,7 +51,7 @@ function add_investment_constraints(
         @constraint(m, [t ∈ t_inv], var_inst[t] == var_current[t_inv])
 
         # Capacity updating
-        @constraint(m, var_current[t_inv] <= max_installed(inv_data, t_inv))
+        @constraint(m, var_current[t_inv] ≤ max_installed(inv_data, t_inv))
         if isnothing(t_inv_prev)
             start_cap_val = start_cap(element, t_inv, inv_data, cap)
             @constraint(m, var_current[t_inv] == start_cap_val + var_add[t_inv])
@@ -73,15 +73,41 @@ end
 """
     set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode)
 
-Add constraints related to installation depending on investment mode of type `element`.
+Add constraints related to upper and lower bounds for investments depending on investment
+mode of type `element`.
+
+These constraints differ dependent on the chosen [`Investment`](@ref):
+- **[`Investment`](@ref)** results in provding a lower and upper bound to the variable
+  `var_add` through the functions [`min_add`](@ref) and [`max_add`](@ref). This approach
+  is the default approach for all investment modes.
+- **[`BinaryInvestment`](@ref)** results in setting the variable `var_invest_b` as binary
+  variable. Furthermore, the variable `var_current` is only able to be 0 or a provided
+  value through the function [`invest_capacity`](@ref).
+- **[`DiscreteInvestment`](@ref)** results in setting the variables `var_invest_b` and
+  `var_remove_b`as positive integer variables. Furthermore, the variable `var_current` is
+  only able to be equal to a multiple of a provided value through the function
+  [`increment`](@ref).
+- **[`SemiContiInvestment`](@ref)** results in setting the variable `var_invest_b` as binary
+  variable. Furthermore, the variable `var_add` is bound through the functions
+  [`min_add`](@ref) and [`max_add`](@ref) or 0.
+- **[`FixedInvestment`](@ref)** results in setting the variable `var_invest_b` as binary
+  variable. Furthermore, the variable `var_current` is fixed to a provided  value through
+  the function [`invest_capacity`](@ref). Thi allows to incorporate the cost for the correct
+  value of the objective function.
+
+!!! tip "Introducing new investment modes"
+    This function can be extended with a new method if you introduce a new
+    [`Investment`](@ref). If not, you have to make certain that the functions
+    [`min_add`](@ref) and [`max_add`](@ref) are applicable for your investment mode.
+
 """
 function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::Investment)
     # Deduce the required variable
     var_add = get_var_add(m, prefix, element)
 
     # Set the limits
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] <= max_add(inv_mode, t_inv))
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] >= min_add(inv_mode, t_inv))
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] ≤ max_add(inv_mode, t_inv))
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] ≥ min_add(inv_mode, t_inv))
 end
 
 function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::BinaryInvestment)
@@ -145,12 +171,12 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     @constraint(
         m,
         [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_add[t_inv] <= max_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
+        var_add[t_inv] ≤ max_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
     @constraint(
         m,
         [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_add[t_inv] >= min_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
+        var_add[t_inv] ≥ min_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
 end
 function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::FixedInvestment)
@@ -176,18 +202,29 @@ end
 """
     set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate)
 
-Set the capex_cost based on the technology investment cost, and strategic period length
-to include the needs for reinvestments and the rest value.
+Function for creating constraints for the variable `var_capex` dependent on the chosen
+[`Investment`](@ref) and [`LifetimeMode`](@ref).
+
+The lifetime calculations are located within this function while the corresponding
+undiscounted CAPEX values are calculated in the function [`set_capex_value`](@ref),
+depending on the chosen investment mode.
+
 It implements different versions of the lifetime implementation:
-- UnlimitedLife:    The investment life is not limited. The investment costs do not \
-                    consider any reinvestment or rest value.
-- StudyLife:        The investment last for the whole study period with adequate \
-                    reinvestments at end of lifetime and rest value.
-- PeriodLife:       The investment is considered to last only for the strategic period. \
-                    the excess lifetime is considered in the rest value.
-- RollingLife:      The investment is rolling to the next strategic periods and it is \
-                    retired at the end of its lifetime or the end of the previous sp if \
-                    its lifetime ends between two sp.
+- **[`UnlimitedLife`](@ref)** results in an unlimited investment. The investment costs do
+  not consider any reinvestment or rest value.
+- **[`StudyLife`](@ref)** results in the investment lasting for the whole study period with
+  adequate reinvestments at end of lifetime and rest value.
+- **[`PeriodLife`](@ref)** results in the investment lasting only for the investment period,
+  independent of the duration of the investment period. The excess lifetime is considered in
+  the calculation of the rest value.
+- **[`RollingLife`](@ref)** results in the investment rolling to the next strategic periods.
+  A capacity is retired at the end of its lifetime or the end of the previous strategic
+  period if its lifetime ends between two strategic periods.
+
+!!! tip "Introducing new lifetime modes"
+    This function can be extended with a new method if you introduce a new
+    [`LifetimeMode`](@ref). If not, you have to make certain that the function
+    [`lifetime`](@ref) is applicable for your lifetime mode.
 """
 set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate) = set_capacity_cost(
     m,
@@ -238,7 +275,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The capacity removal variable is corresponding to the removal of the capacity at the
-    # end of the strategic period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
+    # end of the investment period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
     capex_disc = StrategicProfile([
         set_capex_discounter(duration_strat(t_inv), lifetime(inv_data, t_inv), disc_rate) for t_inv ∈ 𝒯ᴵⁿᵛ
     ])
@@ -265,7 +302,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
             set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, PeriodLife())
 
             # If lifetime is equal to sp duration we only need to invest once and there is no
-            # rest value. The invested capacity is removed at the end of the strategic period
+            # rest value. The invested capacity is removed at the end of the investment period
         elseif lifetime_val == duration_strat(t_inv)
             @constraint(m, var_capex[t_inv] == capex_val)
             @constraint(m, var_rem[t_inv] == var_add[t_inv])
@@ -280,7 +317,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
             # Iteration to identify sp in which remaining_lifetime is smaller than sp duration
             for sp ∈ 𝒯ᴵⁿᵛ
-                if sp >= t_inv
+                if sp ≥ t_inv
                     if remaining_lifetime < duration_strat(sp)
                         break
                     end
@@ -299,7 +336,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
             # Capacity to be removed when remaining_lifetime < duration_years, i.e., in ante_sp
             if ante_sp.sp < length(𝒯ᴵⁿᵛ)
-                @constraint(m, var_rem[ante_sp] >= var_add[t_inv])
+                @constraint(m, var_rem[ante_sp] ≥ var_add[t_inv])
             end
         end
     end
