@@ -28,7 +28,7 @@ end
 """
     PeriodLife <: LifetimeMode
 
-The investment is considered to last only for the strategic period. The excess
+The investment is considered to last only for the investment period. The excess
 lifetime is considered in the rest value. If the lifetime is lower than the length
 of the period, reinvestment is considered as well.
 
@@ -43,7 +43,7 @@ end
     RollingLife <: LifetimeMode
 
 The investment is rolling to the next strategic periods and it is retired at the
-end of its lifetime or the end of the previous strategic period if its lifetime
+end of its lifetime or the end of the previous investment period if its lifetime
 ends between two periods.
 
 # Fields

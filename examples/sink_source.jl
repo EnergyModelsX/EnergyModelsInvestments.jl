@@ -39,12 +39,12 @@ function generate_ss_example_data(lifemode = RollingLife; discount_rate = 0.05)
     op_number = 4   # There are in total 4 operational periods
     operational_periods = SimpleTimes(op_number, op_duration)
 
-    # The duration of operational periods per duration of 1 of a strategic period of 8760
+    # The duration of operational periods per duration of 1 of a investment period of 8760
     # implies that a duration of 1 of an operational period corresponds to an hour, while
-    # a duration of 1 of a strategic period corresponds to a year
+    # a duration of 1 of a investment period corresponds to a year
     op_per_strat = 8760
 
-    sp_duration = 5 # The duration of a strategic period is given as 5 years
+    sp_duration = 5 # The duration of a investment period is given as 5 years
 
     # Creation of the time structure and global data
     T = TwoLevel(4, sp_duration, operational_periods; op_per_strat)
@@ -55,7 +55,7 @@ function generate_ss_example_data(lifemode = RollingLife; discount_rate = 0.05)
     model = InvestmentModel(em_limits, em_cost, CO2, discount_rate)
 
     # The lifetime of the technology is 15 years, requiring reinvestment in the
-    # 5th strategic period
+    # 5th investment period
     lifetime = FixedProfile(15)
 
     # Create the investment data for the source node

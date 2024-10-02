@@ -16,7 +16,7 @@ function [`start_cap(element, t_inv, inv_data::AbstractInvData, cap)`](@ref).
 # Fields
 - **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
   relative to the added capacity.
-- **`max_inst::TimeProfile`** is the maximum installed capacity in a strategic period.
+- **`max_inst::TimeProfile`** is the maximum installed capacity in a investment period.
 - **`inv_mode::Investment`** is the chosen investment mode for the technology. The following
   investment modes are currently available: [`BinaryInvestment`](@ref),
   [`DiscreteInvestment`](@ref), [`ContinuousInvestment`](@ref), [`SemiContinuousInvestment`](@ref)
