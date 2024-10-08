@@ -17,4 +17,8 @@ include("utils.jl")
     @testset "Investments | Investment modes" begin
         include("test_invest.jl")
     end
+
+    @testset "Investments | Lifetime" begin
+        include("test_lifetime.jl")
+    end
 end

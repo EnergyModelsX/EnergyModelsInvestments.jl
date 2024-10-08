@@ -92,6 +92,8 @@ function simple_model(;
         :demand => demand,
         :penalty_deficit => penalty_deficit,
         :penalty_surplus => penalty_surplus,
+        :fixed_opex => fixed_opex,
+        :disc_rate => disc_rate,
     )
     return m, para
 end
