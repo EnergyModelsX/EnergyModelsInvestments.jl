@@ -1,5 +1,21 @@
 # Release notes
 
+## Unversioned
+
+### Rework of tests
+
+* The dependency of the tests from `EnergyModelsBase` was removed to avoid a hen-egg problem regarding registering.
+* The tests were furthermore reworked to test all potential combinations.
+
+### Bugfixes
+
+* Fixed bugs when the lifetime of a `RollingLife` technology was shorter or equal to the duration of a strategic period.
+
+### Rework of documentation
+
+* Restructured both the public and internal libraries.
+* Updated the docstrings to simplify the understanding of the different functions.
+
 ## Version 0.7.1 (2024-08-26)
 
 * Bugfix in `RollingLife` in a situation, in which the duration of a strategic period equals the lifetime of the technology.
