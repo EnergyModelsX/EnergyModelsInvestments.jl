@@ -71,7 +71,7 @@ Hence, it is best to declare all variables as, *e.g.* using the prefix `:cap`:
 ```julia
 𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-# Add investment variables for reference nodes for each strategic period:
+# Add investment variables for reference nodes for each investment period:
 @variable(m, cap_inst[𝒩ᴵⁿᵛ] >= 0)
 @variable(m, cap_capex[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
 @variable(m, cap_current[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] >= 0)
@@ -129,7 +129,7 @@ Note that we included in this example a method for `investment_data()` as outlin
 
 `EnergyModelsInvestments` does not change the objective function.
 This would require detailed knowledge regarding the individual contributing factors.
-Hence, we decided that it is beneficial to instead calculate the capital expense contributions in each strategic period.
+Hence, we decided that it is beneficial to instead calculate the capital expense contributions in each investment period.
 As a consequence, when using `EnergyModelsInvestments`, you have to include the variable ``\texttt{cap\_capex}`` (if you used `prefix = :cap`) for all elements with investments to your objective function.
 
 An illustrative example is given in the function `EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)` compared to the function `objective(m, 𝒩, 𝒯, 𝒫, modeltype::EnergyModel)` in `EnergyModelsBase`.

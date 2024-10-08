@@ -235,7 +235,7 @@ end
         𝒯 = case[:T]
         𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-        # Test that the investments is happening in one strategic period
+        # Test that the investments is happening in one investment period
         @test sum(value.(m[:cap_add][source, t_inv]) > 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 1
     end
 end

@@ -28,7 +28,7 @@ end
 """
     PeriodLife <: LifetimeMode
 
-The investment is considered to last only for the strategic period. The excess
+The investment is considered to last only for the investment period. The excess
 lifetime is considered in the rest value. If the lifetime is lower than the length
 of the period, reinvestment is considered as well.
 
@@ -43,7 +43,7 @@ end
     RollingLife <: LifetimeMode
 
 The investment is rolling to the next strategic periods and it is retired at the
-end of its lifetime or the end of the previous strategic period if its lifetime
+end of its lifetime or the end of the previous investment period if its lifetime
 ends between two periods.
 
 # Fields
@@ -55,13 +55,10 @@ end
 
 """
     lifetime(lifetime_mode::LifetimeMode)
-
-Return the lifetime of the lifetime mode `lifetime_mode` as `TimeProfile`.
-"""
-lifetime(lifetime_mode::LifetimeMode) = lifetime_mode.lifetime
-"""
     lifetime(lifetime_mode::LifetimeMode, t_inv)
 
-Return the lifetime of the lifetime mode `lifetime_mode` in investment period `t_inv`.
+Return the lifetime of the lifetime mode `lifetime_mode` as `TimeProfile` or in
+investment period `t_inv`.
 """
+lifetime(lifetime_mode::LifetimeMode) = lifetime_mode.lifetime
 lifetime(lifetime_mode::LifetimeMode, t_inv) = lifetime_mode.lifetime[t_inv]

@@ -41,12 +41,12 @@ function generate_example_data_network()
     op_number = 24  # There are in total 4 operational periods
     operational_periods = SimpleTimes(op_number, op_duration)
 
-    # The duration of operational periods per duration of 1 of a strategic period of 8760
+    # The duration of operational periods per duration of 1 of a investment period of 8760
     # implies that a duration of 1 of an operational period corresponds to an hour, while
-    # a duration of 1 of a strategic period corresponds to a year
+    # a duration of 1 of a investment period corresponds to a year
     op_per_strat = 8760
 
-    sp_duration = 5 # The duration of a strategic period is given as 5 years
+    sp_duration = 5 # The duration of a investment period is given as 5 years
 
     # Create the time structure It corresponds to simulating one day in a year over
     # 4 strategic periods
