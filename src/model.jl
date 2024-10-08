@@ -92,7 +92,7 @@ These constraints differ dependent on the chosen [`Investment`](@ref):
   [`min_add`](@ref) and [`max_add`](@ref) or 0.
 - **[`FixedInvestment`](@ref)** results in setting the variable `var_invest_b` as binary
   variable. Furthermore, the variable `var_current` is fixed to a provided  value through
-  the function [`invest_capacity`](@ref). Thi allows to incorporate the cost for the correct
+  the function [`invest_capacity`](@ref). This allows to incorporate the cost for the correct
   value of the objective function.
 
 !!! tip "Introducing new investment modes"
