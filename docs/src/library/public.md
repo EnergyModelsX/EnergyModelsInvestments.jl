@@ -32,7 +32,7 @@ The following fields have to be added for all provided types:
 
 The type `StartInvData` allows in addition for providing the initial capacity in the first year through:
 
-- `initial::Real`: Starting capacity of the technology in the first strategic period. The starting capacity is only valid for the first strategic period. This capacity will remain present in the simulation horizon, except if retiring is desired by the model. It is not possible to provide a reducing capacity over time for the initial capacity.
+- `initial::Real`: Starting capacity of the technology in the first investment period. The starting capacity is only valid for the first investment period. This capacity will remain present in the simulation horizon, except if retiring is desired by the model. It is not possible to provide a reducing capacity over time for the initial capacity.
 
 while it utilizes the capacity of the technology if the value is not provided through the function [`EMI.start_cap`](@ref).
 
@@ -79,12 +79,12 @@ The investment mode determines how the model can invest and which constraints ar
 Investment modes are including the required fields.
 These fields are given below with a detailed description in the individual subsections.
 
-- `max_add::TimeProfile`: The maximum added capacity in a strategic period.
-  The maximum added capacity is providing the limit on how fast we can expend a given technology in a strategic period.
+- `max_add::TimeProfile`: The maximum added capacity in an investment period.
+  The maximum added capacity is providing the limit on how fast we can expend a given technology in a investment period.
   In general, this value is dependent on the potential construction time and how fast it is possible to build a technology.
   It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
-- `min_add::TimeProfile`: The minimum added capacity in a strategic period.
-  The minimum added capacity is providing the lower limit on investments in a strategic period.
+- `min_add::TimeProfile`: The minimum added capacity in an investment period.
+  The minimum added capacity is providing the lower limit on investments in an investment period.
   Its meaning changes, dependent on the chosen investment mode.
   It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
 - `capex_offset::TimeProfile`: CAPEX offset for the [`SemiContinuousOffsetInvestment`](@ref) mode.
@@ -106,7 +106,7 @@ Investment
 
 `ContinuousInvestment` is the default investment option for all investments, if no alternative is chosen.
 Continuous investments implies that you can invest in any capacity specified between `min_add` and `max_add`.
-This implies as well that, if `min_add` is specified, it is necessary to invest in every strategic period in at least this capacity.
+This implies as well that, if `min_add` is specified, it is necessary to invest in every investment period in at least this capacity.
 This approach is the standard approach in large energy system models as it avoids binary variables.
 However, it may lead to nonsensical solutions, *e.g.*, investments into a 10~MW nuclear power plant.
 
@@ -119,7 +119,7 @@ ContinuousInvestment
 
 ### `BinaryInvestment`
 
-[`BinaryInvestment`](@ref) implies that one can choose to invest to achieve the specified capacity in the given strategic period, or not.
+[`BinaryInvestment`](@ref) implies that one can choose to invest to achieve the specified capacity in the given investment period, or not.
 The capacity of the investment cannot be adjusted by the optimization.
 
 !!! warning
@@ -134,7 +134,7 @@ BinaryInvestment
 
 `DiscreteInvestment` allow for only a discrete increase in the capacity.
 This increase is specified through the field `increment`.
-Hence, it can be also dependent on the strategic period.
+Hence, it can be also dependent on the investment period.
 
 `DiscreteInvestment` can for example be used to represent investment in modular technologies that can be scaled by adding several modules together.
 In addition, it is beneficial to include for technologies that experience significant economy of scale.
@@ -243,8 +243,8 @@ LifetimeMode
 ### `UnlimitedLife`
 
 This `LifetimeMode` is used when the lifetime of a `Node` is not limited.
-No reinvestment is considered by the optimization and there is also ne salvage value (or rest value) at the end of the last strategic period.
-Hence, the costs are the same, independent of if the investments in the `Node` are happening in the first strategic period (and the technology is used for, *e.g*, 25 years) or the last strategic period (with a usage of, *e.g.*, 5 years) when excluding discounting effects.
+No reinvestment is considered by the optimization and there is also no salvage value (or rest value) at the end of the last investment period.
+Hence, the costs are the same, independent of if the investments in the `Node` are happening in the first investment period (and the technology is used for, *e.g*, 25 years) or the last investment period (with a usage of, *e.g.*, 5 years) when excluding discounting effects.
 
 `UnlimitedLife` is the default lifetime mode, if no other mode is specified.
 
@@ -256,7 +256,7 @@ UnlimitedLife
 
 `StudyLife` includes the technology for the full investigated horizon.
 If the `Lifetime` is shorter than the remaining horizon, reinvestments are considered.
-These reinvestments are included in the costs of the investment strategic period, but discounted to their actual value.
+These reinvestments are included in the costs of the investment investment period, but discounted to their actual value.
 
 As an example, consider investments with a lifetime of 20 years in 2030, while the study horizon ends in 2055.
 In this situation, reinvestments are required in 2050 to allow for operation in the last 5 years.
@@ -268,9 +268,9 @@ StudyLife
 
 ### `PeriodLife`
 
-`PeriodLife` is used to define that the investment is only lasting for the strategic period in which it happens.
+`PeriodLife` is used to define that the investment is only lasting for the investment period in which it happens.
 Additional year of lifetime are counted as a rest value.
-Reinvestment inside the strategic periods are also considered in case the lifetime is shorter than the length of the strategic period.
+Reinvestment inside the strategic periods are also considered in case the lifetime is shorter than the length of the investment period.
 
 ```@docs
 PeriodLife
@@ -278,12 +278,12 @@ PeriodLife
 
 ### `RollingLife`
 
-`RollingLife` corresponds to the classical roll-over of investments from one strategic period to the next until the end of life is reached.
+`RollingLife` corresponds to the classical roll-over of investments from one investment period to the next until the end of life is reached.
 In general, three different cases can be differentiated:
 
-1. The lifetime is shorter than the duration of the strategic period. In this situation, a [`PeriodLife`](@ref) is assumed.
-2. The lifetime equals the duration of the strategic period. In this situation, the capacity is retired at the end of the strategic period
-3. The lifetime is longer than the duration of the strategic period. This leaves however a problem if the lifetime does fall in-between two strategic periods, as it would be the case for a lifetime of, *e.g.*, 8 years and two strategic periods of, *e.g*, 5 years. In this case, the technology would only be available for the first 3 years of the second strategic period leaving the question on how to handle this situation. `EnergyModelsInvestments` retires the technology at the last full strategic period and calculates the remaining value for the technology.
+1. The lifetime is shorter than the duration of the investment period. In this situation, a [`PeriodLife`](@ref) is assumed.
+2. The lifetime equals the duration of the investment period. In this situation, the capacity is retired at the end of the investment period
+3. The lifetime is longer than the duration of the investment period. This leaves however a problem if the lifetime does fall in-between two strategic periods, as it would be the case for a lifetime of, *e.g.*, 8 years and two strategic periods of, *e.g*, 5 years. In this case, the technology would only be available for the first 3 years of the second investment period leaving the question on how to handle this situation. `EnergyModelsInvestments` retires the technology at the last full investment period and calculates the remaining value for the technology.
 
 ```@docs
 RollingLife

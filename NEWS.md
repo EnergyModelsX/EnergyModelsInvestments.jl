@@ -109,7 +109,7 @@ In addition this version includes:
 
 ### Bugfix
 
-* Added strategic period duration multiplication for emissions prices.
+* Added investment period duration multiplication for emissions prices.
 
 ## Version 0.4.5 (2023-10-24)
 

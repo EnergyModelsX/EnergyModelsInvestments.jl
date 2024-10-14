@@ -242,7 +242,7 @@ investment_data_source = SingleInvData(
     FixedProfile(0),                # max installed capacity [MW]
     FixedInvestments(StrategicProfile([10, 15])),
     # Line above: Investment mode with the following arguments:
-    # New capacity in the strategic period, if invested in [MW]
+    # New capacity in the investment period, if invested in [MW]
     RollingLife(FixedProfile(15)),  # Lifetime mode
 )
 ```
