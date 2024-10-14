@@ -24,7 +24,7 @@ end
     BinaryInvestment <: Investment
 
 Binary investment in a given capacity with binary variables.
-The chosen capacity within a investment period is given by the field `cap`.
+The chosen capacity within an investment period is given by the field `cap`.
 
 Binary investments introduce one binary variable for each investment period.
 
@@ -57,10 +57,10 @@ end
 Continuous investment between a lower and upper bound.
 
 # Fields
-- **`min_add::TimeProfile`** is the minimum added capacity in a investment period. In the
+- **`min_add::TimeProfile`** is the minimum added capacity in an investment period. In the
   case of `ContinuousInvestment`, this implies that the model **must** invest at least
   in this capacity in each investment period.
-- **`max_add::TimeProfile`** is the maximum added capacity in a investment period.
+- **`max_add::TimeProfile`** is the maximum added capacity in an investment period.
 """
 struct ContinuousInvestment <: Investment
     min_add::TimeProfile
@@ -87,11 +87,11 @@ still linear dependent on the
 Semi-continuous investments introduce one binary variable for each investment period.
 
 # Fields
-- **`min_add::TimeProfile`** is the minimum added capacity in a investment period. In the
+- **`min_add::TimeProfile`** is the minimum added capacity in an investment period. In the
   case of `SemiContinuousInvestment`, this implies that the model **must** invest at least
   in this capacity in each investment period. in this capacity in each investment period where
   the model decides to invest. The model can also choose not too invest at all.
-- **`max_add::TimeProfile`** is the maximum added capacity in a investment period.
+- **`max_add::TimeProfile`** is the maximum added capacity in an investment period.
 """
 struct SemiContinuousInvestment <: SemiContiInvestment
     min_add::TimeProfile
@@ -110,12 +110,12 @@ user to use different slopes, and hence, account for economy of scales.
 Semi-continuous investments introduce one binary variable for each investment period.
 
 # Fields
-- **`max_add::TimeProfile`** is the maximum added capacity in a investment period.
-- **`min_add::TimeProfile`** is the minimum added capacity in a investment period. In the
+- **`max_add::TimeProfile`** is the maximum added capacity in an investment period.
+- **`min_add::TimeProfile`** is the minimum added capacity in an investment period. In the
   case of `SemiContinuousOffsetInvestment`, this implies that the model **must** invest at
   least in this capacity in each investment period. in this capacity in each investment period
   where the model decides to invest. The model can also choose not too invest at all.
-- **`capex_offset::TimeProfile`** is offset for the CAPEX in a investment period.
+- **`capex_offset::TimeProfile`** is offset for the CAPEX in an investment period.
 """
 struct SemiContinuousOffsetInvestment <: SemiContiInvestment
     min_add::TimeProfile

@@ -91,7 +91,7 @@ These constraints differ dependent on the chosen [`Investment`](@ref):
   variable. Furthermore, the variable `var_add` is bound through the functions
   [`min_add`](@ref) and [`max_add`](@ref) or 0.
 - **[`FixedInvestment`](@ref)** results in setting the variable `var_invest_b` as binary
-  variable. Furthermore, the variable `var_current` is fixed to a provided  value through
+  variable. Furthermore, the variable `var_current` is fixed to a provided value through
   the function [`invest_capacity`](@ref). This allows to incorporate the cost for the correct
   value of the objective function.
 

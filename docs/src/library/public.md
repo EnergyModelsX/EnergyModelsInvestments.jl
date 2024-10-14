@@ -79,12 +79,12 @@ The investment mode determines how the model can invest and which constraints ar
 Investment modes are including the required fields.
 These fields are given below with a detailed description in the individual subsections.
 
-- `max_add::TimeProfile`: The maximum added capacity in a investment period.
+- `max_add::TimeProfile`: The maximum added capacity in an investment period.
   The maximum added capacity is providing the limit on how fast we can expend a given technology in a investment period.
   In general, this value is dependent on the potential construction time and how fast it is possible to build a technology.
   It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
-- `min_add::TimeProfile`: The minimum added capacity in a investment period.
-  The minimum added capacity is providing the lower limit on investments in a investment period.
+- `min_add::TimeProfile`: The minimum added capacity in an investment period.
+  The minimum added capacity is providing the lower limit on investments in an investment period.
   Its meaning changes, dependent on the chosen investment mode.
   It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
 - `capex_offset::TimeProfile`: CAPEX offset for the [`SemiContinuousOffsetInvestment`](@ref) mode.
@@ -243,7 +243,7 @@ LifetimeMode
 ### `UnlimitedLife`
 
 This `LifetimeMode` is used when the lifetime of a `Node` is not limited.
-No reinvestment is considered by the optimization and there is also ne salvage value (or rest value) at the end of the last investment period.
+No reinvestment is considered by the optimization and there is also no salvage value (or rest value) at the end of the last investment period.
 Hence, the costs are the same, independent of if the investments in the `Node` are happening in the first investment period (and the technology is used for, *e.g*, 25 years) or the last investment period (with a usage of, *e.g.*, 5 years) when excluding discounting effects.
 
 `UnlimitedLife` is the default lifetime mode, if no other mode is specified.

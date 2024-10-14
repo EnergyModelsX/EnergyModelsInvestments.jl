@@ -26,7 +26,7 @@ The total CAPEX takes into account the invested capacity to calculate the total 
 The variable is extracted using the functions [`EMI.get_var_capex(m, prefix::Symbol)`](@ref) (for all variables) and [`EMI.get_var_capex(m, prefix::Symbol, element)`](@ref) (for only the variable from a given element instance) in which `m` corresponds to the JuMP model, and `prefix` to a prefix used in variable declaratio.
 
 !!! tip "Units of cost variables"
-    Cost variables provide the absolute costs within a investment period ``t_\texttt{inv}``.
+    Cost variables provide the absolute costs within an investment period ``t_\texttt{inv}``.
     An example unit would be € or $.
 
 ## [Capacity variables](@id man-opt_var-cap)
@@ -45,16 +45,16 @@ They are extracted using the functions functions [`EMI.get_var_inst(m, prefix::S
     The variable ``\texttt{cap\_inst}`` is slightly redundant in this design.
     It is indexed over operational periods ``t`` to allow for variations in the demand on an operational level within nodes without investments.
     This could have been also solved by using a profile, but it was decided to keep the current design.
-    The introduction of a new variable through ``\texttt{cap\_current}`` for the capacity at a investment period simplifies the indexing.
+    The introduction of a new variable through ``\texttt{cap\_current}`` for the capacity at an investment period simplifies the indexing.
 
     If you do not have nodes without investments, you still have to create the variable.
     In this case, we suggest to not use this variable at all and link the capacity usage directly to ``\texttt{cap\_current}``
 
-In addition, we introduce variables for investments in a investment period as:
+In addition, we introduce variables for investments in an investment period as:
 
 - ``\texttt{cap\_add}[n_\texttt{inv}, t_\texttt{inv}]``: Added capacity of `Node` ``n_\texttt{inv}`` with investments in the beginning of investment period ``t_\texttt{inv}``.
 
-The investments are available at the beginning of a investment period.
+The investments are available at the beginning of an investment period.
 They are extracted using the functions functions [`EMI.get_var_add(m, prefix::Symbol)`](@ref) and [`EMI.get_var_add(m, prefix::Symbol, element)`](@ref).
 
 The model can also choose to retire technologies at the end of each investment period through removal variables given as:
