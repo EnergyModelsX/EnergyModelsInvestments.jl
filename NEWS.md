@@ -2,6 +2,12 @@
 
 ## Unversioned
 
+### Rework of initial capacities
+
+* Implemented potential for decreasing initial capacities.
+* This resulted in changes for `BinaryInvestment` and `FixedInvestment` in which the provided capacity fields come in addition to the existing capacities.
+  This allows for a reduction in the initial capacity.
+
 ### Rework of tests
 
 * The dependency of the tests from `EnergyModelsBase` was removed to avoid a hen-egg problem regarding registering.
