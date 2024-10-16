@@ -26,11 +26,13 @@ investment_data(element) = error(
 """
     start_cap(element, t_inv, inv_data::AbstractInvData, cap)
 
-Returns the starting capacity of the type `element` in the first investment period.
+Returns the starting capacity of the type `element` in investment period `t_inv` for
+capacity `cap`.
+
 If [`NoStartInvData`](@ref) is used for the starting capacity, it requires the definition
 of a method for the corresponding `element`.
 """
-start_cap(element, t_inv, inv_data::StartInvData, cap) = inv_data.initial
+start_cap(element, t_inv, inv_data::StartInvData, cap) = inv_data.initial[t_inv]
 start_cap(element, t_inv, inv_data::NoStartInvData, cap) = error(
     "The function `start_cap` is not implemented for $(typeof(element)) and " *
     "`NoStartInvData`. If you want to use `NoStartInvData` as investment data, " *

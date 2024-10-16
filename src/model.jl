@@ -40,11 +40,12 @@ function add_investment_constraints(
     𝒯ᴵⁿᵛ::TS.StratPeriods,
     disc_rate::Float64,
 )
-    # Deduce required variables
+    # Deduce required variables and values
     var_current = get_var_current(m, prefix, element)
     var_inst = get_var_inst(m, prefix, element)
     var_add = get_var_add(m, prefix, element)
     var_rem = get_var_rem(m, prefix, element)
+    val_start_cap = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], start_cap(element, t_inv, inv_data, cap))
 
     for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         # Link capacity usage to installed capacity
@@ -53,25 +54,24 @@ function add_investment_constraints(
         # Capacity updating
         @constraint(m, var_current[t_inv] ≤ max_installed(inv_data, t_inv))
         if isnothing(t_inv_prev)
-            start_cap_val = start_cap(element, t_inv, inv_data, cap)
-            @constraint(m, var_current[t_inv] == start_cap_val + var_add[t_inv])
+            @constraint(m, var_current[t_inv] == val_start_cap[t_inv] + var_add[t_inv])
         else
-            @constraint(
-                m,
+            @constraint(m,
                 var_current[t_inv] ==
-                var_current[t_inv_prev] + var_add[t_inv] - var_rem[t_inv_prev]
+                    val_start_cap[t_inv] - val_start_cap[t_inv_prev] +
+                    var_current[t_inv_prev] + var_add[t_inv] - var_rem[t_inv_prev]
             )
         end
     end
     # Constraints for investments
-    set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, investment_mode(inv_data))
+    set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, val_start_cap, investment_mode(inv_data))
 
     # Constraints for the CAPEX calculation
     set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate)
 end
 
 """
-    set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode)
+    set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_data, inv_mode)
 
 Add constraints related to upper and lower bounds for investments depending on investment
 mode of type `element`.
@@ -99,9 +99,8 @@ These constraints differ dependent on the chosen [`Investment`](@ref):
     This function can be extended with a new method if you introduce a new
     [`Investment`](@ref). If not, you have to make certain that the functions
     [`min_add`](@ref) and [`max_add`](@ref) are applicable for your investment mode.
-
 """
-function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::Investment)
+function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, val_start_cap, inv_mode::Investment)
     # Deduce the required variable
     var_add = get_var_add(m, prefix, element)
 
@@ -110,7 +109,7 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_add[t_inv] ≥ min_add(inv_mode, t_inv))
 end
 
-function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::BinaryInvestment)
+function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, val_start_cap, inv_mode::BinaryInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -118,18 +117,17 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
         set_binary(var_invest_b[element, t_inv])
     end
 
-    # Deduce the required variables
+    # Deduce the required variables and values
     var_current = get_var_current(m, prefix, element)
 
     # Set the limits
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current[t_inv] ==
-        invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
+            val_start_cap[t_inv] +
+            invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
 end
-function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::DiscreteInvestment)
+function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, val_start_cap, inv_mode::DiscreteInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     var_remove_b = get_var_remove_b(m, prefix)
@@ -145,18 +143,14 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_rem = get_var_rem(m, prefix, element)
 
     # Set the limits
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_add[t_inv] == increment(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_rem[t_inv] == increment(inv_mode, t_inv) * var_remove_b[element, t_inv]
     )
 end
-function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
+function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, val_start_cap, inv_mode::SemiContiInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -168,18 +162,14 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_add = get_var_add(m, prefix, element)
 
     # Set the limits
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_add[t_inv] ≤ max_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_add[t_inv] ≥ min_add(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
 end
-function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::FixedInvestment)
+function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, val_start_cap, inv_mode::FixedInvestment)
     # Add the binary variable to the `SparseVariables` containers and add characteristics
     var_invest_b = get_var_invest_b(m, prefix)
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -191,11 +181,10 @@ function set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::
     var_current = get_var_current(m, prefix, element)
 
     # Set the limits
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current[t_inv] ==
-        invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
+            val_start_cap[t_inv] +
+            invest_capacity(inv_mode, t_inv) * var_invest_b[element, t_inv]
     )
 end
 
@@ -257,7 +246,10 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # The capacity is limited to the end of the study. Reinvestments are included
     # No capacity removed as there are reinvestments according to the study length
     capex_disc = StrategicProfile([
-        set_capex_discounter(remaining(t_inv, 𝒯ᴵⁿᵛ), lifetime(inv_data, t_inv), disc_rate) for t_inv ∈ 𝒯ᴵⁿᵛ
+        set_capex_discounter(
+            remaining(t_inv, 𝒯ᴵⁿᵛ),
+            lifetime(inv_data, t_inv), disc_rate
+        ) for t_inv ∈ 𝒯ᴵⁿᵛ
     ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
@@ -277,7 +269,10 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # The capacity removal variable is corresponding to the removal of the capacity at the
     # end of the investment period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
     capex_disc = StrategicProfile([
-        set_capex_discounter(duration_strat(t_inv), lifetime(inv_data, t_inv), disc_rate) for t_inv ∈ 𝒯ᴵⁿᵛ
+        set_capex_discounter(
+            duration_strat(t_inv),
+            lifetime(inv_data, t_inv), disc_rate
+        ) for t_inv ∈ 𝒯ᴵⁿᵛ
     ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])

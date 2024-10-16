@@ -46,25 +46,25 @@ end
 
 Investment data in which the initial capacity is specified in the `AbstractInvData`.
 The structure is similiar to [`NoStartInvData`](@ref) with the addition of the field
-**`initial::Real`**, see below.
+**`initial::TimeProfile`**, see below.
 
 # Fields in addition to [`NoStartInvData`](@ref)
-- **`initial::Real`** is the initial capacity.
+- **`initial::TimeProfile`** is the initial capacity as `TimeProfile`. Retirement of the
+  initial capacity can be achieved through a decreasing capacity.
 """
 struct StartInvData <: AbstractInvData
     capex::TimeProfile
     max_inst::TimeProfile
-    initial::Real
+    initial::TimeProfile
     inv_mode::Investment
     life_mode::LifetimeMode
 end
 function StartInvData(
     capex_trans::TimeProfile,
     trans_max_inst::TimeProfile,
-    initial::Real,
+    initial::TimeProfile,
     inv_mode::Investment,
 )
-
     return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, UnlimitedLife())
 end
 

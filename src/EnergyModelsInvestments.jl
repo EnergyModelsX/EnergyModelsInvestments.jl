@@ -21,6 +21,7 @@ const TS = TimeStruct
 include(joinpath("structures", "investment_mode.jl"))
 include(joinpath("structures", "lifetime_mode.jl"))
 include(joinpath("structures", "investment_data.jl"))
+include(joinpath("structures", "legacy_constructors.jl"))
 
 # Core structure of the code
 include("model.jl")
