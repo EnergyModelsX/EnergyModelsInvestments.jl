@@ -299,15 +299,17 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
         # to account for the required reinvestments
         if lifetime_val < duration_strat(t_inv)
-            set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, PeriodLife())
+            capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
+            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
+            @constraint(m, var_rem[t_inv] == var_add[t_inv])
 
-            # If lifetime is equal to sp duration we only need to invest once and there is no
-            # rest value. The invested capacity is removed at the end of the investment period
+        # If lifetime is equal to sp duration we only need to invest once and there is no
+        # rest value. The invested capacity is removed at the end of the investment period
         elseif lifetime_val == duration_strat(t_inv)
             @constraint(m, var_capex[t_inv] == capex_val[t_inv])
             @constraint(m, var_rem[t_inv] == var_add[t_inv])
 
-            # If lifetime is longer than sp duration, the capacity can roll over to the next sp
+        # If lifetime is longer than sp duration, the capacity can roll over to the next sp
         elseif lifetime_val > duration_strat(t_inv)
             # Initialization of the ante_sp and the remaining lifetime
             # ante_sp represents the last sp in which the remaining lifetime is sufficient

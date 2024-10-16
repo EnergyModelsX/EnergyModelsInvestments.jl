@@ -99,7 +99,7 @@ function add_investment_constraints(
 )
 ```
 
-The individual input is as well described in the [documentation](@ref EnergyModelsInvestments.add_investment_constraints)
+The individual input is as well described in the *[documentation](@ref EnergyModelsInvestments.add_investment_constraints)*.
 
 This functions includes constraints on the capacity and calculates the capital expenses for each `element`.
 There are two main points one has to consider:
@@ -133,6 +133,3 @@ Hence, we decided that it is beneficial to instead calculate the capital expense
 As a consequence, when using `EnergyModelsInvestments`, you have to include the variable ``\texttt{cap\_capex}`` (if you used `prefix = :cap`) for all elements with investments to your objective function.
 
 An illustrative example is given in the function `EMB.objective(m, 𝒩, 𝒯, 𝒫, modeltype::AbstractInvestmentModel)` compared to the function `objective(m, 𝒩, 𝒯, 𝒫, modeltype::EnergyModel)` in `EnergyModelsBase`.
-
-!!! note
-    We plan to add the links to the functions once we have both updates registered.

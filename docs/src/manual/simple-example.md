@@ -1,27 +1,6 @@
 # [Examples](@id man-exampl)
 
-For the content of the individual examples, see the [examples](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/tree/main/examples) directory in the project repository.
-These examples are based on the applicatoin of [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/).
-
-## The package is installed with `] add`
-
-From the Julia REPL, run
-
-```julia
-# Starts the Julia REPL
-using EnergyModelsInvestments
-# Get the path of the examples directory
-exdir = joinpath(pkgdir(EnergyModelsInvestments), "examples")
-# Include the code into the Julia REPL to run the examples
-include(joinpath(exdir, "sink_source.jl"))
-include(joinpath(exdir, "network.jl"))
-```
-
-## The code was downloaded with `git clone`
-
-The examples can be run from the terminal with
-
-```shell script
-~/.../energymodelsinvestments.jl/examples $ julia sink_source.jl
-~/.../energymodelsinvestments.jl/examples $ julia network.jl
-```
+`EnergyModelsInvestments` does not provide directly examples as it requires a host model for running the code.
+It is in itself not a model.
+The incorporation of `EnergyModelsInvestments` is explained on the page on *[How to use `EnergyModelsInvestments`](@ref how_to-use_emi)*.
+A potential application can be seen in [`EnergyModelsBase`](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/) and [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/stable/) in which the previous examples from `EnergyModelsInvestments` are moved.
