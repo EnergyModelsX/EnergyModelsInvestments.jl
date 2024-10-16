@@ -205,7 +205,7 @@ end
         @test sum(is_integer(m[:cap_remove_b][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
             length(𝒯ᴵⁿᵛ)
 
-        # Test that the variable cap_invest_b is 3 exactly once
+        # Test that the variable cap_invest_b is 2 exactly twice
         @test sum(value.(m[:cap_invest_b][n, t_inv]) ≈ 2 for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
     end
 end

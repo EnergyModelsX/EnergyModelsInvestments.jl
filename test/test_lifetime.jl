@@ -48,6 +48,17 @@ end
     𝒯ᴵⁿᵛ = strat_periods(𝒯)
     inv_data = para[:inv_data]
     disc_rates = [objective_weight(t_inv, Discounter(para[:disc_rate], 𝒯)) for t_inv ∈ 𝒯ᴵⁿᵛ]
+    # Explicit calculation of CAPEX
+    # 1. Investments in the first investment period require reinvestments in current period +2 (3).
+    #    The reinvestments use their complete lifetime.
+    # 2. Investments in the second investment period require reinvestments in current period +2 (3).
+    #    The reinvestments use half of their lifetime (-0.5). Due to linear deprecation,
+    #    we still have a discounted final value.
+    # 3. Investments in the second investment period require do not require reinvestments
+    #    and use their complete lifetime.
+    # 4. Investments in the second investment period require do not require reinvestments
+    #    and use half of their lifetime (-0.5). Due to linear deprecation, we still have a
+    #    discounted final value.
     capex = StrategicProfile([
         10 * (1 + disc_rates[3]),
         5 * (1 + (disc_rates[3] - 0.5 * disc_rates[4])),
@@ -96,6 +107,9 @@ end
     inv_data = para[:inv_data]
     disc_rates = [objective_weight(t_inv, Discounter(para[:disc_rate], 𝒯)) for t_inv ∈ 𝒯ᴵⁿᵛ]
     invest = StrategicProfile([5, 10, 15, 15])
+    # Explicit calculation of CAPEX
+    # Investments require reinvestments and use half of their lifetime (-0.5).
+    # Due to linear deprecation, we still have a discounted final value.
     capex = invest * (1 - 0.5 * disc_rates[2]) * 1e3
 
     # Tests of the lifetime calculation
@@ -139,8 +153,9 @@ end
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^5
     invest = StrategicProfile([5, 10, 15, 15])
+    # Explicit calculation of CAPEX
+    # Investments require reinvestments.
     capex = invest * (1 + disc_rate) * 1e3
-    [capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ]'
 
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
