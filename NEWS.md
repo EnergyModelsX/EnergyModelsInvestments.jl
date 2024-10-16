@@ -1,6 +1,6 @@
 # Release notes
 
-## Unversioned
+## Version 0.8.0 (2024-10-16)
 
 ### Rework of initial capacities
 
@@ -21,6 +21,10 @@
 
 * Restructured both the public and internal libraries.
 * Updated the docstrings to simplify the understanding of the different functions.
+
+### Other
+
+* Adjusted to changes in internal types of [Version 0.9 of `TimeStruct`](https://github.com/sintefore/TimeStruct.jl/releases/tag/v0.9.0).
 
 ## Version 0.7.1 (2024-08-26)
 
