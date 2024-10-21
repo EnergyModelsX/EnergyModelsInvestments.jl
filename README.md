@@ -10,10 +10,10 @@ If the package [`EnergyModelsGeography`](https://github.com/EnergyModelsX/Energy
 
 ## Usage
 
-The usage of the package is based illustrated through the commented [`examples`](examples).
-The examples are minimum working examples highlighting how to add investment options to simple energy system models.
-This includes as well investments into transmission infrastructure.
-All examples are extending the examples in `EnergyModelsBase` and `EnergyModelsGeography`.
+The usage of the package is based illustrated through the Section [Use `EnergyModelsInvestments`](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/how-to/use-emi/) in the documentation.
+The approach is furthermore exemplified through the `EnergyModelsInvestments` extensions of [`EnergyModelsBase`](https://github.com/EnergyModelsX/EnergyModelsBase.jl/tree/main/ext/EMIExt) and [`EnergyModelsGeography`](https://github.com/EnergyModelsX/EnergyModelsGeography.jl/tree/main/ext/EMIExt).
+
+Both packages include as well corresponding examples.
 
 ## Cite
 
