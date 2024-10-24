@@ -318,7 +318,7 @@ end
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^10
     invest = StrategicProfile([8, 16, 16, 24])
-    removal = StrategicProfile([0, 8, 16, 0])
+    removal = StrategicProfile([0, 8, 16, 16])
     capex = StrategicProfile([8, 16, 16, 24*(1-0.5*disc_rate)]) * 1e3
 
     # Tests of the lifetime calculation
