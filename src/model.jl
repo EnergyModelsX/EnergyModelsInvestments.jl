@@ -289,9 +289,9 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
 
     # Initialize a dictionary for the removal of capacity
-    rem_dict = Dict{TS.AbstractStrategicPeriod, Vector{TS.AbstractStrategicPeriod}}(
-        t_inv => TS.AbstractStrategicPeriod[] for t_inv ∈ 𝒯ᴵⁿᵛ
-    )
+    rem_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    println(rem_dict)
+
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Extract the values
         lifetime_val = lifetime(inv_data, t_inv)

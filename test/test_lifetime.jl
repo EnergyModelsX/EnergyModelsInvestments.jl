@@ -48,6 +48,7 @@ end
     𝒯ᴵⁿᵛ = strat_periods(𝒯)
     inv_data = para[:inv_data]
     disc_rates = [objective_weight(t_inv, Discounter(para[:disc_rate], 𝒯)) for t_inv ∈ 𝒯ᴵⁿᵛ]
+
     # Explicit calculation of CAPEX
     # 1. Investments in the first investment period require reinvestments in current period +2 (3).
     #    The reinvestments use their complete lifetime.
@@ -107,6 +108,7 @@ end
     inv_data = para[:inv_data]
     disc_rates = [objective_weight(t_inv, Discounter(para[:disc_rate], 𝒯)) for t_inv ∈ 𝒯ᴵⁿᵛ]
     invest = StrategicProfile([5, 10, 15, 15])
+
     # Explicit calculation of CAPEX
     # Investments require reinvestments and use half of their lifetime (-0.5).
     # Due to linear deprecation, we still have a discounted final value.
@@ -153,6 +155,7 @@ end
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^5
     invest = StrategicProfile([5, 10, 15, 15])
+
     # Explicit calculation of CAPEX
     # Investments require reinvestments.
     capex = invest * (1 + disc_rate) * 1e3
@@ -197,6 +200,9 @@ end
     𝒯ᴵⁿᵛ = strat_periods(𝒯)
     inv_data = para[:inv_data]
     invest = StrategicProfile([5, 10, 15, 15])
+
+    # Explicit calculation of CAPEX
+    # Investments require no reinvestments and have no remaining value.
     capex = invest * 1e3
 
     # Tests of the lifetime calculation
@@ -235,7 +241,14 @@ end
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^10
     invest = StrategicProfile([5, 5, 10, 5])
+
+    # Retirements are at the end of the strategic period following the investment period
     removal = StrategicProfile([0, 5, 5, 10])
+
+    # Explicit calculation of CAPEX
+    # 1. Investments do not require reinvestments.
+    # 2. The investment in strategic period 4 has a final value, equal to discounted 10/20 %
+    #    of the intial value
     capex = StrategicProfile([5, 5, 10, 5*(1-0.5*disc_rate)]) * 1e3
 
     # Tests of the lifetime calculation
@@ -278,7 +291,17 @@ end
     disc_rate_1 = 1/(1+para[:disc_rate])^10
     disc_rate_2 = 1/(1+para[:disc_rate])^20
     invest = StrategicProfile([5, 5, 15, 0])
+
+    # Explicit removal in strategic period 2 due to the retirement of investments from
+    # strategic period 1 and 2
     removal = StrategicProfile([0, 10, 0, 0])
+
+    # Explicit calculation of CAPEX
+    # 1. Investments do not require reinvestments.
+    # 2. The investment in strategic period 2 has a final value, equal to discounted 5/15 %
+    #    of the intial value
+    # 3. The investment in strategic period 4 has a final value, equal to discounted 5/25 %
+    #    of the intial value
     capex = StrategicProfile([5, 5*(1-1/3*disc_rate_1), 15*(1-0.2*disc_rate_2), 0]) * 1e3
     capex_prof = StrategicProfile([1, 1*(1-1/3*disc_rate_1), 1*(1-0.2*disc_rate_2), 1])
 
@@ -318,7 +341,14 @@ end
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^10
     invest = StrategicProfile([8, 16, 16, 24])
+
+    # Retirements are at the end of the strategic period following the investment period
     removal = StrategicProfile([0, 8, 16, 16])
+
+    # Explicit calculation of CAPEX
+    # 1. Investments do not require reinvestments.
+    # 2. The investment in strategic period 4 has a final value, equal to discounted 10/20 %
+    #    of the intial value
     capex = StrategicProfile([8, 16, 16, 24*(1-0.5*disc_rate)]) * 1e3
 
     # Tests of the lifetime calculation
