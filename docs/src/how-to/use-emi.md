@@ -94,7 +94,7 @@ function add_investment_constraints(
     inv_data::AbstractInvData,  # Investment data for the element
     cap,                        # Capacity that has investments
     prefix,                     # Used prefix in variable declaration
-    𝒯ᴵⁿᵛ::TS.StratPeriods,      # Strategic periods
+    𝒯ᴵⁿᵛ::TS.AbstractStratPers, # Strategic periods
     disc_rate::Float64,         # Discount rate in absolute values
 )
 ```

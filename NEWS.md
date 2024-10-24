@@ -1,5 +1,13 @@
 # Release notes
 
+## Version 0.8.0 (2024-10-24)
+
+### Bugfix `RollingLife`
+
+* The lifetime mode `RollingLife` experienced problems in situations in which investments of multiple investment periods should be retired in the same investment period.
+* In this situation, we did not calculate the minimum removal correctly.
+* This is fixed and a test included to identify these problems in future iterations.
+
 ## Version 0.8.0 (2024-10-16)
 
 ### Rework of initial capacities

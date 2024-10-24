@@ -235,7 +235,7 @@ end
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^10
     invest = StrategicProfile([5, 5, 10, 5])
-    removal = StrategicProfile([0, 5, 5, 0])
+    removal = StrategicProfile([0, 5, 5, 10])
     capex = StrategicProfile([5, 5, 10, 5*(1-0.5*disc_rate)]) * 1e3
 
     # Tests of the lifetime calculation
@@ -251,6 +251,48 @@ end
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
                 StrategicProfile([1, 1, 1, 1*(1-0.5*disc_rate)])[t_inv]
+            for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
+            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+    end
+end
+
+@testset "RollingLife - Multiple removal in one sp" begin
+    # Creation and solving of the model
+    ts = TwoLevel(4,10,SimpleTimes(4,1))
+    inv_data = NoStartInvData(
+        FixedProfile(1000),
+        FixedProfile(40),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(15)),
+        RollingLife(StrategicProfile([20,10,25,20]))
+    )
+    demand = StrategicProfile([5,10,15,15])
+    m, para = simple_model(;ts, inv_data, demand)
+
+    # Extraction of required data
+    n = para[:node]
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    inv_data = para[:inv_data]
+    disc_rate = 1/(1+para[:disc_rate])^20
+    invest = StrategicProfile([5, 5, 15, 0])
+    removal = StrategicProfile([0, 10, 0, 0])
+    capex = StrategicProfile([5, 5, 15*(1-0.2*disc_rate), 0]) * 1e3
+
+    # Tests of the lifetime calculation
+    # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
+    @testset "Lifetime calculations" begin
+        # Test that `:cap_rem` follows the lifetime
+        @test sum(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) ==
+            length(𝒯ᴵⁿᵛ)
+
+        # Test that the CAPEX is correctly calculated
+        # - set_capex_discounter(years, lifetime, disc_rate)
+        @test sum(
+            value.(m[:cap_capex])[n, t_inv] ≈
+                value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
+                StrategicProfile([1, 1, 1*(1-0.2*disc_rate), 1])[t_inv]
             for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
         @test sum(
             value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
