@@ -290,7 +290,6 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # Initialize a dictionary for the removal of capacity
     rem_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
-    println(rem_dict)
 
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Extract the values
