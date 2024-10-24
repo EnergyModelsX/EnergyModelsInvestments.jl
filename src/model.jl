@@ -288,41 +288,62 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # Calculate the CAPEX value based on the chosen investment mode
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
 
+    # Initialize a dictionary for the removal of capacity
+    rem_dict = Dict{TS.AbstractStrategicPeriod, Vector{TS.AbstractStrategicPeriod}}()
+
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Extract the values
         lifetime_val = lifetime(inv_data, t_inv)
+
+        # Initialization of the t_inv_rem and the remaining lifetime
+        # t_inv_rem represents the last investment period in which the remaining lifetime
+        # is sufficient to cover the whole investment perioud duration.
+        t_inv_rem = t_inv
 
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
         # to account for the required reinvestments
         if lifetime_val < duration_strat(t_inv)
             capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
             @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
-            @constraint(m, var_rem[t_inv] == var_add[t_inv])
+            if haskey(rem_dict, t_inv_rem)
+                push!(rem_dict[t_inv_rem], t_inv)
+            else
+                rem_dict[t_inv_rem] = TS.AbstractStrategicPeriod[t_inv]
+            end
 
         # If lifetime is equal to sp duration we only need to invest once and there is no
         # rest value. The invested capacity is removed at the end of the investment period
         elseif lifetime_val == duration_strat(t_inv)
             @constraint(m, var_capex[t_inv] == capex_val[t_inv])
-            @constraint(m, var_rem[t_inv] == var_add[t_inv])
+            if haskey(rem_dict, t_inv_rem)
+                push!(rem_dict[t_inv_rem], t_inv)
+            else
+                rem_dict[t_inv_rem] = TS.AbstractStrategicPeriod[t_inv]
+            end
 
         # If lifetime is longer than sp duration, the capacity can roll over to the next sp
         elseif lifetime_val > duration_strat(t_inv)
-            # Initialization of the ante_sp and the remaining lifetime
-            # ante_sp represents the last sp in which the remaining lifetime is sufficient
-            # to cover the whole sp duration.
-            ante_sp = t_inv
+            # Initialization of the the remaining lifetime
             remaining_lifetime = lifetime_val
 
-            # Iteration to identify sp in which remaining_lifetime is smaller than sp duration
+            # Iteration to identify investment period in which the remaining lifetime is
+            # smaller than its duration
             for sp ∈ 𝒯ᴵⁿᵛ
                 if sp ≥ t_inv
                     if remaining_lifetime < duration_strat(sp)
                         break
                     end
                     remaining_lifetime -= duration_strat(sp)
-                    ante_sp = sp
+                    t_inv_rem = sp
                 end
             end
+
+            # If the reaming life is larger than 0 at the end of the analysis horizon, we
+            # do not remove the capacity
+            if !haskey(rem_dict, t_inv_rem)
+                rem_dict[t_inv_rem] = TS.AbstractStrategicPeriod[]
+            end
+            remaining_lifetime ≤ 0 && push!(rem_dict[t_inv_rem], t_inv)
 
             # Calculation of cost and rest value
             capex_disc = (
@@ -332,10 +353,10 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
             )
             @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
 
-            # Capacity to be removed when remaining_lifetime < duration_years, i.e., in ante_sp
-            if ante_sp.sp < length(𝒯ᴵⁿᵛ)
-                @constraint(m, var_rem[ante_sp] ≥ var_add[t_inv])
-            end
         end
+    end
+    for (t_inv_rem, t_inv_vec) ∈ rem_dict
+        # Capacity to be removed when remaining_lifetime < duration_years, i.e., in t_inv_rem
+        @constraint(m, var_rem[t_inv_rem] ≥ sum(var_add[t_inv] for t_inv ∈ t_inv_vec))
     end
 end
