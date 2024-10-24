@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.8.0 (2024-10-24)
+## Version 0.8.1 (2024-10-24)
 
 ### Bugfix `RollingLife`
 
