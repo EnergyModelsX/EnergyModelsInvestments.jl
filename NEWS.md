@@ -1,5 +1,11 @@
 # Release notes
 
+## Version 0.6.2 (2024-10-24)
+
+* The lifetime mode `RollingLife` experienced problems in situations in which investments of multiple investment periods should be retired in the same investment period.
+* In this situation, we did not calculate the minimum removal correctly.
+* This is fixed, see also [PR 41](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/pull/41) for the incorporation of a test for the latest version of `EnergyModelsInvestments`.
+
 ## Version 0.6.1 (2024-08-26)
 
 * Bugfix in `RollingLife` in a situation, in which the duration of a strategic period equals the lifetime of the technology.
