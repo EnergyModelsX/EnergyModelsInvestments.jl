@@ -286,8 +286,7 @@ end
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
     @testset "Lifetime calculations" begin
         # Test that `:cap_rem` follows the lifetime
-        @test sum(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)

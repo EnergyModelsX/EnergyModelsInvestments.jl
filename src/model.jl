@@ -298,7 +298,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
         # Initialization of the t_inv_rem and the remaining lifetime
         # t_inv_rem represents the last investment period in which the remaining lifetime
-        # is sufficient to cover the whole investment perioud duration.
+        # is sufficient to cover the whole investment period duration.
         t_inv_rem = t_inv
 
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
@@ -335,7 +335,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
                 end
             end
 
-            # If the reaming life is larger than 0 at the end of the analysis horizon, we
+            # If the remaining life is larger than 0 at the end of the analysis horizon, we
             # do not remove the capacity
             bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
 
