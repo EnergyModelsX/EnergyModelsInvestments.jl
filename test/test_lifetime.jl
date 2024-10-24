@@ -265,7 +265,7 @@ end
         FixedProfile(1000),
         FixedProfile(40),
         ContinuousInvestment(FixedProfile(0), FixedProfile(15)),
-        RollingLife(StrategicProfile([20,10,25,20]))
+        RollingLife(StrategicProfile([20,15,25,20]))
     )
     demand = StrategicProfile([5,10,15,15])
     m, para = simple_model(;ts, inv_data, demand)
@@ -275,10 +275,12 @@ end
     𝒯 = para[:T]
     𝒯ᴵⁿᵛ = strat_periods(𝒯)
     inv_data = para[:inv_data]
-    disc_rate = 1/(1+para[:disc_rate])^20
+    disc_rate_1 = 1/(1+para[:disc_rate])^10
+    disc_rate_2 = 1/(1+para[:disc_rate])^20
     invest = StrategicProfile([5, 5, 15, 0])
     removal = StrategicProfile([0, 10, 0, 0])
-    capex = StrategicProfile([5, 5, 15*(1-0.2*disc_rate), 0]) * 1e3
+    capex = StrategicProfile([5, 5*(1-1/3*disc_rate_1), 15*(1-0.2*disc_rate_2), 0]) * 1e3
+    capex_prof = StrategicProfile([1, 1*(1-1/3*disc_rate_1), 1*(1-0.2*disc_rate_2), 1])
 
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
@@ -291,8 +293,7 @@ end
         # - set_capex_discounter(years, lifetime, disc_rate)
         @test sum(
             value.(m[:cap_capex])[n, t_inv] ≈
-                value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
-                StrategicProfile([1, 1, 1*(1-0.2*disc_rate), 1])[t_inv]
+                value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) * capex_prof[t_inv]
             for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
         @test sum(
             value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for

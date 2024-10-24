@@ -289,8 +289,9 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
 
     # Initialize a dictionary for the removal of capacity
-    rem_dict = Dict{TS.AbstractStrategicPeriod, Vector{TS.AbstractStrategicPeriod}}()
-
+    rem_dict = Dict{TS.AbstractStrategicPeriod, Vector{TS.AbstractStrategicPeriod}}(
+        t_inv => TS.AbstractStrategicPeriod[] for t_inv ∈ 𝒯ᴵⁿᵛ
+    )
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Extract the values
         lifetime_val = lifetime(inv_data, t_inv)
@@ -305,26 +306,19 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         if lifetime_val < duration_strat(t_inv)
             capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
             @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
-            if haskey(rem_dict, t_inv_rem)
-                push!(rem_dict[t_inv_rem], t_inv)
-            else
-                rem_dict[t_inv_rem] = TS.AbstractStrategicPeriod[t_inv]
-            end
+            push!(rem_dict[t_inv_rem], t_inv)
 
         # If lifetime is equal to sp duration we only need to invest once and there is no
         # rest value. The invested capacity is removed at the end of the investment period
         elseif lifetime_val == duration_strat(t_inv)
             @constraint(m, var_capex[t_inv] == capex_val[t_inv])
-            if haskey(rem_dict, t_inv_rem)
-                push!(rem_dict[t_inv_rem], t_inv)
-            else
-                rem_dict[t_inv_rem] = TS.AbstractStrategicPeriod[t_inv]
-            end
+            push!(rem_dict[t_inv_rem], t_inv)
 
         # If lifetime is longer than sp duration, the capacity can roll over to the next sp
         elseif lifetime_val > duration_strat(t_inv)
             # Initialization of the the remaining lifetime
             remaining_lifetime = lifetime_val
+            bool_lifetime = true
 
             # Iteration to identify investment period in which the remaining lifetime is
             # smaller than its duration
@@ -335,15 +329,15 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
                     end
                     remaining_lifetime -= duration_strat(sp)
                     t_inv_rem = sp
+                    if sp == last(𝒯ᴵⁿᵛ) && remaining_lifetime > 0
+                        bool_lifetime = false
+                    end
                 end
             end
 
             # If the reaming life is larger than 0 at the end of the analysis horizon, we
             # do not remove the capacity
-            if !haskey(rem_dict, t_inv_rem)
-                rem_dict[t_inv_rem] = TS.AbstractStrategicPeriod[]
-            end
-            remaining_lifetime ≤ 0 && push!(rem_dict[t_inv_rem], t_inv)
+            bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
 
             # Calculation of cost and rest value
             capex_disc = (
@@ -352,11 +346,12 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
                 (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
             )
             @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
-
         end
     end
     for (t_inv_rem, t_inv_vec) ∈ rem_dict
         # Capacity to be removed when remaining_lifetime < duration_years, i.e., in t_inv_rem
-        @constraint(m, var_rem[t_inv_rem] ≥ sum(var_add[t_inv] for t_inv ∈ t_inv_vec))
+        if !isempty(t_inv_vec)
+            @constraint(m, var_rem[t_inv_rem] ≥ sum(var_add[t_inv] for t_inv ∈ t_inv_vec))
+        end
     end
 end
