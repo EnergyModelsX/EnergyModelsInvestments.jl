@@ -91,6 +91,8 @@ These fields are given below with a detailed description in the individual subse
   The offset can be best described with the equation ``y = \texttt{capex} \times x + \texttt{capex\_offset}`` where ``x`` corresponds to the invested capacity and ``y`` to the total capital cost.
 - `cap_increment::TimeProfile`: Increment in the case of [`DiscreteInvestment`](@ref).
   The increment corresponds to the potential increase in the case of `DiscreteInvestment`.
+- `cap::TimeProfile`: Capacity in the case of [`BinaryInvestment`](@ref) and [`FixedInvestment`](@ref).
+  The capacity corresponds to the _**additional**_ invested capacity.
 
 ### `Investment`
 
@@ -102,7 +104,7 @@ It is also possible for the user to define new investment modes without major ch
 Investment
 ```
 
-### `ContinuousInvestment`
+### [`ContinuousInvestment`](@id lib-pub-inv_mode-con)
 
 `ContinuousInvestment` is the default investment option for all investments, if no alternative is chosen.
 Continuous investments implies that you can invest in any capacity specified between `min_add` and `max_add`.
@@ -117,7 +119,7 @@ However, it may lead to nonsensical solutions, *e.g.*, investments into a 10~MW 
 ContinuousInvestment
 ```
 
-### `BinaryInvestment`
+### [`BinaryInvestment`](@id lib-pub-inv_mode-bin)
 
 [`BinaryInvestment`](@ref) implies that one can choose to invest to achieve the specified capacity in the given investment period, or not.
 The capacity of the investment cannot be adjusted by the optimization.
@@ -130,7 +132,7 @@ The capacity of the investment cannot be adjusted by the optimization.
 BinaryInvestment
 ```
 
-### `DiscreteInvestment`
+### [`DiscreteInvestment`](@id lib-pub-inv_mode-disc)
 
 `DiscreteInvestment` allow for only a discrete increase in the capacity.
 This increase is specified through the field `increment`.
@@ -148,7 +150,7 @@ In this situation, several instances with different `increment` and `capex` can 
 DiscreteInvestment
 ```
 
-### `SemiContiInvestment`
+### [`SemiContiInvestment`](@id lib-pub-inv_mode-semi_con)
 
 `SemiContiInvestment` is an abstract type used for two investment modes:
 
@@ -174,7 +176,7 @@ SemiContiInvestment
     These investment modes leads to the addition of binary variables.
     The number of binary variables is equal to the number of strategic periods times the number of `Node`s with the `SemiContinuousInvestment` and `SemiContinuousOffsetInvestment` mode.
 
-#### `SemiContinuousInvestment`
+#### [`SemiContinuousInvestment`](@id lib-pub-inv_mode-semi_con-lin)
 
 The cost function in `SemiContinuousInvestment` is calculated in the same way as in [`ContinuousInvestment`](@ref).
 The total contribution of invested capacity ``x`` to the objective function ``y`` is given through the equation
@@ -185,7 +187,7 @@ The total contribution of invested capacity ``x`` to the objective function ``y`
 SemiContinuousInvestment
 ```
 
-#### `SemiContinuousOffsetInvestment`
+#### [`SemiContinuousOffsetInvestment`](@id lib-pub-inv_mode-semi_con-off)
 
 [`SemiContinuousOffsetInvestment`](@ref) is a type of investment similar to [`SemiContinuousInvestment`](@ref) and implemented for investments in transmission infrastructure.
 It does differ with respect to how the costs are calculated.
@@ -209,13 +211,11 @@ where ``x`` corresponds to the invested capacity and ``y`` to the total capital 
 SemiContinuousOffsetInvestment
 ```
 
-### `FixedInvestment`
+### [`FixedInvestment`](@id lib-pub-inv_mode-fix)
 
 `FixedInvestment` is a type of investment where an investment in the given capacity is forced.
 It allows to account for the investment cost of known investments.
 In practice, there is however not too much use in including the fixed investment, except if one is interested in the values of the dual variables.
-
-The fields `cap_min_add`, `cap_max_add`, and `cap_increment` do not have a meaning when using `FixedInvestment`.
 
 ```@docs
 FixedInvestment
@@ -240,7 +240,7 @@ LifetimeMode
     However, we are aware of this situation and look into potential approaches for including it.
     One such approach is outlined in [Issue 30](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/issues/30).
 
-### `UnlimitedLife`
+### [`UnlimitedLife`](@id lib-pub-life_mode-un)
 
 This `LifetimeMode` is used when the lifetime of a `Node` is not limited.
 No reinvestment is considered by the optimization and there is also no salvage value (or rest value) at the end of the last investment period.
@@ -252,7 +252,7 @@ Hence, the costs are the same, independent of if the investments in the `Node` a
 UnlimitedLife
 ```
 
-### `StudyLife`
+### [`StudyLife`](@id lib-pub-life_mode-stud)
 
 `StudyLife` includes the technology for the full investigated horizon.
 If the `Lifetime` is shorter than the remaining horizon, reinvestments are considered.
@@ -266,7 +266,7 @@ The CAPEX are then correspondingly adjusted to account for both discounted reinv
 StudyLife
 ```
 
-### `PeriodLife`
+### [`PeriodLife`](@id lib-pub-life_mode-per)
 
 `PeriodLife` is used to define that the investment is only lasting for the investment period in which it happens.
 Additional year of lifetime are counted as a rest value.
@@ -276,7 +276,7 @@ Reinvestment inside the strategic periods are also considered in case the lifeti
 PeriodLife
 ```
 
-### `RollingLife`
+### [`RollingLife`](@id lib-pub-life_mode-rol)
 
 `RollingLife` corresponds to the classical roll-over of investments from one investment period to the next until the end of life is reached.
 In general, three different cases can be differentiated:
