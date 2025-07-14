@@ -145,3 +145,16 @@ function set_capex_discounter(years, lifetime, disc_rate)
         ((N_inv * lifetime - years) / lifetime) * (1 + disc_rate)^(-years)
     return capex_disc
 end
+
+"""
+    get_cumulative_periods(𝒯::AbstractStratPers)
+
+Given a collection of strategic periods `𝒯`, returns a dictionary mapping each period `t` in `𝒯` 
+to a vector of all periods in `𝒯` up to and including `t`.
+This is used to retrieve the cumulative set of periods leading up to each strategic period.
+"""
+function get_cumulative_periods(𝒯::TS.AbstractStratPers)
+    chunks_t_inv = collect(collect(ts) for ts in chunk(Iterators.reverse(𝒯), 𝒯.ts.len))
+    chunks_t_inv_dict = Dict(t_inv => first(filter(c -> c[1] == t_inv, chunks_t_inv)) for t_inv in 𝒯)
+    return chunks_t_inv_dict
+end
