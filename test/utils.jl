@@ -128,6 +128,6 @@ function variables(m, n, 𝒯)
     @variable(m, deficit[𝒯] ≥ 0)
 end
 
-function present_value(vector, r, period_duration)
-    return [vector[i] * (1+r)^(-period_duration*(i - 1)) for i in 1:length(vector)]
+function present_value(annualised_cost, r, duration)
+    return annualised_cost * (1 - (1 + r)^(-duration))/r
 end

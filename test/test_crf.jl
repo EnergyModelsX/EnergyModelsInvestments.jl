@@ -29,14 +29,13 @@
     end
 
     annualised_capex_sp = [
-        sum(capex_sp[t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]) for t_inv in 𝒯ᴵⁿᵛ
+        sum(capex_sp[t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]) for t_inv in 𝒯ᴵⁿᵛ
     ]
-    pv_annualised_capex_sp = present_value(annualised_capex_sp[t_indx:end], 0.07, 10)
+    pv = present_value(annualised_capex_sp[t_indx], 0.07, TS.remaining(collect(𝒯ᴵⁿᵛ)[t_indx], 𝒯ᴵⁿᵛ))
     @testset "Check annualised costs allocation and value" begin
         @test first(annualised_capex_sp) == 0 # sp1 has 0 cost from investments in sp2
-        @test all(annualised_capex_sp[t_indx:end] .== CRF * 1e4 * 10) # from sp2 onwards, annual costs allocated
-
-        @test sum(pv_annualised_capex_sp) > capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]] # present value of sum of annual costs is higher than capex as it includes return costs
+        @test all(annualised_capex_sp[t_indx:end] .== CRF * 1e4) # from sp2 onwards, annual costs allocated
+        @test isapprox(pv, capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]])
     end
 
     vector_capex = [
@@ -46,9 +45,8 @@
         StrategicProfile([0, 0, 0, 0])*1e4,
     ]
     annualised_capex = [
-        sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv])
-        for i in 1:4, t_inv in 𝒯ᴵⁿᵛ
-            ]
+        sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv])
+        for i in 1:4, t_inv in 𝒯ᴵⁿᵛ]
     @testset "Check with results" begin
         @test all(isapprox.(sum(annualised_capex, dims=1), value.(m[:cap_capex])))        
     end
@@ -105,17 +103,13 @@ end
     t_indx =2
     capex_sp = StrategicProfile([0, 5 * (1 + (1/1.07^20 - 0.5 * 1/1.07^30)), 0, 0])*1e3
     CRF = EMI.CRF(inv_data, collect(𝒯ᴵⁿᵛ)[t_indx], 𝒯ᴵⁿᵛ)
-    @testset "Calculation CRF" begin
-        @test isapprox(CRF, (0.07 * 1.07^30)/(1.07^30-1))
-    end
-
     annualised_capex_sp = [
-        sum(capex_sp[t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]) for t_inv in 𝒯ᴵⁿᵛ
+        sum(capex_sp[t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]) for t_inv in 𝒯ᴵⁿᵛ
     ]
-    pv_annualised_capex_sp = present_value(annualised_capex_sp[t_indx:end], 0.07, 10)
+    pv = present_value(annualised_capex_sp[t_indx], 0.07, TS.remaining(collect(𝒯ᴵⁿᵛ)[t_indx], 𝒯ᴵⁿᵛ))
     @testset "Check annualised costs allocation and value" begin
         @test first(annualised_capex_sp) == 0 # sp1 has 0 cost from investments in sp2
-        @test sum(pv_annualised_capex_sp) > capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]] # present value of sum of annual costs is higher than capex as it includes return costs
+        @test isapprox(pv, capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]]) 
     end
 
     # Check all annualisation of capex 
@@ -126,7 +120,7 @@ end
         StrategicProfile([0, 0, 0, 5* (1 - 0.5 *  1/1.07^10)])*1e3,
     ]
     annualised_capex = [
-        sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv])
+        sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv])
         for i in 1:4, t_inv in 𝒯ᴵⁿᵛ]
     @testset "Check with results" begin
         @test all(isapprox.(sum(annualised_capex, dims=1), value.(m[:cap_capex])))        
@@ -175,14 +169,13 @@ end
     t_indx =2
     capex_sp = StrategicProfile([0, 10 * (1 - 0.5 * 1/1.07^10), 0, 0])*1e3
     CRF = EMI.CRF(inv_data, collect(𝒯ᴵⁿᵛ)[t_indx], 𝒯ᴵⁿᵛ)
-
     annualised_capex_sp = [
-        sum(capex_sp[t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]) for t_inv in 𝒯ᴵⁿᵛ
+        sum(capex_sp[t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]) for t_inv in 𝒯ᴵⁿᵛ
     ]
-    pv_annualised_capex_sp = present_value(annualised_capex_sp[t_indx:end], 0.07, 10)
+    pv = present_value(annualised_capex_sp[t_indx], 0.07, TS.remaining(collect(𝒯ᴵⁿᵛ)[t_indx], 𝒯ᴵⁿᵛ))
     @testset "Check annualised costs allocation and value" begin
         @test first(annualised_capex_sp) == 0 # sp1 has 0 cost from investments in sp2
-        @test sum(pv_annualised_capex_sp) > capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]] # present value of sum of annual costs is higher than capex as it includes return costs
+        @test isapprox(pv, capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]])     
     end
 
     # Check all annualisation of capex 
@@ -193,7 +186,7 @@ end
         StrategicProfile([0, 0, 0, 15* (1 - 0.5 *  1/1.07^10)])*1e3,
     ]
     annualised_capex = [
-        sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv])
+        sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv])
         for i in 1:4, t_inv in 𝒯ᴵⁿᵛ]
     @testset "Check with results" begin
         @test all(isapprox.(sum(annualised_capex, dims=1), value.(m[:cap_capex])))        
