@@ -286,14 +286,27 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The capacity removal variable is corresponding to the removal of the capacity at the
     # end of the investment period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
-    capex_disc = StrategicProfile([
-        set_capex_discounter(
-            duration_strat(t_inv),
-            lifetime(inv_data, t_inv), disc_rate
-        ) for t_inv ∈ 𝒯ᴵⁿᵛ
-    ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
+    if has_discount_rate(inv_data)
+        capex_disc = StrategicProfile([
+            set_capex_discounter(
+                duration_strat(t_inv),
+                lifetime(inv_data, t_inv), get_discount_rate(inv_data)
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ])
+        Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
+
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]))
+    else
+        capex_disc = StrategicProfile([
+            set_capex_discounter(
+                duration_strat(t_inv),
+                lifetime(inv_data, t_inv), disc_rate
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ])
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
+    end
+
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_rem[t_inv] == var_add[t_inv])
 end
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
