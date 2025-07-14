@@ -234,7 +234,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     if has_discount_rate(inv_data)
         Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
-        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(capex_val[t] * CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(capex_val[t] * CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]))
     else
         @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv])
     end
@@ -261,7 +261,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         ])
         Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
 
-        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]))
     else
         capex_disc = StrategicProfile([
             set_capex_discounter(
@@ -296,7 +296,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         ])
         Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
 
-        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]))
     else
         capex_disc = StrategicProfile([
             set_capex_discounter(
