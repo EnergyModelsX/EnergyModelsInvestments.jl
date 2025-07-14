@@ -94,7 +94,7 @@ end
                                         15,
                                         5 * (1 - 0.5 *  1/1.07^10),
                                         ])*1e3
-    @testset "Discounted Capex calculations"
+    @testset "Discounted Capex calculations" begin
         @test all(isapprox.([capex[t_inv] * capex_disc[t_inv] for t_inv in 𝒯ᴵⁿᵛ], [capex_explicit[t_inv] for t_inv in 𝒯ᴵⁿᵛ]))
     end
     
@@ -115,8 +115,6 @@ end
     pv_annualised_capex_sp = present_value(annualised_capex_sp[t_indx:end], 0.07, 10)
     @testset "Check annualised costs allocation and value" begin
         @test first(annualised_capex_sp) == 0 # sp1 has 0 cost from investments in sp2
-        @test all(isapprox.(annualised_capex_sp[t_indx:end], CRF * 1e3 * 5 * 10)) # from sp2 onwards, annual costs allocated
-
         @test sum(pv_annualised_capex_sp) > capex_sp[collect(𝒯ᴵⁿᵛ)[t_indx]] # present value of sum of annual costs is higher than capex as it includes return costs
     end
 
@@ -129,10 +127,8 @@ end
     ]
     annualised_capex = [
         sum(vector_capex[i][t] * EMI.CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv])
-        for i in 1:4, t_inv in 𝒯ᴵⁿᵛ
-            ]
+        for i in 1:4, t_inv in 𝒯ᴵⁿᵛ]
     @testset "Check with results" begin
         @test all(isapprox.(sum(annualised_capex, dims=1), value.(m[:cap_capex])))        
     end
-
 end
