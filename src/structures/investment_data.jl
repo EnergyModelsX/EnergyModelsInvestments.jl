@@ -30,6 +30,7 @@ struct NoStartInvData <: AbstractInvData
     max_inst::TimeProfile
     inv_mode::Investment
     life_mode::LifetimeMode
+    disc_rate::Union{Float64, Nothing} #Optional parameter
 end
 function NoStartInvData(
     capex_trans::TimeProfile,
@@ -37,7 +38,25 @@ function NoStartInvData(
     inv_mode::Investment,
 )
 
-    return NoStartInvData(capex_trans, trans_max_inst, inv_mode, UnlimitedLife())
+    return NoStartInvData(capex_trans, trans_max_inst, inv_mode, UnlimitedLife(), nothing)
+end
+function NoStartInvData(
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    inv_mode::Investment,
+    disc_rate::Float64
+)
+
+    return NoStartInvData(capex_trans, trans_max_inst, inv_mode, UnlimitedLife(), disc_rate)
+end
+function NoStartInvData(
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    inv_mode::Investment,
+    life_mode::LifetimeMode
+)
+
+    return NoStartInvData(capex_trans, trans_max_inst, inv_mode, life_mode, nothing)
 end
 
 
@@ -58,6 +77,7 @@ struct StartInvData <: AbstractInvData
     initial::TimeProfile
     inv_mode::Investment
     life_mode::LifetimeMode
+    disc_rate::Union{Float64, Nothing} #Optional parameter
 end
 function StartInvData(
     capex_trans::TimeProfile,
@@ -65,7 +85,25 @@ function StartInvData(
     initial::TimeProfile,
     inv_mode::Investment,
 )
-    return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, UnlimitedLife())
+    return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, UnlimitedLife(), nothing)
+end
+function StartInvData(
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    initial::TimeProfile,
+    inv_mode::Investment,
+    disc_rate::Float64
+)
+    return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, UnlimitedLife(), disc_rate)
+end
+function StartInvData(
+    capex_trans::TimeProfile,
+    trans_max_inst::TimeProfile,
+    initial::TimeProfile,
+    inv_mode::Investment,
+    life_mode::LifetimeMode
+)
+    return StartInvData(capex_trans, trans_max_inst, initial, inv_mode, life_mode, nothing)
 end
 
 """
@@ -165,3 +203,22 @@ investment period `t_inv`.
 invest_capacity(inv_data::AbstractInvData) = invest_capacity(investment_mode(inv_data))
 invest_capacity(inv_data::AbstractInvData, t_inv) =
     invest_capacity(investment_mode(inv_data), t_inv)
+
+"""
+   get_discount_rate(inv_data::AbstractInvData)
+
+Returns the discount rate of the investment data `inv_data`. If the element has not an associated `disc_rate` it 
+returns `nothing`.
+"""
+get_discount_rate(inv_data::AbstractInvData) = inv_data.disc_rate
+
+"""
+    has_discount_rate(inv_data::AbstractInvData)
+
+Returns `true` if the investment data `inv_data` has an associated `disc_rate`. Otherwise, it returns `false`.
+"""
+
+function has_discount_rate(inv_data::AbstractInvData)
+    disc_rate = get_discount_rate(inv_data)
+    return isa(disc_rate, Float64)
+end
