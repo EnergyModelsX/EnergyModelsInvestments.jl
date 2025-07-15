@@ -360,7 +360,15 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         # If lifetime is equal to sp duration we only need to invest once and there is no
         # rest value. The invested capacity is removed at the end of the investment period
         elseif lifetime_val == duration_strat(t_inv)
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv])
+            if has_discount_rate(inv_data)
+                annuity_capex = @expression(m, capex_val[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+                period_annuity_capex = @expression(m, annuity_capex * set_period_annuity(inv_data, t_inv))
+                period_annuity_capex_dict[t_inv] = period_annuity_capex
+
+                @constraint(m, var_capex[t_inv] == sum(period_annuity_capex_dict[t] for t in Tᶜᵘᵐ[t_inv]))
+            else
+                @constraint(m, var_capex[t_inv] == capex_val[t_inv])
+            end
             push!(rem_dict[t_inv_rem], t_inv)
 
         # If lifetime is longer than sp duration, the capacity can roll over to the next sp
