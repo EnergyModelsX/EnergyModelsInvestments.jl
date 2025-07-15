@@ -376,11 +376,9 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
             if has_discount_rate(inv_data)
                 r = get_discount_rate(inv_data)
                 capex_disc, rem_dict = get_capex_disc(lifetime_val, r, rem_dict, t_inv_rem, t_inv, 𝒯ᴵⁿᵛ)
-                @show capex_disc
                 annuity_capex = @expression(m, capex_val[t_inv] * capex_disc * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
                 period_annuity_capex = @expression(m, annuity_capex * set_period_annuity(inv_data, t_inv))
                 period_annuity_capex_dict[t_inv] = period_annuity_capex
-                @show period_annuity_capex
 
                 @constraint(m, var_capex[t_inv] == sum(period_annuity_capex_dict[t] for t in Tᶜᵘᵐ[t_inv]))
             else
