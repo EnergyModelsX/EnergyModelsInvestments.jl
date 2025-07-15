@@ -158,3 +158,36 @@ function get_cumulative_periods(𝒯::TS.AbstractStratPers)
     chunks_t_inv_dict = Dict(t_inv => first(filter(c -> c[1] == t_inv, chunks_t_inv)) for t_inv in 𝒯)
     return chunks_t_inv_dict
 end
+
+function get_capex_disc(lifetime_val, disc_rate, rem_dict, t_inv_rem, t_inv, 𝒯ᴵⁿᵛ)
+    # Initialization of the remaining lifetime
+    remaining_lifetime = lifetime_val
+    bool_lifetime = true
+
+    # Iteration to identify investment period in which the remaining lifetime is 
+    # smaller than its duration
+    for sp ∈ 𝒯ᴵⁿᵛ
+        if sp ≥ t_inv
+            if remaining_lifetime < duration_strat(sp)
+                break
+            end
+            remaining_lifetime -= duration_strat(sp)
+            t_inv_rem = sp
+            if sp == last(𝒯ᴵⁿᵛ) && remaining_lifetime > 0
+                bool_lifetime = false
+            end
+        end
+    end
+    # If the remaining life is larger than 0 at the end of the analysis horizon, we
+    # do not remove the capacity
+    bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
+
+     # Calculation of cost and rest value
+    capex_disc = (
+        1 -
+        (remaining_lifetime / lifetime_val) *
+        (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
+    )
+
+    return capex_disc, rem_dict
+end
