@@ -299,8 +299,10 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
             ) for t_inv ∈ 𝒯ᴵⁿᵛ
         ])
         Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
-
-        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]))
+        
+        annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex_val[t_inv] * capex_disc[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+        period_annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], annuity_capex[t_inv] * set_period_annuity(inv_data, t_inv))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(period_annuity_capex[t] for t in Tᶜᵘᵐ[t_inv]))
     else
         capex_disc = StrategicProfile([
             set_capex_discounter(
