@@ -373,36 +373,20 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
         # If lifetime is longer than sp duration, the capacity can roll over to the next sp
         elseif lifetime_val > duration_strat(t_inv)
-            # Initialization of the the remaining lifetime
-            remaining_lifetime = lifetime_val
-            bool_lifetime = true
+            if has_discount_rate(inv_data)
+                r = get_discount_rate(inv_data)
+                capex_disc, rem_dict = get_capex_disc(lifetime_val, r, rem_dict, t_inv_rem, t_inv, 𝒯ᴵⁿᵛ)
+                @show capex_disc
+                annuity_capex = @expression(m, capex_val[t_inv] * capex_disc * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+                period_annuity_capex = @expression(m, annuity_capex * set_period_annuity(inv_data, t_inv))
+                period_annuity_capex_dict[t_inv] = period_annuity_capex
+                @show period_annuity_capex
 
-            # Iteration to identify investment period in which the remaining lifetime is
-            # smaller than its duration
-            for sp ∈ 𝒯ᴵⁿᵛ
-                if sp ≥ t_inv
-                    if remaining_lifetime < duration_strat(sp)
-                        break
-                    end
-                    remaining_lifetime -= duration_strat(sp)
-                    t_inv_rem = sp
-                    if sp == last(𝒯ᴵⁿᵛ) && remaining_lifetime > 0
-                        bool_lifetime = false
-                    end
-                end
+                @constraint(m, var_capex[t_inv] == sum(period_annuity_capex_dict[t] for t in Tᶜᵘᵐ[t_inv]))
+            else
+                capex_disc, rem_dict = get_capex_disc(lifetime_val, disc_rate, rem_dict, t_inv_rem, t_inv, 𝒯ᴵⁿᵛ)
+                @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
             end
-
-            # If the remaining life is larger than 0 at the end of the analysis horizon, we
-            # do not remove the capacity
-            bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
-
-            # Calculation of cost and rest value
-            capex_disc = (
-                1 -
-                (remaining_lifetime / lifetime_val) *
-                (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
-            )
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
         end
     end
     for (t_inv_rem, t_inv_vec) ∈ rem_dict
