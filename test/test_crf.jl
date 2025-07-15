@@ -1,3 +1,27 @@
+@testset "Proof of concept - CRF" begin
+    demand = StrategicProfile([10,30,30,20])
+    
+    inv_data1 = NoStartInvData(
+        FixedProfile(1000),
+        FixedProfile(30),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(10)),
+        0.07 # riskier technology
+    )
+    m1, para1 = simple_model(;demand=demand, inv_data=inv_data1)
+
+    inv_data2 = NoStartInvData(
+        FixedProfile(1000),
+        FixedProfile(30),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(10)),
+        0.02
+    )
+    m2, para2 = simple_model(;demand=demand, inv_data=inv_data2)
+
+    @testset "Comparing cap_capex" begin
+        @test all(value.(m1[:cap_capex]).data .> value.(m2[:cap_capex]).data)
+    end
+
+end
 
 @testset "UnlimitedLife - CRF" begin
     # Creation and solving of the model
