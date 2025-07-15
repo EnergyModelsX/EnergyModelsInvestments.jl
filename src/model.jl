@@ -262,8 +262,10 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
             ) for t_inv ∈ 𝒯ᴵⁿᵛ
         ])
         Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
-
-        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum((capex_val[t] * capex_disc[t]) * CRF(inv_data, t, 𝒯ᴵⁿᵛ) for t in Tᶜᵘᵐ[t_inv]))
+        
+        annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex_val[t_inv] * capex_disc[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+        period_annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], annuity_capex[t_inv] * set_period_annuity(inv_data, t_inv))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(period_annuity_capex[t] for t in Tᶜᵘᵐ[t_inv]))
     else
         capex_disc = StrategicProfile([
             set_capex_discounter(
@@ -323,6 +325,8 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # Initialize a dictionary for the removal of capacity
     rem_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
+    Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
+
     for t_inv ∈ 𝒯ᴵⁿᵛ
         # Extract the values
         lifetime_val = lifetime(inv_data, t_inv)
@@ -335,8 +339,13 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
         # to account for the required reinvestments
         if lifetime_val < duration_strat(t_inv)
-            capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
+            if has_discount_rate(inv_data)
+                capex_disc = StrategicProfile([set_capex_discounter(duration_strat(t_inv), lifetime_val, get_discount_rate(inv_data)) for t_inv in 𝒯ᴵⁿᵛ])
+                @constraint(m, var_capex[t_inv] == sum(capex_val[t] * capex_disc[t] * CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]))
+            else
+                capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
+                @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
+            end
             push!(rem_dict[t_inv_rem], t_inv)
 
         # If lifetime is equal to sp duration we only need to invest once and there is no
