@@ -127,3 +127,8 @@ function variables(m, n, 𝒯)
     @variable(m, surplus[𝒯] ≥ 0)
     @variable(m, deficit[𝒯] ≥ 0)
 end
+
+function present_value(annuity_period, r, period_duration, n_periods)
+    pv = sum([annuity_period/(1+r)^(period_duration*i) for i in 0:(n_periods-1)])
+    return pv
+end

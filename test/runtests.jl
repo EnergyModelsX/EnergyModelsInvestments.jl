@@ -21,4 +21,8 @@ include("utils.jl")
     @testset "Investments | Lifetime" begin
         include("test_lifetime.jl")
     end
+
+    @testset "Investments | Annualised" begin
+        include("test_crf.jl")
+    end
 end

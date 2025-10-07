@@ -24,6 +24,7 @@ include(joinpath("structures", "investment_data.jl"))
 include(joinpath("structures", "legacy_constructors.jl"))
 
 # Core structure of the code
+include("crf.jl")
 include("model.jl")
 include("utils.jl")
 

@@ -232,7 +232,14 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # The capacity has an unlimited lifetime, one investment at the beginning of t_inv
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv])
+    if has_discount_rate(inv_data)
+        Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
+        annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex_val[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+        period_annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], annuity_capex[t_inv] * set_period_annuity(inv_data, t_inv))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(period_annuity_capex[t] for t in Tᶜᵘᵐ[t_inv]))
+    else
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv])
+    end
 
     # Fix the binary variable
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -246,14 +253,28 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # The capacity is limited to the end of the study. Reinvestments are included
     # No capacity removed as there are reinvestments according to the study length
-    capex_disc = StrategicProfile([
-        set_capex_discounter(
-            remaining(t_inv, 𝒯ᴵⁿᵛ),
-            lifetime(inv_data, t_inv), disc_rate
-        ) for t_inv ∈ 𝒯ᴵⁿᵛ
-    ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
+    if has_discount_rate(inv_data)
+        capex_disc = StrategicProfile([
+            set_capex_discounter(
+                remaining(t_inv, 𝒯ᴵⁿᵛ),
+                lifetime(inv_data, t_inv), get_discount_rate(inv_data)
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ])
+        Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
+        
+        annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex_val[t_inv] * capex_disc[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+        period_annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], annuity_capex[t_inv] * set_period_annuity(inv_data, t_inv))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(period_annuity_capex[t] for t in Tᶜᵘᵐ[t_inv]))
+    else
+        capex_disc = StrategicProfile([
+            set_capex_discounter(
+                remaining(t_inv, 𝒯ᴵⁿᵛ),
+                lifetime(inv_data, t_inv), disc_rate
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ])
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
+    end
 
     # Fix the binary variable
     for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -269,14 +290,29 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # The capacity is limited to the current sp. It has to be removed in the next sp.
     # The capacity removal variable is corresponding to the removal of the capacity at the
     # end of the investment period. Hence, we have to enforce `var_rem[t_inv] == var_add[t_inv]`
-    capex_disc = StrategicProfile([
-        set_capex_discounter(
-            duration_strat(t_inv),
-            lifetime(inv_data, t_inv), disc_rate
-        ) for t_inv ∈ 𝒯ᴵⁿᵛ
-    ])
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
+    if has_discount_rate(inv_data)
+        capex_disc = StrategicProfile([
+            set_capex_discounter(
+                duration_strat(t_inv),
+                lifetime(inv_data, t_inv), get_discount_rate(inv_data)
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ])
+        Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
+        
+        annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], capex_val[t_inv] * capex_disc[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+        period_annuity_capex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], annuity_capex[t_inv] * set_period_annuity(inv_data, t_inv))
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == sum(period_annuity_capex[t] for t in Tᶜᵘᵐ[t_inv]))
+    else
+        capex_disc = StrategicProfile([
+            set_capex_discounter(
+                duration_strat(t_inv),
+                lifetime(inv_data, t_inv), disc_rate
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ])
+        @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
+    end
+
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_rem[t_inv] == var_add[t_inv])
 end
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
@@ -290,8 +326,11 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
 
     # Initialize a dictionary for the removal of capacity
     rem_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    
+    period_annuity_capex_dict = Dict{TS.StrategicPeriod, Any}()
+    Tᶜᵘᵐ = get_cumulative_periods(𝒯ᴵⁿᵛ)
 
-    for t_inv ∈ 𝒯ᴵⁿᵛ
+    for t_inv ∈ sort(collect(𝒯ᴵⁿᵛ))
         # Extract the values
         lifetime_val = lifetime(inv_data, t_inv)
 
@@ -303,48 +342,49 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
         # to account for the required reinvestments
         if lifetime_val < duration_strat(t_inv)
-            capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
+            if has_discount_rate(inv_data)
+                capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, get_discount_rate(inv_data))
+                
+                annuity_capex = @expression(m, capex_val[t_inv] * capex_disc * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+                period_annuity_capex = @expression(m, annuity_capex * set_period_annuity(inv_data, t_inv))
+                period_annuity_capex_dict[t_inv] = period_annuity_capex
+
+                @constraint(m, var_capex[t_inv] == sum(period_annuity_capex_dict[t] for t in Tᶜᵘᵐ[t_inv]))
+                #@constraint(m, var_capex[t_inv] == sum(capex_val[t] * capex_disc[t] * CRF(inv_data, t, 𝒯ᴵⁿᵛ) * t.duration for t in Tᶜᵘᵐ[t_inv]))
+            else
+                capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
+                @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
+            end
             push!(rem_dict[t_inv_rem], t_inv)
 
         # If lifetime is equal to sp duration we only need to invest once and there is no
         # rest value. The invested capacity is removed at the end of the investment period
         elseif lifetime_val == duration_strat(t_inv)
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv])
+            if has_discount_rate(inv_data)
+                annuity_capex = @expression(m, capex_val[t_inv] * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+                period_annuity_capex = @expression(m, annuity_capex * set_period_annuity(inv_data, t_inv))
+                period_annuity_capex_dict[t_inv] = period_annuity_capex
+
+                @constraint(m, var_capex[t_inv] == sum(period_annuity_capex_dict[t] for t in Tᶜᵘᵐ[t_inv]))
+            else
+                @constraint(m, var_capex[t_inv] == capex_val[t_inv])
+            end
             push!(rem_dict[t_inv_rem], t_inv)
 
         # If lifetime is longer than sp duration, the capacity can roll over to the next sp
         elseif lifetime_val > duration_strat(t_inv)
-            # Initialization of the the remaining lifetime
-            remaining_lifetime = lifetime_val
-            bool_lifetime = true
+            if has_discount_rate(inv_data)
+                r = get_discount_rate(inv_data)
+                capex_disc, rem_dict = get_capex_disc(lifetime_val, r, rem_dict, t_inv_rem, t_inv, 𝒯ᴵⁿᵛ)
+                annuity_capex = @expression(m, capex_val[t_inv] * capex_disc * CRF(inv_data, t_inv, 𝒯ᴵⁿᵛ))
+                period_annuity_capex = @expression(m, annuity_capex * set_period_annuity(inv_data, t_inv))
+                period_annuity_capex_dict[t_inv] = period_annuity_capex
 
-            # Iteration to identify investment period in which the remaining lifetime is
-            # smaller than its duration
-            for sp ∈ 𝒯ᴵⁿᵛ
-                if sp ≥ t_inv
-                    if remaining_lifetime < duration_strat(sp)
-                        break
-                    end
-                    remaining_lifetime -= duration_strat(sp)
-                    t_inv_rem = sp
-                    if sp == last(𝒯ᴵⁿᵛ) && remaining_lifetime > 0
-                        bool_lifetime = false
-                    end
-                end
+                @constraint(m, var_capex[t_inv] == sum(period_annuity_capex_dict[t] for t in Tᶜᵘᵐ[t_inv]))
+            else
+                capex_disc, rem_dict = get_capex_disc(lifetime_val, disc_rate, rem_dict, t_inv_rem, t_inv, 𝒯ᴵⁿᵛ)
+                @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
             end
-
-            # If the remaining life is larger than 0 at the end of the analysis horizon, we
-            # do not remove the capacity
-            bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
-
-            # Calculation of cost and rest value
-            capex_disc = (
-                1 -
-                (remaining_lifetime / lifetime_val) *
-                (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
-            )
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
         end
     end
     for (t_inv_rem, t_inv_vec) ∈ rem_dict
