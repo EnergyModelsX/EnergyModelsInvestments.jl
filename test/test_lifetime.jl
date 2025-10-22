@@ -14,20 +14,17 @@
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::UnlimitedLife)
     @testset "Lifetime calculations" begin
         # Test that `:cap_rem` is fixed to 0
-        @test sum(is_fixed(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        @test all(is_fixed(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 
     # Test that the CAPEX is correctly calculated
     # - set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
     @testset "Capex calculation" begin
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ==
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] == capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -40,7 +37,7 @@ end
         StudyLife(FixedProfile(20))
     )
     demand = StrategicProfile([10,10,30,35])
-    m, para = simple_model(;inv_data,demand)
+    m, para = simple_model(;inv_data, demand)
 
     # Extraction of required data
     n = para[:node]
@@ -66,27 +63,26 @@ end
         15,
         5 * (1 - 0.5 *  disc_rates[2]),
     ])*1e3
+    invest = StrategicProfile([10, 5, 15, 5])
 
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::StudyLife)
     @testset "Lifetime calculations" begin
-        # Test that `:cap_rem` is fixed to 0
-        @test sum(is_fixed(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        # Test that `:cap_rem` is fixed to 0 and the additions are following the predicted value
+        @test all(is_fixed(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_add][n, t_inv]) ≈ invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
                 EMI.set_capex_discounter(
                     EMI.remaining(t_inv, 𝒯ᴵⁿᵛ),
                     EMI.lifetime(inv_data, t_inv),
                     para[:disc_rate]
-                ) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        ) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -99,7 +95,7 @@ end
         PeriodLife(FixedProfile(20))
     )
     demand = StrategicProfile([5,10,15,15])
-    m, para = simple_model(;inv_data,demand)
+    m, para = simple_model(;inv_data, demand)
 
     # Extraction of required data
     n = para[:node]
@@ -117,23 +113,22 @@ end
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::PeriodLife)
     @testset "Lifetime calculations" begin
-        # Test that `:cap_add` is equal to `cap_rem` in each investment period
-        @test sum(value.(m[:cap_add][n, t_inv]) == value.(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        # Test that `:cap_add` is equal to `cap_rem` in each investment period and equal
+        # to the predicted value
+        @test all(value.(m[:cap_add][n, t_inv]) == value.(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
                 EMI.set_capex_discounter(
                     duration_strat(t_inv),
                     EMI.lifetime(inv_data, t_inv),
                     para[:disc_rate]
-                ) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        ) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -146,7 +141,7 @@ end
         RollingLife(FixedProfile(5))
     )
     demand = StrategicProfile([5,10,15,15])
-    m, para = simple_model(;inv_data,demand)
+    m, para = simple_model(;inv_data, demand)
 
     # Extraction of required data
     n = para[:node]
@@ -163,23 +158,23 @@ end
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
     @testset "Lifetime calculations" begin
-        # Test that `:cap_add` is equal to `cap_rem` in each investment period
-        @test sum(value.(m[:cap_add][n, t_inv]) == value.(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        # Test that `:cap_add` is equal to `cap_rem` in each investment period and equal
+        # to the predicted value
+        @test all(value.(m[:cap_add][n, t_inv]) == value.(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
                 EMI.set_capex_discounter(
                     duration_strat(t_inv),
                     EMI.lifetime(inv_data, t_inv),
                     para[:disc_rate]
-                ) for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+                )
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -192,7 +187,7 @@ end
         RollingLife(FixedProfile(10))
     )
     demand = StrategicProfile([5,10,15,15])
-    m, para = simple_model(;inv_data,demand)
+    m, para = simple_model(;inv_data, demand)
 
     # Extraction of required data
     n = para[:node]
@@ -208,18 +203,17 @@ end
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
     @testset "Lifetime calculations" begin
-        # Test that `:cap_add` is equal to `cap_rem` in each investment period
-        @test sum(value.(m[:cap_add][n, t_inv]) == value.(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        # Test that `:cap_add` is equal to `cap_rem` in each investment period and equal
+        # to the predicted value
+        @test all(value.(m[:cap_add][n, t_inv]) == value.(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv)
-            for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -232,7 +226,7 @@ end
         RollingLife(FixedProfile(20))
     )
     demand = StrategicProfile([5,10,15,15])
-    m, para = simple_model(;inv_data,demand)
+    m, para = simple_model(;inv_data, demand)
 
     # Extraction of required data
     n = para[:node]
@@ -255,19 +249,19 @@ end
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
     @testset "Lifetime calculations" begin
         # Test that `:cap_rem` follows the lifetime
-        @test sum(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that `:cap_add` follows the lifetime
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
                 StrategicProfile([1, 1, 1, 1*(1-0.5*disc_rate)])[t_inv]
-            for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -311,15 +305,16 @@ end
         # Test that `:cap_rem` follows the lifetime
         @test all(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
+        # Test that `:cap_add` follows the lifetime
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) * capex_prof[t_inv]
-            for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
 
@@ -332,7 +327,7 @@ end
         RollingLife(FixedProfile(20))
     )
     demand = StrategicProfile([7, 23, 24.5, 40])
-    m, para = simple_model(;inv_data,demand)
+    m, para = simple_model(;inv_data, demand)
 
     # Extraction of required data
     n = para[:node]
@@ -355,18 +350,18 @@ end
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
     @testset "Lifetime calculations" begin
         # Test that `:cap_rem` follows the lifetime
-        @test sum(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) ==
-            length(𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that `:cap_add` follows the lifetime
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
-        @test sum(
+        @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
                 StrategicProfile([1, 1, 1, 1*(1-0.5*disc_rate)])[t_inv]
-            for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
-        @test sum(
-            value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for
-            t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
