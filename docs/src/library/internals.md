@@ -44,6 +44,7 @@ EnergyModelsInvestments.lifetime
 ## [Utility functions](@id lib-int-fun_util)
 
 ```@docs
+EnergyModelsInvestments.capacity_removal!
 EnergyModelsInvestments.set_capex_discounter
 EnergyModelsInvestments.start_cap
 ```

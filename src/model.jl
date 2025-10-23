@@ -291,61 +291,15 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # Initialize a dictionary for the removal of capacity
     rem_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
+    # Depending on the lifetime, different approaches are used through the function
+    # `capacity_removal!` where the rest value (or additional costs) are calculated given
+    # the lifetime of the element and the duration. The outer for loop is required to
+    # differentiate between `TwoLevel` and `TwoLevelTree`
     for t_inv ∈ 𝒯ᴵⁿᵛ
-        # Extract the values
-        lifetime_val = lifetime(inv_data, t_inv)
-
-        # Initialization of the t_inv_rem and the remaining lifetime
-        # t_inv_rem represents the last investment period in which the remaining lifetime
-        # is sufficient to cover the whole investment period duration.
-        t_inv_rem = t_inv
-
-        # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
-        # to account for the required reinvestments
-        if lifetime_val < duration_strat(t_inv)
-            capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
-            push!(rem_dict[t_inv_rem], t_inv)
-
-        # If lifetime is equal to sp duration we only need to invest once and there is no
-        # rest value. The invested capacity is removed at the end of the investment period
-        elseif lifetime_val == duration_strat(t_inv)
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv])
-            push!(rem_dict[t_inv_rem], t_inv)
-
-        # If lifetime is longer than sp duration, the capacity can roll over to the next sp
-        elseif lifetime_val > duration_strat(t_inv)
-            # Initialization of the the remaining lifetime
-            remaining_lifetime = lifetime_val
-            bool_lifetime = true
-
-            # Iteration to identify investment period in which the remaining lifetime is
-            # smaller than its duration
-            for sp ∈ 𝒯ᴵⁿᵛ
-                if sp ≥ t_inv
-                    if remaining_lifetime < duration_strat(sp)
-                        break
-                    end
-                    remaining_lifetime -= duration_strat(sp)
-                    t_inv_rem = sp
-                    if sp == last(𝒯ᴵⁿᵛ) && remaining_lifetime > 0
-                        bool_lifetime = false
-                    end
-                end
-            end
-
-            # If the remaining life is larger than 0 at the end of the analysis horizon, we
-            # do not remove the capacity
-            bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
-
-            # Calculation of cost and rest value
-            capex_disc = (
-                1 -
-                (remaining_lifetime / lifetime_val) *
-                (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
-            )
-            @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
-        end
+        capex_disc = capacity_removal!(
+            rem_dict, t_inv, lifetime(inv_data, t_inv), 𝒯ᴵⁿᵛ, disc_rate
+        )
+        @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
     end
     for (t_inv_rem, t_inv_vec) ∈ rem_dict
         # Capacity to be removed when remaining_lifetime < duration_years, i.e., in t_inv_rem
