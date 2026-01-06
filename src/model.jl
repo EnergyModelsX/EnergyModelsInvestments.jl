@@ -48,6 +48,10 @@ function add_investment_constraints(
     var_rem = get_var_rem(m, prefix, element)
     val_start_cap = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ], start_cap(element, t_inv, inv_data, cap))
 
+    # Identify the investment periods relevant for capacity addition in each investment period
+    life_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    update_lifetime_vectors!(life_dict, lifetime_mode(inv_data), 𝒯ᴵⁿᵛ)
+
     for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         # Link capacity usage to installed capacity
         @constraint(m, [t ∈ t_inv], var_inst[t] == var_current[t_inv])
@@ -61,6 +65,11 @@ function add_investment_constraints(
                 var_current[t_inv] ==
                     val_start_cap[t_inv] - val_start_cap[t_inv_prev] +
                     var_current[t_inv_prev] + var_add[t_inv] - var_rem[t_inv_prev]
+            )
+            @constraint(m,
+                var_current[t_inv] ≤
+                    val_start_cap[t_inv] - val_start_cap[t_inv_prev] +
+                    sum(var_add[sp] for sp ∈ 𝒯ᴵⁿᵛ if sp ∈ life_dict[t_inv])
             )
         end
     end
@@ -228,24 +237,18 @@ set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate) = set_
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::UnlimitedLife)
     # Deduce the required variables
     var_capex = get_var_capex(m, prefix, element)
-    var_rem = get_var_rem(m, prefix, element)
 
     # The capacity has an unlimited lifetime, one investment at the beginning of t_inv
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv])
-
-    # Fix the binary variable
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        fix(var_rem[t_inv], 0; force = true)
-    end
 end
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::StudyLife)
     # Deduce the required variables
     var_capex = get_var_capex(m, prefix, element)
+    var_add = get_var_add(m, prefix, element)
     var_rem = get_var_rem(m, prefix, element)
 
     # The capacity is limited to the end of the study. Reinvestments are included
-    # No capacity removed as there are reinvestments according to the study length
     capex_disc = StrategicProfile([
         set_capex_discounter(
             remaining(t_inv, 𝒯ᴵⁿᵛ),
@@ -255,10 +258,12 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
 
-    # Fix the binary variable
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        fix(var_rem[t_inv], 0; force = true)
-    end
+    # All capacities that require reinvestments or should be retired at the end of the study
+    # are removed
+    @constraint(m,
+        sum(var_rem[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) ==
+            sum(var_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ if capex_disc[t_inv] ≥ 1.0)
+    )
 end
 function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::PeriodLife)
     # Deduce the required variables
@@ -279,7 +284,7 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_capex[t_inv] == capex_val[t_inv] * capex_disc[t_inv])
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ], var_rem[t_inv] == var_add[t_inv])
 end
-function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
+function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, lifetime_mode::RollingLife)
     # Deduce the required variables
     var_capex = get_var_capex(m, prefix, element)
     var_add = get_var_add(m, prefix, element)
@@ -288,8 +293,8 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
     # Calculate the CAPEX value based on the chosen investment mode
     capex_val = set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ)
 
-    # Initialize a dictionary for the removal of capacity
-    rem_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    # Calculate the CAPEX value based on the chosen investment mode
+    rem_dict = _init_rem_dict(𝒯ᴵⁿᵛ)
 
     # Depending on the lifetime, different approaches are used through the function
     # `capacity_removal!` where the rest value (or additional costs) are calculated given
@@ -301,10 +306,10 @@ function set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rat
         )
         @constraint(m, var_capex[t_inv] == capex_val[t_inv] * capex_disc)
     end
-    for (t_inv_rem, t_inv_vec) ∈ rem_dict
-        # Capacity to be removed when remaining_lifetime < duration_years, i.e., in t_inv_rem
-        if !isempty(t_inv_vec)
-            @constraint(m, var_rem[t_inv_rem] ≥ sum(var_add[t_inv] for t_inv ∈ t_inv_vec))
-        end
-    end
+    # Requirement for total capacity removal given the investments whose lifetime ends within
+    # the study period
+    @constraint(m, [𝒯ᴵⁿᵛ ∈ keys(rem_dict)],
+        sum(var_rem[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) ==
+            sum(var_add[t_inv] for t_inv ∈ rem_dict[𝒯ᴵⁿᵛ])
+    )
 end
