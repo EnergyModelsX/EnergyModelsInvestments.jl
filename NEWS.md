@@ -1,5 +1,13 @@
 # Release notes
 
+## Unversioned
+
+### Support for `TwoLevelTree`
+
+* The current structure does not support `TwoLevelTree` structures due to retirement constraints.
+* Retirement constraints are adjusted to reflect retirement in each branch of the tree structure.
+* Early retirement not yet supported.
+
 ## Version 0.8.1 (2024-10-24)
 
 ### Bugfix `RollingLife`
