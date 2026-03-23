@@ -50,7 +50,7 @@ The individual lifetime modes are explained in *[the corresponding section of th
     In this situation, it can occur that investments are retired in one strategic period with direct reinvestments in the next strategic period.
     This problem is caused by wrongly provided values for the potential capacity increases specified in [`FixedInvestment`](@ref) or [`BinaryInvestment`](@ref).
 
-    We plan to add a check for this behavior in `EnergyModelsBase` to provide the user with a proper error message when specifying the values wrongly.
+    We plan to add a check for this behavior in `EnergyModelsBase` to provide the user with a proper error message when specifying the values incorrectly.
 
 ## [As extension to `EnergyModelsBase`](@id man-phil-EMB_ext)
 
