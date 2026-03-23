@@ -40,6 +40,7 @@ function simple_model(;
     penalty_surplus = FixedProfile(0),
     fixed_opex = FixedProfile(0),
     disc_rate = 0.05,
+    ret_cost = 0.2
 )
 
     # Creation of the model and extraction of strategic periods
@@ -57,7 +58,7 @@ function simple_model(;
         m[:cap_use][n, t] + m[:deficit][t] ==
             demand[t] + m[:surplus][t]
     )
-    @constraint(m, [t ∈ 𝒯], m[:cap_use][n, t] ≤ m[:cap_inst][n, t])
+    @constraint(m, [t ∈ 𝒯], m[:cap_use][n, t] == m[:cap_inst][n, t])
 
     # Add the investment constraints
     EMI.add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯ᴵⁿᵛ, disc_rate)
@@ -75,9 +76,9 @@ function simple_model(;
 
     # Calculation of the objective function.
     @objective(m, Max,
-    -sum(
-        opex[t_inv] * duration_strat(t_inv) * objective_weight(t_inv, disc; type = "avg") +
-        m[:cap_capex][n, t_inv] * objective_weight(t_inv, disc)
+        -sum(
+            opex[t_inv] * duration_strat(t_inv) * objective_weight(t_inv, disc; type = "avg") +
+            m[:cap_capex][n, t_inv] * objective_weight(t_inv, disc)
         for t_inv ∈ 𝒯ᴵⁿᵛ)
     )
     set_optimizer(m, HiGHS.Optimizer)

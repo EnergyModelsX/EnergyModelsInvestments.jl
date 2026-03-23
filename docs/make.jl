@@ -1,11 +1,17 @@
 using Documenter
+using DocumenterInterLinks
 
 using EnergyModelsInvestments
+using TimeStruct
 const EMI = EnergyModelsInvestments
 
 # Copy the NEWS.md file
 news = "docs/src/manual/NEWS.md"
 cp("NEWS.md", news; force=true)
+
+links = InterLinks(
+    "TimeStruct" => "https://sintefore.github.io/TimeStruct.jl/stable/",
+)
 
 makedocs(
     sitename = "EnergyModelsInvestments",
@@ -35,7 +41,8 @@ makedocs(
             "Public" => "library/public.md",
             "Internals" => "library/internals.md"
         ]
-    ]
+    ],
+    plugins=[links],
 )
 
 deploydocs(;
