@@ -2,6 +2,11 @@
 
 ## Unversioned
 
+### Added support for early capacity retirement
+
+* Early capacity retirement implemented with zero cost associated with it.
+* This fixes issues with `FixedInvestment` and lifetime calculations.
+
 ### Added support for `TwoLevelTree`
 
 * The previous version did not support `TwoLevelTree` structures due to retirement constraints.
