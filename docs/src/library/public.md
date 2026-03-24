@@ -234,12 +234,6 @@ In practice, this requires only the introduction of a new subtype to `LifetimeMo
 LifetimeMode
 ```
 
-!!! warning "Existing capacity and lifetime"
-    The current implementation does not provide a lifetime for the existing capacity, independently if you use [`NoStartInvData`](@ref) or [`StartInvData`](@ref).
-    This is caused by the background of development of `EnergyModelsInvestments`.
-    However, we are aware of this situation and look into potential approaches for including it.
-    One such approach is outlined in [Issue 30](https://github.com/EnergyModelsX/EnergyModelsInvestments.jl/issues/30).
-
 ### [`UnlimitedLife`](@id lib-pub-life_mode-un)
 
 This `LifetimeMode` is used when the lifetime of a `Node` is not limited.

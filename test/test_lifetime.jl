@@ -278,9 +278,11 @@ end
     𝒯ᴵⁿᵛ = strat_periods(𝒯)
     inv_data = para[:inv_data]
     disc_rate = 1/(1+para[:disc_rate])^10
-    invest = StrategicProfile([15, 0, 15, 0])
 
-    # Retirements are at the end of the strategic period following the investment period
+    # Investments occur to avoid paying the deficit penalty
+    # The first retirement is after the end of the lifetime while the second retirment in
+    # sp3 is an early retirement to avoid paying the fixed OPEX when no demand is present
+    invest = StrategicProfile([15, 0, 15, 0])
     removal = StrategicProfile([0, 15, 15, 0])
 
     # Explicit calculation of CAPEX

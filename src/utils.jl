@@ -207,7 +207,7 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
             end
         end
     end
-    if bool_lifetime 
+    if bool_lifetime
         push!(rem_dict[𝒯ᴵⁿᵛ], t_inv)
     end
 
@@ -230,26 +230,26 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
 end
 
 """
-    update_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
-    update_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
-    update_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
-    update_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+    populate_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
+    populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
 
-Update the `life_dict` with the vectors of available time periods for capacity additions in each strategic
-period. The update allows for both [`TwoLevel`](@extref TimeStruct.TwoLevel) and
-[`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structures.
+Populate the `life_dict` with the vectors of available time periods for capacity additions
+in each strategic period. The update allows for both [`TwoLevel`](@extref TimeStruct.TwoLevel)
+and [`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structures.
 """
-function update_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
+function populate_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         push!(life_dict[t_inv], t_inv)
     end
 end
-function update_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+function populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
     for t_inv ∈ 𝒯ᴵⁿᵛ
         append!(life_dict[t_inv], [sp for sp ∈ 𝒯ᴵⁿᵛ if sp ≤ t_inv])
     end
 end
-function update_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
     for t_inv ∈ 𝒯ᴵⁿᵛ
         lifetime_val = lifetime(lifetime_mode, t_inv)
         if lifetime_val ≤ duration_strat(t_inv)
@@ -258,7 +258,7 @@ function update_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, �
             for sp ∈ 𝒯ᴵⁿᵛ
                 if sp ≥ t_inv
                     dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ sp && spp ≥ t_inv; init = 0)
-                    if dur ≤ lifetime(lifetime_mode, t_inv) 
+                    if dur ≤ lifetime(lifetime_mode, t_inv)
                         push!(life_dict[sp], t_inv)
                     end
                 end
@@ -266,11 +266,9 @@ function update_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, �
         end
     end
 end
-function update_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
     for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts)
-        update_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(scen))
+        populate_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(scen))
     end
-unique!.(values(life_dict))
-        unique!(val)
-    end
+    unique!.(values(life_dict))
 end
