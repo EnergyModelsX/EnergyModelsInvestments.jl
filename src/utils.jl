@@ -207,7 +207,9 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
             end
         end
     end
-    bool_lifetime && push!(rem_dict[𝒯ᴵⁿᵛ], t_inv)
+    if bool_lifetime 
+        push!(rem_dict[𝒯ᴵⁿᵛ], t_inv)
+    end
 
     # Calculation of discounting factor considering the salvage value
     if bool_shorter
@@ -233,7 +235,7 @@ end
     update_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
     update_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
 
-Update the `life_dict` with the vectors of available capacity additions in each strategic
+Update the `life_dict` with the vectors of available time periods for capacity additions in each strategic
 period. The update allows for both [`TwoLevel`](@extref TimeStruct.TwoLevel) and
 [`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structures.
 """
@@ -256,7 +258,9 @@ function update_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, �
             for sp ∈ 𝒯ᴵⁿᵛ
                 if sp ≥ t_inv
                     dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ sp && spp ≥ t_inv; init = 0)
-                    dur ≤ lifetime(lifetime_mode, t_inv) && push!(life_dict[sp], t_inv)
+                    if dur ≤ lifetime(lifetime_mode, t_inv) 
+                        push!(life_dict[sp], t_inv)
+                    end
                 end
             end
         end
@@ -266,7 +270,7 @@ function update_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{Unlimite
     for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts)
         update_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(scen))
     end
-    for (_, val) ∈ life_dict
+unique!.(values(life_dict))
         unique!(val)
     end
 end
