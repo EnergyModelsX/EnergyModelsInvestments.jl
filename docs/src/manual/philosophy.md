@@ -6,7 +6,7 @@
 It cannot be used as a stand-alone package, but simplifies the incorporation of investment options into energy system models.
 The user still has to define several functions within their own package, as outlined in *[Use `EnergyModelsInvestments`](@ref how_to-use_emi)*.
 
-The aim in the package development is to provide the user with maximum flexibility on how to incorporate investment decisions.
+The aim in the package development is to provide the user with maximum flexibility on how to incorporate investment decisions without having to implement investments themselves.
 In the case of investments, the flexibility is required for selecting:
 
 1. the investment mode for a given technology in a given region and
@@ -61,6 +61,10 @@ In practice, models either do not consider the lifetime, include annualized cost
 `EnergyModelsInvestments` allows to choose as well differing lifetime modes for the individual technologies.
 
 The individual lifetime modes are explained in *[the corresponding section of the public library](@ref lib-pub-life_mode)*.
+
+!!! important "Depreciation and rest value"
+    `EnergyModelsInvestments` assumes linear depreciation over the lifetime of a unit.
+    This implies that an existing rest value (when the lifetime does not fit within the resolution of the time structure) is automatically calculated using linear deprecation and not based on the capital recovery factor.
 
 ## [As extension to `EnergyModelsBase`](@id man-phil-EMB_ext)
 

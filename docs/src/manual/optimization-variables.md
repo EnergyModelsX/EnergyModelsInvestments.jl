@@ -7,8 +7,8 @@ The individual variables can be differentiated in *[Cost variables](@ref man-opt
 
 ## [General structure of variables](@id man-opt_var-gen)
 
-As an example, consider the capex variables.
-The capex variables with a prefix `:cap` are given by ``\texttt{cap\_capex}[n_\texttt{inv}, t_\texttt{inv}]`` for `Node` ``n_\texttt{inv}`` with investments in investment period ``t_\texttt{inv}``.
+As an example, consider the capital expenditure (CAPEX) variables.
+The CAPEX variables with a prefix `:cap` are given by ``\texttt{cap\_capex}[n_\texttt{inv}, t_\texttt{inv}]`` for `Node` ``n_\texttt{inv}`` with investments in investment period ``t_\texttt{inv}``.
 They are extracted using the functions functions [`EMI.get_var_capex(m, prefix::Symbol)`](@ref) and [`EMI.get_var_capex(m, prefix::Symbol, element)`](@ref) in which `m` corresponds to the JuMP model, prefix to a prefix used in variable declaration (in this case `:cap`) and element to an instance of the element (in the previous example given as ``n_\texttt{inv}``).
 
 They are **not** declared within `EnergyModelsInvestments`, but have to be declared within the model using `EnergyModelsInvestments`.
@@ -21,9 +21,9 @@ One example is given through `EnergyModelsBase`:
 
 - ``\texttt{cap\_capex}[n_\texttt{inv}, t_\texttt{inv}]``: Undiscounted total CAPEX of `Node` ``n_\texttt{inv}`` with investments in investment period ``t_\texttt{inv}``.
 
-The total CAPEX takes into account the invested capacity to calculate the total costs as well as the end of horizon value of the individual technologies including discounting.
+The total CAPEX takes into account the invested capacity to calculate the total costs as well as the end of model horizon value of the individual technologies including discounting.
 
-The variable is extracted using the functions [`EMI.get_var_capex(m, prefix::Symbol)`](@ref) (for all variables) and [`EMI.get_var_capex(m, prefix::Symbol, element)`](@ref) (for only the variable from a given element instance) in which `m` corresponds to the JuMP model, and `prefix` to a prefix used in variable declaratio.
+The variable is extracted using the functions [`EMI.get_var_capex(m, prefix::Symbol)`](@ref) (for all variables) and [`EMI.get_var_capex(m, prefix::Symbol, element)`](@ref) (for only the variable from a given element instance) in which `m` corresponds to the JuMP model, and `prefix` to a prefix used in variable declaration.
 
 !!! tip "Units of cost variables"
     Cost variables provide the absolute costs within an investment period ``t_\texttt{inv}``.
@@ -62,14 +62,14 @@ The model can also choose to retire technologies at the end of each investment p
 - ``\texttt{cap\_rem}[n_\texttt{inv}, t_\texttt{inv}]``: Retired capacity of `Node` ``n_\texttt{inv}`` with investments at the end of investment period ``t_\texttt{inv}``.
 
 The retired capacity corresponds to removal of capacity, either due to the end of lifetime or due to lack of usage.
-Capacity removal has an impact on the objective function due to removal of the fixed OPEX.
+Capacity removal has an impact on the objective function due to removal of the fixed operating expenses (OPEX).
 It can hence be beneficial for the model to remove unused capacity to avoid fixed OPEX when the technology is not used in the future.
 Early removal of a technology, that is before the end of its lifetime, does not provide a rest value to the objective function.
 The variables are extracted using the functions functions [`EMI.get_var_rem(m, prefix::Symbol)`](@ref) and [`EMI.get_var_rem(m, prefix::Symbol, element)`](@ref).
 
 !!! tip "Units of capacity variables"
     The units of the capacity variables are defined by the user.
-    Within `EnergyModelsBase`, we use both rates (normal nodes as well as charge and discharge capacity of `Storage` nodes) and energy/mass (level capacity of `Storage` nodes).
+    Within `EnergyModelsBase`, we use both rates (normal nodes as well as charge and discharge capacities of `Storage` nodes) and energy/mass (level capacity of `Storage` nodes).
     Hence, it is important to consider the requirement of the model when deciding the unit.
 
 ## [Auxiliary variables](@id man-opt_var-aux)
@@ -85,7 +85,13 @@ These variables are:
 
 accessed through the functions [`EMI.get_var_invest_b(m, prefix::Symbol)`](@ref), [`EMI.get_var_invest_b(m, prefix::Symbol, element)`](@ref), [`EMI.get_var_remove_b(m, prefix::Symbol)`](@ref), and [`EMI.get_var_remove_b(m, prefix::Symbol, element)`](@ref).
 
-The auxiliary variables are only created if the investment mode requires them through the application [`SparseVariables`](https://github.com/sintefore/SparseVariables.jl).
+The auxiliary variables must be initiated in your own model through, *e.g.*, the following description:
+
+```julia
+@variable(m, cap_invest_b[𝒩ᴵⁿᵛ, 𝒯ᴵⁿᵛ] ≥ 0; container = IndexedVarArray)
+```
+
+They are only created if the investment mode requires them through the application of [`SparseVariables`](https://github.com/sintefore/SparseVariables.jl).
 
 ### [`BinaryInvestment`](@ref)
 

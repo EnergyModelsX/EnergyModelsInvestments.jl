@@ -7,9 +7,14 @@ We will as well implement information regarding the adjustment of extension pack
 
 ## [Adjustments from 0.8.x](@id how_to-update-08)
 
+Versiom 0.9.x introduced the potential for early capacity retirements in all cases.
+Previously, this was only possible when there was a remaining capacity at the end of the modelled horizon.
+As we consider this to be an unwanted effect, we allowed it now for all capacities.
+The changes do not require you to do any adjustments to your model.
+The results may however differ.
+
 We changed the arguments of the function [`add_investment_constraints`](@ref EMI.add_investment_constraints) from `𝒯ᴵⁿᵛ::TS.AbstractStratPers` to `𝒯::Union{TwoLevel, TwoLevelTree}`.
 The change removes the requirement to go into the subfields of `StratTreeNodes` to access the original `TwoLevelTree` to create the strategic scenarios.
-
 The only required change is to change the function call from, *e.g.*,
 
 ```julia
