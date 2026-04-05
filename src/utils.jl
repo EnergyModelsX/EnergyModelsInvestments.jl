@@ -140,25 +140,30 @@ is given by `PeriodLife` and `StudyLife`.
 """
 function set_capex_discounter(years, lifetime, disc_rate)
     N_inv = ceil(years / lifetime)
-    capex_disc =
+    disc_fact =
         sum((1 + disc_rate)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
         ((N_inv * lifetime - years) / lifetime) * (1 + disc_rate)^(-years)
-    return capex_disc
+    return disc_fact
 end
 
 """
-    _init_rem_dict(𝒯ᴵⁿᵛ::TS.StratPers)
-    _init_rem_dict(𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+    _init_rem_dict(𝒯::TwoLevel)
+    _init_rem_dict(𝒯::TwoLevelTree)
 
 Return the initialized removal dictionary depending on the chosen time structure.
 """
-_init_rem_dict(𝒯ᴵⁿᵛ::TS.StratPers) =  Dict(𝒯ᴵⁿᵛ => eltype(𝒯ᴵⁿᵛ)[])
-_init_rem_dict(𝒯ᴵⁿᵛ::TS.StratTreeNodes) =
-    Dict(strategic_periods(scen) => eltype(strategic_periods(scen))[] for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts))
+function _init_rem_dict(𝒯::TwoLevel)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    return Dict(𝒯ᴵⁿᵛ => eltype(𝒯ᴵⁿᵛ)[])
+end
+_init_rem_dict(𝒯::TwoLevelTree) =
+    Dict(strategic_periods(scen) => eltype(strategic_periods(scen))[] for scen ∈ strategic_scenarios(𝒯))
 
 """
-    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratTreeNodes, disc_rate)
-    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.StrategicScenario}, disc_rate)
+    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevelTree, disc_rate)
+    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevel, disc_rate)
+
+    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.AbstractStratPers, disc_rate)
 
 Update the dictionary used for calculation of capacity removal and return the value used for
 discounting the investment costs given a lifetime differing from the resolution of the time
@@ -167,28 +172,29 @@ structure.
 Both the dictionary and the discounting value take into account potentially differing
 strategic durations in a [`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structure.
 """
-function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratPers, disc_rate)
+function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevel, disc_rate)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     return _cap_rem!(rem_dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ, disc_rate)
 end
-function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratTreeNodes, disc_rate)
+function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevelTree, disc_rate)
     # Calculate the values and initiate the new dictionary
-    strat_scens = strategic_scenarios(𝒯ᴵⁿᵛ.ts)
+    strat_scens = strategic_scenarios(𝒯)
     disc_dict = Dict()
     for scen ∈ strat_scens
-        sps = strategic_periods(scen)
-        if t_inv ∈ sps
-            disc_dict[scen] = _cap_rem!(rem_dict, t_inv, lifetime_val, sps, disc_rate)
+        𝒯ᴵⁿᵛ = strategic_periods(scen)
+        if t_inv ∈ 𝒯ᴵⁿᵛ
+            disc_dict[scen] = _cap_rem!(rem_dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ, disc_rate)
         end
     end
 
     # Calculation of the averaged discounting factor considering different branches
-    capex_disc = 0
+    disc_fact = 0
     for (scen, disc) ∈ disc_dict
-        capex_disc += disc * scen.probability
+        disc_fact += disc * scen.probability
     end
-    return capex_disc
+    return disc_fact
 end
-function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes}, disc_rate)
+function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.AbstractStratPers, disc_rate)
     # Initialize the variable used for calculating the remaining life at the end of a
     # strategic period and the boolean for identifying whether the capacity must be removed
     remaining_lifetime = lifetime_val
@@ -215,60 +221,62 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
     if bool_shorter
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
         # to account for the required reinvestments
-        capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
+        disc_fact = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
     else
         # If lifetime is equal or longer than sp duration, the discounting rate is including
         # a potential rest value, depending on the remaining lifetime at the end of the
-        # last period it is active.
-        capex_disc = (
-            1 -
-            (remaining_lifetime / lifetime_val) *
-            (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
+        # last period it is active
+        disc_fact = set_capex_discounter(
+            lifetime_val-remaining_lifetime, lifetime_val, disc_rate
         )
     end
-    return capex_disc
+    return disc_fact
 end
 
 """
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::LifetimeMode, 𝒯::TwoLevel)
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::LifetimeMode, 𝒯::TwoLevelTree)
+
     populate_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
-    populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
-    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
-    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+    populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
 
 Populate the `life_dict` with the vectors of available time periods for capacity additions
 in each strategic period. The update allows for both [`TwoLevel`](@extref TimeStruct.TwoLevel)
 and [`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structures.
 """
+populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::LifetimeMode, 𝒯::TwoLevel) =
+    populate_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(𝒯))
+function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::LifetimeMode, 𝒯::TwoLevelTree)
+    for scen ∈ strategic_scenarios(𝒯)
+        populate_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(scen))
+    end
+    unique!.(values(life_dict))
+end
 function populate_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         push!(life_dict[t_inv], t_inv)
     end
 end
-function populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+function populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         append!(life_dict[t_inv], [sp for sp ∈ 𝒯ᴵⁿᵛ if sp ≤ t_inv])
     end
 end
-function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         lifetime_val = lifetime(lifetime_mode, t_inv)
         if lifetime_val ≤ duration_strat(t_inv)
             push!(life_dict[t_inv], t_inv)
         else
             for sp ∈ 𝒯ᴵⁿᵛ
-                if sp ≥ t_inv
-                    dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ sp && spp ≥ t_inv; init = 0)
-                    if dur ≤ lifetime(lifetime_mode, t_inv)
-                        push!(life_dict[sp], t_inv)
+                if sp ≤ t_inv
+                    dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ t_inv && spp ≥ sp; init = 0)
+                    if dur ≤ lifetime(lifetime_mode, sp)
+                        push!(life_dict[t_inv], sp)
                     end
                 end
             end
         end
     end
-end
-function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
-    for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts)
-        populate_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(scen))
-    end
-    unique!.(values(life_dict))
 end
