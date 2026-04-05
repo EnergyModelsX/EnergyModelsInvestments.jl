@@ -27,8 +27,7 @@ options.
 - `cap`: the field that is used if several capacities are provided.
 - `prefix`: the prefix used for variables for this element. This argument is used for
   extracting the individual investment variables.
-- `𝒯ᴵⁿᵛ::TS.AbstractStratPers`: the strategic periods structure. It can be created from both
-  a `TwoLevel` or `TwoLevelTree` structure.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure.
 - `disc_rate`: the discount rate used in the lifetime calculation for reinvestment and
   end of life calculations.
 """
@@ -38,9 +37,12 @@ function add_investment_constraints(
     inv_data::AbstractInvData,
     cap,
     prefix,
-    𝒯ᴵⁿᵛ::TS.AbstractStratPers,
+    𝒯::Union{TwoLevel, TwoLevelTree},
     disc_rate::Float64,
 )
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
     # Deduce required variables and values
     var_current = get_var_current(m, prefix, element)
     var_inst = get_var_inst(m, prefix, element)

@@ -60,7 +60,7 @@ function simple_model(;
     @constraint(m, [t ∈ 𝒯], m[:cap_use][n, t] == m[:cap_inst][n, t])
 
     # Add the investment constraints
-    EMI.add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯ᴵⁿᵛ, disc_rate)
+    EMI.add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯, disc_rate)
 
     # Calculation of the OPEX contribution
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
