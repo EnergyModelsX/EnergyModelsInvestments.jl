@@ -17,7 +17,9 @@ Pages = [
     "manual/quick-start.md",
     "manual/philosophy.md",
     "manual/optimization-variables.md",
+    "manual/math_desc.md",
     "manual/simple-example.md",
+    "manual/NEWS.md",
 ]
 Depth = 1
 ```
