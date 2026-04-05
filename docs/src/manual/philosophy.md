@@ -12,12 +12,30 @@ In the case of investments, the flexibility is required for selecting:
 1. the investment mode for a given technology in a given region and
 2. the lifetime description for a given technology in a given region.
 
-The model is also compatible with [`EnergyModelsGeography`](https://energymodelsx.github.io/EnergyModelsGeography.jl/stable/) to extend its concept to investment in `TransmissionMode`s.
+!!! warning "Capacity retirements"
+    The package supports the removal of capacity before the end of the lifetime without an additional cost.
+    Among others, early capacity removal can be caused by inconsistent input data for [`FixedInvestment`](@ref) or [`BinaryInvestment`](@ref) with [`RollingLife`](@ref).
+    An example is given by:
+
+    ```julia
+    # Investment data
+    inv_data = NoStartInvData(
+        FixedProfile(1000),
+        FixedProfile(40),
+        FixedInvestment(StrategicProfile([10, 10, 0, 0])),
+        RollingLife(FixedProfile(20))
+    )
+
+    # Used time structure
+    ts = TwoLevel([5,5,10,10],SimpleTimes(4,1))
+    ```
+
+    In this situation, `FixedInvestment` forces the retirement of the capacity at the end of the second strategic period while the lifetime would require the retirement of the capacity at the end of the third capacity.
 
 ## [Investment modes](@id man-phil-inv_mode)
 
 Investment modes are different approaches for implementing investments in technologies.
-They are explained in detail in *[Investment Types](@ref lib-pub-inv_mode)*.
+They are explained in detail in *[Investment modes](@ref lib-pub-inv_mode)*.
 `EnergyModelsInvestments` allows for different investment modes for technologies, both for different technologies, but also for the same technology implemented through different instances.
 
 Different technologies require different descriptions of the investments.
@@ -43,14 +61,6 @@ In practice, models either do not consider the lifetime, include annualized cost
 `EnergyModelsInvestments` allows to choose as well differing lifetime modes for the individual technologies.
 
 The individual lifetime modes are explained in *[the corresponding section of the public library](@ref lib-pub-life_mode)*.
-
-!!! warning "Capacity retirements"
-    Certain combinations of investment and lifetime mode can lead to weird behavior of the model.
-    Specifically, when you utilize [`FixedInvestment`](@ref) or [`BinaryInvestment`](@ref), you **must** be careful with your lifetime mode.
-    In this situation, it can occur that investments are retired in one strategic period with direct reinvestments in the next strategic period.
-    This problem is caused by wrongly provided values for the potential capacity increases specified in [`FixedInvestment`](@ref) or [`BinaryInvestment`](@ref).
-
-    We plan to add a check for this behavior in `EnergyModelsBase` to provide the user with a proper error message when specifying the values incorrectly.
 
 ## [As extension to `EnergyModelsBase`](@id man-phil-EMB_ext)
 

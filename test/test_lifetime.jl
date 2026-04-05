@@ -10,13 +10,6 @@
     inv_data = para[:inv_data]
     capex = StrategicProfile([1,1,1,0])*1e4
 
-    # Tests of the lifetime calculation
-    # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::UnlimitedLife)
-    @testset "Lifetime calculations" begin
-        # Test that `:cap_rem` is fixed to 0
-        @test all(is_fixed(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
-    end
-
     # Test that the CAPEX is correctly calculated
     # - set_capex_value(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, ::Investment)
     @testset "Capex calculation" begin
@@ -68,9 +61,11 @@ end
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::StudyLife)
     @testset "Lifetime calculations" begin
-        # Test that `:cap_rem` is fixed to 0 and the additions are following the predicted value
-        @test all(is_fixed(m[:cap_rem][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        # Test the additions are following the predicted value
         @test all(value.(m[:cap_add][n, t_inv]) ≈ invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test the capacities are removed in the end, if it is required
+        @test value.(m[:cap_rem][n, last(𝒯ᴵⁿᵛ)]) ≈ 30
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
@@ -244,6 +239,57 @@ end
     # 2. The investment in strategic period 4 has a final value, equal to discounted 10/20 %
     #    of the intial value
     capex = StrategicProfile([5, 5, 10, 5*(1-0.5*disc_rate)]) * 1e3
+
+    # Tests of the lifetime calculation
+    # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
+    @testset "Lifetime calculations" begin
+        # Test that `:cap_rem` follows the lifetime
+        @test all(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that `:cap_add` follows the lifetime
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the CAPEX is correctly calculated
+        # - set_capex_discounter(years, lifetime, disc_rate)
+        @test all(
+            value.(m[:cap_capex])[n, t_inv] ≈
+                value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
+                StrategicProfile([1, 1, 1, 1*(1-0.5*disc_rate)])[t_inv]
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+end
+
+@testset "RollingLife - Early removal" begin
+    # Creation and solving of the model
+    inv_data = NoStartInvData(
+        FixedProfile(1000),
+        FixedProfile(40),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(15)),
+        RollingLife(FixedProfile(20))
+    )
+    demand = StrategicProfile([15,15,15,0])
+    fixed_opex = FixedProfile(10)
+    m, para = simple_model(;inv_data, demand, fixed_opex);
+
+    # Extraction of required data
+    n = para[:node]
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    inv_data = para[:inv_data]
+    disc_rate = 1/(1+para[:disc_rate])^10
+
+    # Investments occur to avoid paying the deficit penalty
+    # The first retirement is after the end of the lifetime while the second retirment in
+    # sp3 is an early retirement to avoid paying the fixed OPEX when no demand is present
+    invest = StrategicProfile([15, 0, 15, 0])
+    removal = StrategicProfile([0, 15, 15, 0])
+
+    # Explicit calculation of CAPEX
+    # 1. Investments do not require reinvestments.
+    # 2. The investment in strategic period 4 has a final value, equal to discounted 10/20 %
+    #    of the intial value
+    capex = StrategicProfile([15, 0, 15, 0]) * 1e3
 
     # Tests of the lifetime calculation
     # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)

@@ -147,6 +147,16 @@ function set_capex_discounter(years, lifetime, disc_rate)
 end
 
 """
+    _init_rem_dict(𝒯ᴵⁿᵛ::TS.StratPers)
+    _init_rem_dict(𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+
+Return the initialized removal dictionary depending on the chosen time structure.
+"""
+_init_rem_dict(𝒯ᴵⁿᵛ::TS.StratPers) =  Dict(𝒯ᴵⁿᵛ => eltype(𝒯ᴵⁿᵛ)[])
+_init_rem_dict(𝒯ᴵⁿᵛ::TS.StratTreeNodes) =
+    Dict(strategic_periods(scen) => eltype(strategic_periods(scen))[] for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts))
+
+"""
     capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratTreeNodes, disc_rate)
     capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.StrategicScenario}, disc_rate)
 
@@ -161,7 +171,7 @@ function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::T
     return _cap_rem!(rem_dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ, disc_rate)
 end
 function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratTreeNodes, disc_rate)
-
+    # Calculate the values and initiate the new dictionary
     strat_scens = strategic_scenarios(𝒯ᴵⁿᵛ.ts)
     disc_dict = Dict()
     for scen ∈ strat_scens
@@ -179,10 +189,9 @@ function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::T
     return capex_disc
 end
 function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes}, disc_rate)
-    # Initialize the variables used for calculating the remaining life at the end of a
-    # strategic period
+    # Initialize the variable used for calculating the remaining life at the end of a
+    # strategic period and the boolean for identifying whether the capacity must be removed
     remaining_lifetime = lifetime_val
-    t_inv_rem = t_inv
     bool_lifetime = true
     bool_shorter = true
 
@@ -192,14 +201,15 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
         if sp ≥ t_inv
             remaining_lifetime < duration_strat(sp) && break
             remaining_lifetime -= duration_strat(sp)
-            t_inv_rem = sp
             bool_shorter = false
             if sp == last(𝒯ᴵⁿᵛ) && remaining_lifetime > 0
                 bool_lifetime = false
             end
         end
     end
-    bool_lifetime && push!(rem_dict[t_inv_rem], t_inv)
+    if bool_lifetime
+        push!(rem_dict[𝒯ᴵⁿᵛ], t_inv)
+    end
 
     # Calculation of discounting factor considering the salvage value
     if bool_shorter
@@ -217,4 +227,48 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
         )
     end
     return capex_disc
+end
+
+"""
+    populate_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
+    populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+    populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+
+Populate the `life_dict` with the vectors of available time periods for capacity additions
+in each strategic period. The update allows for both [`TwoLevel`](@extref TimeStruct.TwoLevel)
+and [`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structures.
+"""
+function populate_lifetime_vectors!(life_dict::Dict, _::PeriodLife, 𝒯ᴵⁿᵛ::TS.AbstractStratPers)
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        push!(life_dict[t_inv], t_inv)
+    end
+end
+function populate_lifetime_vectors!(life_dict::Dict, _::Union{UnlimitedLife, StudyLife}, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        append!(life_dict[t_inv], [sp for sp ∈ 𝒯ᴵⁿᵛ if sp ≤ t_inv])
+    end
+end
+function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes})
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        lifetime_val = lifetime(lifetime_mode, t_inv)
+        if lifetime_val ≤ duration_strat(t_inv)
+            push!(life_dict[t_inv], t_inv)
+        else
+            for sp ∈ 𝒯ᴵⁿᵛ
+                if sp ≥ t_inv
+                    dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ sp && spp ≥ t_inv; init = 0)
+                    if dur ≤ lifetime(lifetime_mode, t_inv)
+                        push!(life_dict[sp], t_inv)
+                    end
+                end
+            end
+        end
+    end
+end
+function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::Union{UnlimitedLife, StudyLife, RollingLife}, 𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+    for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts)
+        populate_lifetime_vectors!(life_dict, lifetime_mode, strategic_periods(scen))
+    end
+    unique!.(values(life_dict))
 end

@@ -1,4 +1,3 @@
-
 """
     struct SimpleNode
 
@@ -64,20 +63,21 @@ function simple_model(;
     EMI.add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯ᴵⁿᵛ, disc_rate)
 
     # Calculation of the OPEX contribution
-    opex = @expression(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        sum(
-            (
-                m[:deficit][t] * penalty_deficit[t] +
-                m[:surplus][t] * penalty_surplus[t]
-            ) * duration(t) * multiple_strat(t_inv, t)
-        for t ∈ t_inv) +
-        m[:cap_current][n, t_inv] * fixed_opex[t_inv]
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        m[:opex][t_inv] ==
+            sum(
+                (
+                    m[:deficit][t] * penalty_deficit[t] +
+                    m[:surplus][t] * penalty_surplus[t]
+                ) * duration(t) * multiple_strat(t_inv, t)
+            for t ∈ t_inv) +
+            m[:cap_current][n, t_inv] * fixed_opex[t_inv]
     )
 
     # Calculation of the objective function.
     @objective(m, Max,
         -sum(
-            opex[t_inv] * duration_strat(t_inv) * objective_weight(t_inv, disc; type = "avg") +
+            m[:opex][t_inv] * duration_strat(t_inv) * objective_weight(t_inv, disc; type = "avg") +
             m[:cap_capex][n, t_inv] * objective_weight(t_inv, disc)
         for t_inv ∈ 𝒯ᴵⁿᵛ)
     )
@@ -124,7 +124,8 @@ function variables(m, n, 𝒯)
     @variable(m, cap_invest_b[[n], 𝒯ᴵⁿᵛ] ≥ 0; container = IndexedVarArray)
     @variable(m, cap_remove_b[[n], 𝒯ᴵⁿᵛ] ≥ 0; container = IndexedVarArray)
 
-    # Add demand variables
+    # Add additional variables
+    @variable(m, opex[𝒯ᴵⁿᵛ] ≥ 0)
     @variable(m, surplus[𝒯] ≥ 0)
     @variable(m, deficit[𝒯] ≥ 0)
 end
