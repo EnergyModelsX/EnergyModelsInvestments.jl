@@ -94,7 +94,7 @@ function add_investment_constraints(
     inv_data::AbstractInvData,  # Investment data for the element
     cap,                        # Capacity that has investments
     prefix,                     # Used prefix in variable declaration
-    𝒯ᴵⁿᵛ::TS.AbstractStratPers, # Strategic periods
+    𝒯::Union{TwoLevel, TwoLevelTree}, # Time structure
     disc_rate::Float64,         # Discount rate in absolute values
 )
 ```
@@ -105,9 +105,9 @@ This functions includes constraints on the capacity and calculates the capital e
 There are two main points one has to consider:
 
 1. We add the investments constraints for each individual `element`.
-  In the case of multiple `element`s, it is necessary to iterate through the vector of `element`s.
+   In the case of multiple `element`s, it is necessary to iterate through the vector of `element`s.
 2. We add the investment constraints for each individual capacity `cap`.
-  This argument is only relevant if an `element` has multiple capacities as it is the case for `Storage` nodes in `EnergyModelsBase`.
+   This argument is only relevant if an `element` has multiple capacities as it is the case for `Storage` nodes in `EnergyModelsBase`.
 
 Consequently, you have to iterate through all `element`s and their capacities `cap` if you want to add investment constraints.
 
@@ -121,7 +121,7 @@ for n ∈ 𝒩ᴵⁿᵛ
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Add the investment constraints
-    EMI.add_investment_constraints(m, n, inv_data, :cap, :cap, 𝒯ᴵⁿᵛ, disc_rate)
+    EMI.add_investment_constraints(m, n, inv_data, :cap, :cap, 𝒯, disc_rate)
 end
 ```
 
