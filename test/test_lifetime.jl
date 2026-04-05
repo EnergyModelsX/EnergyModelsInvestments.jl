@@ -42,13 +42,13 @@ end
     # Explicit calculation of CAPEX
     # 1. Investments in the first investment period require reinvestments in current period +2 (3).
     #    The reinvestments use their complete lifetime.
-    # 2. Investments in the second investment period require reinvestments in current period +2 (3).
+    # 2. Investments in the second investment period require reinvestments in current period +2 (4).
     #    The reinvestments use half of their lifetime (-0.5). Due to linear deprecation,
     #    we still have a discounted final value.
-    # 3. Investments in the second investment period require do not require reinvestments
-    #    and use their complete lifetime.
-    # 4. Investments in the second investment period require do not require reinvestments
-    #    and use half of their lifetime (-0.5). Due to linear deprecation, we still have a
+    # 3. Investments in the third investment period do not require reinvestments and use
+    #    their complete lifetime.
+    # 4. Investments in the forth investment period do not require reinvestments and use
+    #    half of their lifetime (-0.5). Due to linear deprecation, we still have a
     #    discounted final value.
     capex = StrategicProfile([
         10 * (1 + disc_rates[3]),
@@ -66,6 +66,69 @@ end
 
         # Test the capacities are removed in the end, if it is required
         @test value.(m[:cap_rem][n, last(𝒯ᴵⁿᵛ)]) ≈ 30
+
+        # Test that the CAPEX is correctly calculated
+        # - set_capex_discounter(years, lifetime, disc_rate)
+        @test all(
+            value.(m[:cap_capex])[n, t_inv] ≈
+                value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
+                EMI.set_capex_discounter(
+                    EMI.remaining(t_inv, 𝒯ᴵⁿᵛ),
+                    EMI.lifetime(inv_data, t_inv),
+                    para[:disc_rate]
+        ) for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+end
+
+@testset "StudyLife - Early retirement" begin
+    # Creation and solving of the model
+    inv_data = NoStartInvData(
+        FixedProfile(1000),
+        FixedProfile(40),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(15)),
+        StudyLife(FixedProfile(20))
+    )
+    demand = StrategicProfile([10,10,30,0])
+    fixed_opex = FixedProfile(10)
+    m, para = simple_model(;inv_data, demand, fixed_opex)
+
+    # Extraction of required data
+    n = para[:node]
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    inv_data = para[:inv_data]
+    disc_rates = [objective_weight(t_inv, Discounter(para[:disc_rate], 𝒯)) for t_inv ∈ 𝒯ᴵⁿᵛ]
+
+    # Explicit calculation of CAPEX
+    # 1. Investments in the first investment period require reinvestments in current period +2 (3).
+    #    The reinvestments use their complete lifetime.
+    # 2. Investments in the second investment period require reinvestments in current period +2 (5).
+    #    The reinvestments use half of their lifetime (-0.5). Due to linear deprecation,
+    #    we still have a discounted final value.
+    # 3. Investments in the third investment period do not require reinvestments and use
+    #    their complete lifetime.
+    # 4. No investments occur in the forth investment period
+    capex = StrategicProfile([
+        10 * (1 + disc_rates[3]),
+        5 * (1 + (disc_rates[3] - 0.5 * disc_rates[4])),
+        15,
+        0,
+    ])*1e3
+    invest = StrategicProfile([10, 5, 15, 0])
+
+    # Capacity removal
+    # All capacity is removed at the end of the third investment period to avoid fixed OPEX
+    removal = StrategicProfile([0, 0, 30, 0])
+
+    # Tests of the lifetime calculation
+    # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::StudyLife)
+    @testset "Lifetime calculations" begin
+        # Test the additions are following the predicted value
+        @test all(value.(m[:cap_add][n, t_inv]) ≈ invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test the capacities are removed in the respective period
+        @test all(value.(m[:cap_rem][n,t_inv]) ≈ removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
 
         # Test that the CAPEX is correctly calculated
         # - set_capex_discounter(years, lifetime, disc_rate)
