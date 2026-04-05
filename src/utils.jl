@@ -147,18 +147,23 @@ function set_capex_discounter(years, lifetime, disc_rate)
 end
 
 """
-    _init_rem_dict(𝒯ᴵⁿᵛ::TS.StratPers)
-    _init_rem_dict(𝒯ᴵⁿᵛ::TS.StratTreeNodes)
+    _init_rem_dict(𝒯::TwoLevel)
+    _init_rem_dict(𝒯::TwoLevelTree)
 
 Return the initialized removal dictionary depending on the chosen time structure.
 """
-_init_rem_dict(𝒯ᴵⁿᵛ::TS.StratPers) =  Dict(𝒯ᴵⁿᵛ => eltype(𝒯ᴵⁿᵛ)[])
-_init_rem_dict(𝒯ᴵⁿᵛ::TS.StratTreeNodes) =
-    Dict(strategic_periods(scen) => eltype(strategic_periods(scen))[] for scen ∈ strategic_scenarios(𝒯ᴵⁿᵛ.ts))
+function _init_rem_dict(𝒯::TwoLevel)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    return Dict(𝒯ᴵⁿᵛ => eltype(𝒯ᴵⁿᵛ)[])
+end
+_init_rem_dict(𝒯::TwoLevelTree) =
+    Dict(strategic_periods(scen) => eltype(strategic_periods(scen))[] for scen ∈ strategic_scenarios(𝒯))
 
 """
-    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratTreeNodes, disc_rate)
-    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.StrategicScenario}, disc_rate)
+    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevelTree, disc_rate)
+    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevel, disc_rate)
+
+    capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.AbstractStratPers, disc_rate)
 
 Update the dictionary used for calculation of capacity removal and return the value used for
 discounting the investment costs given a lifetime differing from the resolution of the time
@@ -167,17 +172,18 @@ structure.
 Both the dictionary and the discounting value take into account potentially differing
 strategic durations in a [`TwoLevelTree`](@extref TimeStruct.TwoLevelTree) time structure.
 """
-function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratPers, disc_rate)
+function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevel, disc_rate)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     return _cap_rem!(rem_dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ, disc_rate)
 end
-function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.StratTreeNodes, disc_rate)
+function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevelTree, disc_rate)
     # Calculate the values and initiate the new dictionary
-    strat_scens = strategic_scenarios(𝒯ᴵⁿᵛ.ts)
+    strat_scens = strategic_scenarios(𝒯)
     disc_dict = Dict()
     for scen ∈ strat_scens
-        sps = strategic_periods(scen)
-        if t_inv ∈ sps
-            disc_dict[scen] = _cap_rem!(rem_dict, t_inv, lifetime_val, sps, disc_rate)
+        𝒯ᴵⁿᵛ = strategic_periods(scen)
+        if t_inv ∈ 𝒯ᴵⁿᵛ
+            disc_dict[scen] = _cap_rem!(rem_dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ, disc_rate)
         end
     end
 
@@ -188,7 +194,7 @@ function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::T
     end
     return disc_fact
 end
-function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes}, disc_rate)
+function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.AbstractStratPers, disc_rate)
     # Initialize the variable used for calculating the remaining life at the end of a
     # strategic period and the boolean for identifying whether the capacity must be removed
     remaining_lifetime = lifetime_val
@@ -219,7 +225,7 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
     else
         # If lifetime is equal or longer than sp duration, the discounting rate is including
         # a potential rest value, depending on the remaining lifetime at the end of the
-        # last period it is active.
+        # last period it is active
         disc_fact = set_capex_discounter(
             lifetime_val-remaining_lifetime, lifetime_val, disc_rate
         )
