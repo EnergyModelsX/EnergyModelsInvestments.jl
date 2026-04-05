@@ -140,10 +140,10 @@ is given by `PeriodLife` and `StudyLife`.
 """
 function set_capex_discounter(years, lifetime, disc_rate)
     N_inv = ceil(years / lifetime)
-    capex_disc =
+    disc_fact =
         sum((1 + disc_rate)^(-n_inv * lifetime) for n_inv ∈ 0:N_inv-1) -
         ((N_inv * lifetime - years) / lifetime) * (1 + disc_rate)^(-years)
-    return capex_disc
+    return disc_fact
 end
 
 """
@@ -182,11 +182,11 @@ function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::T
     end
 
     # Calculation of the averaged discounting factor considering different branches
-    capex_disc = 0
+    disc_fact = 0
     for (scen, disc) ∈ disc_dict
-        capex_disc += disc * scen.probability
+        disc_fact += disc * scen.probability
     end
-    return capex_disc
+    return disc_fact
 end
 function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.StratPers, TS.ScenTreeNodes}, disc_rate)
     # Initialize the variable used for calculating the remaining life at the end of a
@@ -215,18 +215,16 @@ function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::Union{TS.
     if bool_shorter
         # If lifetime is shorter than the sp duration, we apply the method for PeriodLife
         # to account for the required reinvestments
-        capex_disc = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
+        disc_fact = set_capex_discounter(duration_strat(t_inv), lifetime_val, disc_rate)
     else
         # If lifetime is equal or longer than sp duration, the discounting rate is including
         # a potential rest value, depending on the remaining lifetime at the end of the
         # last period it is active.
-        capex_disc = (
-            1 -
-            (remaining_lifetime / lifetime_val) *
-            (1 + disc_rate)^(-(lifetime_val - remaining_lifetime))
+        disc_fact = set_capex_discounter(
+            lifetime_val-remaining_lifetime, lifetime_val, disc_rate
         )
     end
-    return capex_disc
+    return disc_fact
 end
 
 """
@@ -256,10 +254,10 @@ function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife,
             push!(life_dict[t_inv], t_inv)
         else
             for sp ∈ 𝒯ᴵⁿᵛ
-                if sp ≥ t_inv
-                    dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ sp && spp ≥ t_inv; init = 0)
-                    if dur ≤ lifetime(lifetime_mode, t_inv)
-                        push!(life_dict[sp], t_inv)
+                if sp ≤ t_inv
+                    dur = sum(duration_strat(spp) for spp ∈ 𝒯ᴵⁿᵛ if spp ≤ t_inv && spp ≥ sp; init = 0)
+                    if dur ≤ lifetime(lifetime_mode, sp)
+                        push!(life_dict[t_inv], sp)
                     end
                 end
             end
