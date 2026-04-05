@@ -2,16 +2,30 @@
 
 ## Unversioned
 
-### Added support for early capacity retirement
+### Breaking changes
+
+#### Added support for early capacity retirement
 
 * Early capacity retirement implemented with zero cost associated with it.
 * This fixes issues with `FixedInvestment` and lifetime calculations.
 
-### Added support for `TwoLevelTree`
+#### Changed arguments for main function
+
+* Move from `𝒯ᴵⁿᵛ::TS.AbstractStratPers` to `𝒯::Union{TwoLevel, TwoLevelTree}` in `add_investment_constraints`.
+* Aim with change is to avoid calling fields of `TwoLeveltree` for the implementation.
+* Adjustments to existing models outlined in the documentation.
+
+### Additional changes
+
+#### Added support for `TwoLevelTree`
 
 * The previous version did not support `TwoLevelTree` structures due to retirement constraints.
 * Retirement constraints are adjusted to reflect retirement in each branch of the tree structure.
 * Early retirement not yet supported for the nodes.
+
+#### Miscellaneous
+
+* Simplified some parts of the code by reusing other functions.
 
 ## Version 0.8.1 (2024-10-24)
 

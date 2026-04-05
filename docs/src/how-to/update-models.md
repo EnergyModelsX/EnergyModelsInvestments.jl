@@ -5,6 +5,25 @@ Hence, there are frequently breaking changes occuring, although we plan to keep 
 This document is designed to provide users with information regarding how they have to adjust their models to keep compatibility to the latest changes.
 We will as well implement information regarding the adjustment of extension packages, although this is more difficult due to the vast majority of potential changes.
 
+## [Adjustments from 0.8.x](@id how_to-update-08)
+
+We changed the arguments of the function [`add_investment_constraints`](@ref EMI.add_investment_constraints) from `𝒯ᴵⁿᵛ::TS.AbstractStratPers` to `𝒯::Union{TwoLevel, TwoLevelTree}`.
+The change removes the requirement to go into the subfields of `StratTreeNodes` to access the original `TwoLevelTree` to create the strategic scenarios.
+
+The only required change is to change the function call from, *e.g.*,
+
+```julia
+add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯ᴵⁿᵛ, disc_rate)
+```
+
+to
+
+```julia
+add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯, disc_rate)
+```
+
+The same holds if you created a new lifetime mode.
+
 ## [Adjustments from 0.5.x](@id how_to-update-05)
 
 The following changes obly affect older models using `EnergyModelsBase` and `EnergyModelsGeography`.
