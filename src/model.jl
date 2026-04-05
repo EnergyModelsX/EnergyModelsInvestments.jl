@@ -52,7 +52,7 @@ function add_investment_constraints(
 
     # Identify the investment periods relevant for capacity addition in each investment period
     life_dict = Dict(t_inv => eltype(𝒯ᴵⁿᵛ)[] for t_inv ∈ 𝒯ᴵⁿᵛ)
-    populate_lifetime_vectors!(life_dict, lifetime_mode(inv_data), 𝒯ᴵⁿᵛ)
+    populate_lifetime_vectors!(life_dict, lifetime_mode(inv_data), 𝒯)
 
     for (t_inv_prev, t_inv) ∈ withprev(𝒯ᴵⁿᵛ)
         # Link capacity usage to installed capacity
