@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.9.0 (2026-04-07)
+## Version 0.9.0 (2026-04-08)
 
 ### Breaking changes
 

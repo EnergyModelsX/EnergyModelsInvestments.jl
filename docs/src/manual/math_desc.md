@@ -149,7 +149,7 @@ CAPEX and capacity removal constraints are incorporated through the function [`s
 The undiscounted CAPEX value is in the following defined as ``\texttt{capex\_val}[n, t_{inv}]``.
 It is calculated through the function [`set_capex_value`](@ref EnergyModelsInvestments.set_capex_value) depending on the chosen investment mode as outlined *[below](@ref man-desc-utils-capex)*.
 
-The discount factor ``capex\_disc`` is calculated for each technology indificually through the function [`set_capex_discounter`](@ref EnergyModelsInvestments.set_capex_discounter).
+The discount factor ``capex\_disc`` is calculated for each technology individually through the function [`set_capex_discounter`](@ref EnergyModelsInvestments.set_capex_discounter).
 It supports the calculation of the rest value, but also the required reinvestments, depending on the ratio between the input values `years` and `lifetime`.
 
 The function [`set_capacity_cost`](@ref EMI.set_capacity_cost) has the following methods with their respective constraints:
@@ -202,7 +202,7 @@ The function [`set_capacity_cost`](@ref EMI.set_capacity_cost) has the following
   This is achieved through the function [`capacity_removal!`](@ref EnergyModelsInvestments.capacity_removal!) in which we calculate both the discount factor and identify in which investment period this capacity must be removed the latest.
   The latter is saved in the ``rem\_dict``, indexed over the `AbstractStratPers` subtype.
 
-  The discount factor ``capex\_disc`` is calculated for all investment periods similar to the approach for [`StudyLife`](@ref) (when there is a remaining lifetime in a subsequent investment period that is short than the duration of the investment period) and [`PeriodLife`](@ref) (when the lifetime is shorter than the duration of a investment period).
+  The discount factor ``capex\_disc`` is calculated for all investment periods similar to the approach for [`StudyLife`](@ref) (when there is a remaining lifetime in a subsequent investment period that is shorter than the duration of the investment period) and [`PeriodLife`](@ref) (when the lifetime is shorter than the duration of an investment period).
   The capacity is furthermore added to the ``rem\_dict`` if it must be removed within the model horizon.
 
   In the case of strategic scenarios, we calculate the discount factor of an investment period for each strategic scenario in which the investment period is present.

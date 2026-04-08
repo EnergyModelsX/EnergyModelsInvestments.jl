@@ -7,7 +7,7 @@ We will as well implement information regarding the adjustment of extension pack
 
 ## [Adjustments from 0.8.x](@id how_to-update-08)
 
-Versiom 0.9.x introduced the potential for early capacity retirements in all cases.
+Version 0.9.x introduced the potential for early capacity retirements in all cases.
 Previously, this was only possible when there was a remaining capacity at the end of the modelled horizon.
 As we consider this to be an unwanted effect, we allowed it now for all capacities.
 The changes do not require you to do any adjustments to your model.
