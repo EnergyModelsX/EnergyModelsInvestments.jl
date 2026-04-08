@@ -1,6 +1,6 @@
 # Release notes
 
-## Unversioned
+## Version 0.9.0 (2026-04-08)
 
 ### Breaking changes
 
@@ -26,6 +26,7 @@
 #### Miscellaneous
 
 * Simplified some parts of the code by reusing other functions.
+* Updated the documentation with a mathematical description.
 
 ## Version 0.8.1 (2024-10-24)
 

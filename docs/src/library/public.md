@@ -1,5 +1,9 @@
 # [Public interface](@id lib-pub)
 
+```@docs
+EnergyModelsInvestments
+```
+
 ## [Additional Data for Investments](@id lib-pub-data)
 
 ### [General type structure](@id lib-pub-data-abstract)
@@ -25,14 +29,27 @@ It is also possible to create new subtypes with changing parameters.
 
 The following fields have to be added for all provided types:
 
-- `capex::TimeProfile`: Capital expenditures (CAPEX) of the `Node`. The capital expenditures are relative to the capacity. Hence, it is important to consider the unit for both costs and the energy of the technology. The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
-- `max_inst::TimeProfile`: Maximum installed capacity of the `Node`. The maximum installed capacity is limiting the total installed capacity of the Node. It is possible to have different values for different `Node`s representing the same technology. This can be useful for, *e.g.*, the potential for wind power in different regions.
-- `inv_mode::Investment`: Investment mode of the `Node`. The individual investment modes are explained in detail in *[Investment types](@ref lib-pub-inv_mode)*.
-- `life_mode::LifetimeMode`: Lifetime mode of the `Node`. The lifetime mode is describing how the lifetime of the node is implemented. This includes as well final values and retiring of the individual technologies. The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref lib-pub-life_mode)*.
+- `capex::TimeProfile`: Capital expenditure (CAPEX) of the technology.
+  The CAPEX is relative to the capacity.
+  Hence, it is important to consider the unit for both costs and the energy of the technology.
+  The total contribution to the objective function ``y`` is then given through the equation ``y = \texttt{capex} \times x`` where ``x`` corresponds to the invested capacity.
+- `max_inst::TimeProfile`: Maximum installed capacity of the technology.
+  The maximum installed capacity is limiting the total installed capacity of the technology.
+  It is possible to have different values for different technologies representing the same technology.
+  This can be useful for, *e.g.*, the potential for wind power in different regions.
+- `inv_mode::Investment`: Investment mode of the technology.
+  The individual investment modes are explained in detail in *[Investment types](@ref lib-pub-inv_mode)*.
+- `life_mode::LifetimeMode`: Lifetime mode of the technology.
+  The lifetime mode is describing how the lifetime of the node is implemented.
+  This includes as well rest values and retiring of the individual technologies.
+  The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref lib-pub-life_mode)*.
 
 The type `StartInvData` allows in addition for providing the initial capacity in the first year through:
 
-- `initial::Real`: Starting capacity of the technology in the first investment period. The starting capacity is only valid for the first investment period. This capacity will remain present in the simulation horizon, except if retiring is desired by the model. It is not possible to provide a reducing capacity over time for the initial capacity.
+- `initial::Real`: Starting capacity of the technology in the first investment period.
+  The starting capacity is only valid for the first investment period.
+  This capacity will remain present in the simulation horizon, except if retiring is desired by the model.
+  It is not possible to provide a reducing capacity over time for the initial capacity.
 
 while it utilizes the capacity of the technology if the value is not provided through the function [`EMI.start_cap`](@ref).
 
@@ -85,14 +102,14 @@ These fields are given below with a detailed description in the individual subse
   It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
 - `min_add::TimeProfile`: The minimum added capacity in an investment period.
   The minimum added capacity is providing the lower limit on investments in an investment period.
-  Its meaning changes, dependent on the chosen investment mode.
+  Its meaning changes depending on the chosen investment mode.
   It is introduced for `ContinuousInvestment` and `SemiContiInvestment` modes.
 - `capex_offset::TimeProfile`: CAPEX offset for the [`SemiContinuousOffsetInvestment`](@ref) mode.
   The offset can be best described with the equation ``y = \texttt{capex} \times x + \texttt{capex\_offset}`` where ``x`` corresponds to the invested capacity and ``y`` to the total capital cost.
 - `cap_increment::TimeProfile`: Increment in the case of [`DiscreteInvestment`](@ref).
   The increment corresponds to the potential increase in the case of `DiscreteInvestment`.
 - `cap::TimeProfile`: Capacity in the case of [`BinaryInvestment`](@ref) and [`FixedInvestment`](@ref).
-  The capacity corresponds to the _**additional**_ invested capacity.
+  The capacity corresponds to the ***additional*** invested capacity.
 
 ### `Investment`
 
@@ -126,7 +143,7 @@ The capacity of the investment cannot be adjusted by the optimization.
 
 !!! warning
     This investment type leads to the addition of binary variables.
-    The number of binary variables is equal to the number of strategic periods times the number of `Node`s with the `BinaryInvestment` mode.
+    The number of binary variables is equal to the number of strategic periods times the number of technologies with the `BinaryInvestment` mode.
 
 ```@docs
 BinaryInvestment
@@ -144,7 +161,7 @@ In this situation, several instances with different `increment` and `capex` can 
 
 !!! note
     This investment type leads to the addition of integer variables.
-    The number of integer variables is equal to the number of strategic periods times the number of `Node`s with the `DiscreteInvestment` mode.
+    The number of integer variables is equal to the number of strategic periods times the number of technologies with the `DiscreteInvestment` mode.
 
 ```@docs
 DiscreteInvestment
@@ -174,7 +191,7 @@ SemiContiInvestment
 
 !!! note
     These investment modes leads to the addition of binary variables.
-    The number of binary variables is equal to the number of strategic periods times the number of `Node`s with the `SemiContinuousInvestment` and `SemiContinuousOffsetInvestment` mode.
+    The number of binary variables is equal to the number of strategic periods times the number of technologies with the `SemiContinuousInvestment` and `SemiContinuousOffsetInvestment` mode.
 
 #### [`SemiContinuousInvestment`](@id lib-pub-inv_mode-semi_con-lin)
 
@@ -189,12 +206,12 @@ SemiContinuousInvestment
 
 #### [`SemiContinuousOffsetInvestment`](@id lib-pub-inv_mode-semi_con-off)
 
-[`SemiContinuousOffsetInvestment`](@ref) is a type of investment similar to [`SemiContinuousInvestment`](@ref) and implemented for investments in transmission infrastructure.
+[`SemiContinuousOffsetInvestment`](@ref) is a type of investment similar to [`SemiContinuousInvestment`](@ref).
 It does differ with respect to how the costs are calculated.
 A `SemiContinuousOffsetInvestment` has an offset in the cost implemented through the the field `capex_offset`.
 This offset corresponds to the theoretical cost at an invested capacity of 0.
 
-While  [`SemiContinuousInvestment`](@ref)utilizes the same relative cost, even if a lower limit is specified, `SemiContinuousOffsetInvestment` allows for the specification of an offset in the cost through the field `capex_offset`.
+While  [`SemiContinuousInvestment`](@ref) utilizes the same relative cost, even if a lower limit is specified, `SemiContinuousOffsetInvestment` allows for the specification of an offset in the cost through the field `capex_offset`.
 This offset is an absolute cost.
 It corresponds to the theoretical cost at an invested capacity of 0.
 This changes the contribution to the cost function from
@@ -236,9 +253,9 @@ LifetimeMode
 
 ### [`UnlimitedLife`](@id lib-pub-life_mode-un)
 
-This `LifetimeMode` is used when the lifetime of a `Node` is not limited.
+This `LifetimeMode` is used when the lifetime of a technology is not limited.
 No reinvestment is considered by the optimization and there is also no salvage value (or rest value) at the end of the last investment period.
-Hence, the costs are the same, independent of if the investments in the `Node` are happening in the first investment period (and the technology is used for, *e.g*, 25 years) or the last investment period (with a usage of, *e.g.*, 5 years) when excluding discounting effects.
+Hence, the costs are the same, independent of if the investments in the technology are happening in the first investment period (and the technology is used for, *e.g*, 25 years) or the last investment period (with a usage of, *e.g.*, 5 years) when excluding discounting effects.
 
 `UnlimitedLife` is the default lifetime mode, if no other mode is specified.
 
@@ -275,9 +292,14 @@ PeriodLife
 `RollingLife` corresponds to the classical roll-over of investments from one investment period to the next until the end of life is reached.
 In general, three different cases can be differentiated:
 
-1. The lifetime is shorter than the duration of the investment period. In this situation, a [`PeriodLife`](@ref) is assumed.
-2. The lifetime equals the duration of the investment period. In this situation, the capacity is retired at the end of the investment period
-3. The lifetime is longer than the duration of the investment period. This leaves however a problem if the lifetime does fall in-between two strategic periods, as it would be the case for a lifetime of, *e.g.*, 8 years and two strategic periods of, *e.g*, 5 years. In this case, the technology would only be available for the first 3 years of the second investment period leaving the question on how to handle this situation. `EnergyModelsInvestments` retires the technology at the last full investment period and calculates the remaining value for the technology.
+1. The lifetime is shorter than the duration of the investment period.
+  In this situation, a [`PeriodLife`](@ref) is assumed.
+2. The lifetime equals the duration of the investment period.
+  In this situation, the capacity is retired at the end of the investment period
+3. The lifetime is longer than the duration of the investment period.
+  This leaves however a problem if the lifetime does fall in-between two strategic periods, as it would be the case for a lifetime of, *e.g.*, 8 years and two strategic periods of, *e.g*, 5 years.
+  In this case, the technology would only be available for the first 3 years of the second investment period leaving the question on how to handle this situation.
+  `EnergyModelsInvestments` retires the technology at the last full investment period and calculates the remaining value for the technology.
 
 ```@docs
 RollingLife

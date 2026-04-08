@@ -29,6 +29,7 @@ makedocs(
             "Quick Start" => "manual/quick-start.md",
             "Philosophy" => "manual/philosophy.md",
             "Optimization variables" => "manual/optimization-variables.md",
+            "Mathematical description" => "manual/math_desc.md",
             "Example" => "manual/simple-example.md",
             "Release notes" => "manual/NEWS.md",
         ],
