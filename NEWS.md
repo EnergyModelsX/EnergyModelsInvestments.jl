@@ -6,6 +6,10 @@
 
 * Fixed a bug introduced in pull request #49 in cases where an initial capacity was specified.
 
+## Additional changes
+
+* Minor updates to the documentation and docstrings.
+
 ## Version 0.9.0 (2026-04-08)
 
 ### Breaking changes
@@ -14,11 +18,12 @@
 
 * Early capacity retirement implemented with zero cost associated with it.
 * This fixes issues with `FixedInvestment` and lifetime calculations.
+* Adjustment can change model behavior and results.
 
 #### Changed arguments for main function
 
 * Move from `𝒯ᴵⁿᵛ::TS.AbstractStratPers` to `𝒯::Union{TwoLevel, TwoLevelTree}` in `add_investment_constraints`.
-* Aim with change is to avoid calling fields of `TwoLeveltree` for the implementation.
+* Aim with change is to avoid calling fields of `TwoLevelTree` for the implementation.
 * Adjustments to existing models outlined in the documentation.
 
 ### Additional changes
@@ -27,7 +32,6 @@
 
 * The previous version did not support `TwoLevelTree` structures due to retirement constraints.
 * Retirement constraints are adjusted to reflect retirement in each branch of the tree structure.
-* Early retirement not yet supported for the nodes.
 
 #### Miscellaneous
 

@@ -7,13 +7,15 @@ We will as well implement information regarding the adjustment of extension pack
 
 ## [Adjustments from 0.8.x](@id how_to-update-08)
 
-Version 0.9.x introduced the potential for early capacity retirements in all cases.
+### [Key changes for model behaviour and arguments](@id how_to-update-08-key)
+
+Version 0.9.0 introduced the potential for early capacity retirements in all cases.
 Previously, this was only possible when there was a remaining capacity at the end of the modelled horizon.
-As we consider this to be an unwanted effect, we allowed it now for all capacities.
+As we consider this to be an unwanted effect, we allow it now for all capacities.
 The changes do not require you to do any adjustments to your model.
 The results may however differ.
 
-We changed the arguments of the function [`add_investment_constraints`](@ref EMI.add_investment_constraints) from `𝒯ᴵⁿᵛ::TS.AbstractStratPers` to `𝒯::Union{TwoLevel, TwoLevelTree}`.
+In addition, we changed the arguments of the function [`add_investment_constraints`](@ref EMI.add_investment_constraints) from `𝒯ᴵⁿᵛ::TS.AbstractStratPers` to `𝒯::Union{TwoLevel, TwoLevelTree}`.
 The change removes the requirement to go into the subfields of `StratTreeNodes` to access the original `TwoLevelTree` to create the strategic scenarios.
 The only required change is to change the function call from, *e.g.*,
 
@@ -27,7 +29,49 @@ to
 add_investment_constraints(m, n, inv_data, nothing, :cap, 𝒯, disc_rate)
 ```
 
-The same holds if you created a new lifetime mode.
+The same holds if you created a new lifetime mode where the function argument is changed from
+
+```julia
+set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate)
+```
+
+to
+
+```julia
+set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate)
+```
+
+### [Changes to types](@id how_to-update-08-types)
+
+We introduced in version 0.8.1 the potential for changes in the initial capacity.
+As a consequence, we changed the field types for [`StartInvData`](@ref) while retaining a legacy constructor for the old version.
+
+The previous description for [`StartInvData`](@ref) was given by:
+
+```julia
+struct StartInvData <: AbstractInvData
+    capex::TimeProfile
+    max_inst::TimeProfile
+    initial::Real
+    inv_mode::Investment
+    life_mode::LifetimeMode
+end
+```
+
+while the new type is given as
+
+```julia
+struct StartInvData <: AbstractInvData
+    capex::TimeProfile
+    max_inst::TimeProfile
+    initial::TimeProfile
+    inv_mode::Investment
+    life_mode::LifetimeMode
+end
+```
+
+!!! note
+    The legacy constructors will be included at least until version 0.9.
 
 ## [Adjustments from 0.5.x](@id how_to-update-05)
 
