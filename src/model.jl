@@ -72,8 +72,7 @@ function add_investment_constraints(
             )
             @constraint(m,
                 var_current[t_inv] ≤
-                    val_start_cap[t_inv] - val_start_cap[t_inv_prev] +
-                    sum(var_add[sp] for sp ∈ life_dict[t_inv])
+                    val_start_cap[t_inv] + sum(var_add[sp] for sp ∈ life_dict[t_inv])
             )
         end
     end

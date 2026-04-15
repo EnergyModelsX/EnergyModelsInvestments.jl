@@ -1,5 +1,11 @@
 # Release notes
 
+## Version 0.9.1 (2026-04-16)
+
+### Bug fix
+
+* Fixed a bug introduced in pull request #49 in cases where an initial capacity was specified.
+
 ## Version 0.9.0 (2026-04-08)
 
 ### Breaking changes
