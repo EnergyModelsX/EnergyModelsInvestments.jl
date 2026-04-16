@@ -547,3 +547,60 @@ end
         @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 end
+
+@testset "RollingLife - Longer lifetime, StartInvData" begin
+    # Creation and solving of the model
+    inv_data = StartInvData(
+        FixedProfile(1000),
+        FixedProfile(40),
+        StrategicProfile([15, 10, 5, 0]),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(15)),
+        RollingLife(FixedProfile(20))
+    )
+    demand = StrategicProfile([5,10,15,15])
+    m, para = simple_model(;inv_data, demand)
+
+    # Extraction of required data
+    n = para[:node]
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    inv_data = para[:inv_data]
+    disc_rate = 1/(1+para[:disc_rate])^10
+    invest = StrategicProfile([0, 0, 10, 5])
+
+    # Retirements are at the end of the strategic period following the investment period
+    # This is only the last strategic period
+    removal = StrategicProfile([0, 0, 0, 10])
+
+    # Explicit calculation of CAPEX
+    # 1. Investments do not require reinvestments.
+    # 2. The investment in strategic period 4 has a final value, equal to discounted 10/20 %
+    #    of the intial value
+    capex = StrategicProfile([0, 0, 10, 5*(1-0.5*disc_rate)]) * 1e3
+
+    # Explicit calculation of the current capacity
+    cap_initial = StrategicProfile([15, 10, 5, 0])
+    cap_current = cap_initial + invest + removal
+
+    # Tests of the lifetime calculation
+    # - set_capacity_cost(m, element, inv_data, prefix, 𝒯ᴵⁿᵛ, disc_rate, ::RollingLife)
+    @testset "Lifetime calculations" begin
+        # Test that `:cap_current` follows the initial capacity
+        @test all(value.(m[:cap_current][n, t_inv]) == cap_current[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that `:cap_rem` follows the lifetime
+        @test all(value.(m[:cap_rem][n, t_inv]) == removal[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that `:cap_add` follows the lifetime
+        @test all(value.(m[:cap_add][n, t_inv]) == invest[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the CAPEX is correctly calculated
+        # - set_capex_discounter(years, lifetime, disc_rate)
+        @test all(
+            value.(m[:cap_capex])[n, t_inv] ≈
+                value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
+                StrategicProfile([1, 1, 1, 1*(1-0.5*disc_rate)])[t_inv]
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+end
