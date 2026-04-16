@@ -46,10 +46,16 @@ The following fields have to be added for all provided types:
 
 The type `StartInvData` allows in addition for providing the initial capacity in the first year through:
 
-- `initial::Real`: Starting capacity of the technology in the first investment period.
-  The starting capacity is only valid for the first investment period.
-  This capacity will remain present in the simulation horizon, except if retiring is desired by the model.
-  It is not possible to provide a reducing capacity over time for the initial capacity.
+- `initial::TimeProfile`: Initial capacity of the technology in each investment period.
+  The initial capacity is the capacity which is specified by the user a priori.
+  This implies, that if you can implement a legacy capacity with a lifetime through a reduction in the `TimeProfile`.
+  The time profile
+
+  ```julia
+  StrategicProfile([10,8,6,4,2,0])
+  ```
+
+  would result in a reduction of the legacy capacity of ``2`` in each year.
 
 while it utilizes the capacity of the technology if the value is not provided through the function [`EMI.start_cap`](@ref).
 

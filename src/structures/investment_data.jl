@@ -48,9 +48,19 @@ Investment data in which the initial capacity is specified in the `AbstractInvDa
 The structure is similiar to [`NoStartInvData`](@ref) with the addition of the field
 **`initial::TimeProfile`**, see below.
 
-# Fields in addition to [`NoStartInvData`](@ref)
+# Fields
+- **`capex::TimeProfile`** is the capital costs for investing in a capacity. The value is
+  relative to the added capacity.
+- **`max_inst::TimeProfile`** is the maximum installed capacity in an investment period.
 - **`initial::TimeProfile`** is the initial capacity as `TimeProfile`. Retirement of the
   initial capacity can be achieved through a decreasing capacity.
+- **`inv_mode::Investment`** is the chosen investment mode for the technology. The following
+  investment modes are currently available: [`BinaryInvestment`](@ref),
+  [`DiscreteInvestment`](@ref), [`ContinuousInvestment`](@ref), [`SemiContinuousInvestment`](@ref)
+  or [`FixedInvestment`](@ref).
+- **`life_mode::LifetimeMode`** is type of handling the lifetime. Several different
+  alternatives can be used: [`UnlimitedLife`](@ref), [`StudyLife`](@ref), [`PeriodLife`](@ref)
+  or [`RollingLife`](@ref).
 """
 struct StartInvData <: AbstractInvData
     capex::TimeProfile
