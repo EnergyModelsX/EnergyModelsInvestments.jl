@@ -1,5 +1,9 @@
 # Release notes
 
+## Unversioned
+
+* Improved the description for the `AbstractInvData` to highlight the changes.
+
 ## Version 0.9.1 (2026-04-16)
 
 ### Bug fix

@@ -44,23 +44,27 @@ The following fields have to be added for all provided types:
   This includes as well rest values and retiring of the individual technologies.
   The default value is [`UnlimitedLife`](@ref). More information can be found in *[`LifetimeMode`](@ref lib-pub-life_mode)*.
 
-The type `StartInvData` allows in addition for providing the initial capacity in the first year through:
+The type `StartInvData` allows in addition for providing the initial capacity through:
 
 - `initial::TimeProfile`: Initial capacity of the technology in each investment period.
-  The initial capacity is the capacity which is specified by the user a priori.
-  This implies, that if you can implement a legacy capacity with a lifetime through a reduction in the `TimeProfile`.
+  The initial capacity is the capacity which is specified by the user *a priori*.
+  This implies, that you can implement a legacy capacity with a lifetime through a reduction in the `TimeProfile`.
   The time profile
 
   ```julia
   StrategicProfile([10,8,6,4,2,0])
   ```
 
-  would result in a reduction of the legacy capacity of ``2`` in each year.
+  would result in a reduction of the legacy capacity of ``2`` in investment period ``5``.
 
 while it utilizes the capacity of the technology if the value is not provided through the function [`EMI.start_cap`](@ref).
 
-!!! warning
-    If you do not use `StartInvData`, you have to provide the function [`EMI.start_cap`](@ref) for your type. Otherwise, `EnergyModelsInvestments` is not able to deduce the starting capcity.
+!!! warning "`StartInvData` and `NoStartInvData`"
+    If you do not use `StartInvData`, you **must** provide a method to the function [`EMI.start_cap`](@ref) for your type.
+    Otherwise, `EnergyModelsInvestments` is not able to deduce the starting capcity.
+
+    Note that the function will **always** use the capacity specified within `StartInvData` through the field `initial` for providing the exogeneous capacity profile.
+    This implies that any existing capacity, *e.g.*, through the field *[`cap` in `EnergyModelsBase` nodes](https://energymodelsx.github.io/EnergyModelsBase.jl/stable/nodes/source/#nodes-source-fields)* will not be utilized when using `StartInvData`.
 
 `AbstractInvData` types have constructors that allow omitting the last field, `life_mode`.
 
@@ -184,7 +188,7 @@ These investment modes are similar with respect to how you can increase the capa
 They differ however on how the overall cost is calculated.
 Both investment modes are in general similar to [`ContinuousInvestment`](@ref), but the investment is either 0 or between a minimum and maximum value.
 This means you can define the field `min_add::TimeProfile` without forcing investment in the technology.
-Instead, the value determines that **_if_** the model decides to invest, then it has to at least invest in the value provided through **`min_add`**.
+Instead, the value determines that ***if*** the model decides to invest, then it has to at least invest in the value provided through **`min_add`**.
 This can be also described as:
 
 ``x = 0 \lor \texttt{min\_add} \leq x \leq \texttt{max\_add}``

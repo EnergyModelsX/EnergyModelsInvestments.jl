@@ -24,9 +24,9 @@ start_cap(element, t_inv, inv_data::NoStartInvData, cap)
 ```
 
 for your type.
-The main reason is that in this case you do not specify the initial capacity in `EnergyModelsInvestments`, but instead deduce it from the provided initial capacity in your energiy system optimization model.
+The main reason is that in this case you do not specify the initial capacity in `EnergyModelsInvestments`, but instead deduce it from the provided initial capacity in your energy system optimization model.
 
-In the case of EnergyModelsBase, this is given through the methods
+In the case of `EnergyModelsBase`, this is given through the methods
 
 ```julia
 EMI.start_cap(n::EMB.Node, t_inv, inv_data::NoStartInvData, cap) =
