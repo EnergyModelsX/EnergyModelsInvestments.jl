@@ -435,49 +435,52 @@ end
         ContinuousInvestment(FixedProfile(0), FixedProfile(15)),
         RollingLife(FixedProfile(15))
     )
-    demand = StrategicProfile([5,15,15,15,15])
+    demand = StrategicProfile([5, 15, 15, 15, 15])
     penalty_surplus = FixedProfile(1000)
     fixed_opex = FixedProfile(10)
     op_pers = SimpleTimes(4, 1)
     ts = TwoLevelTree(TreeNode(5, op_pers,
         TreeNode(5, op_pers, [0.7, 0.1, 0.2], [
-            TreeNode(2, op_pers, TreeNode(3, op_pers, TreeNode(5, op_pers))),
+            TreeNode(2, op_pers,[0.5, 0.5], [
+                TreeNode(3, op_pers, TreeNode(5, op_pers)),
+                TreeNode(6, op_pers),
+            ]),
             TreeNode(4, op_pers, TreeNode(6, op_pers)),
-            TreeNode(2, op_pers, TreeNode(8, op_pers))
+            TreeNode(2, op_pers, TreeNode(3, op_pers, TreeNode(5, op_pers))),
         ]),
     ); op_per_strat=1.0)
-    m, para = simple_model(;inv_data, demand, ts, penalty_surplus, fixed_opex)
+    m, para = simple_model(;inv_data, demand, ts, penalty_surplus, fixed_opex);
 
     # Extraction of required data
     n = para[:node]
     𝒯 = ts
     𝒯ᴵⁿᵛ = strat_periods(𝒯)
     disc(x::Int) = 1/(1+para[:disc_rate])^x
-    invest = StrategicStochasticProfile([[5], [10], [0, 0, 0], [0, 5, 5], [5]])
+    invest = StrategicStochasticProfile([[5], [10], [0, 0, 0], [5, 5, 5, 0], [0, 5]])
 
     # Retirements are after 15 years and differing for the different branches
-    removal = StrategicStochasticProfile([[0], [0], [0, 5, 5], [5, 10, 10], [10]])
+    removal = StrategicStochasticProfile([[0], [0], [5, 5, 0], [0, 0, 10, 5], [10, 10]])
 
     # Explicit calculation of CAPEX
     # 1. Investments of strategic period 1 require reinvestments (in differing periods in
-    #    each branch) and have an end value, depending on the branch.
-    # 2. Investments of strategic period 2 do not require reinvestments and do not have and
-    #    end value
+    #    each branch, except for branch in the first) and have an end value, depending on the branch.
+    # 2. Investments of strategic period 2 do not require reinvestments but have an
+    #    end value due to the different total duration of each scenario
     # 3. Investments in strategic period 4 and 5 have an end value which is depending on the
     #    branch
     capex = StrategicStochasticProfile([
-        [5] .* 1000 * ((1)*0.7 + (1 - 1/15*disc(14))*0.1 + (1 - 3/15*disc(12))*0.2),
-        [10] .* 1e3,
+        [5] .* 1e3 * ((1)*0.7*0.5 + (1 - 3/15*disc(12))*0.7*0.5 + (1 - 1/15*disc(14))*0.1 + (1)*0.2),
+        [10] .* 1e3 * ((1)*0.7*0.5 + (1 - 2/15*disc(13))*0.7*0.5 + (1)*0.1 + (1)*0.2),
         [0, 0, 0],
-        [0, 5 * 0.1 * (1-9/15*disc(6)), 5 * 0.2 * (1-7/15*disc(8))] .* 1e3,
-        [5 * 0.7] .* 1e3 * (1-10/15*disc(5)),
+        [5 * (1-7/15*disc(8)), 5 * (1-9/15*disc(6)), 5 * (1-9/15*disc(6)), 0] .* 1e3,
+        [0, 5] .* 1e3 * (1-10/15*disc(5)),
     ])
     disc_prof = StrategicStochasticProfile([
-        [(1)*0.7 + (1 - 1/15*disc(14))*0.1 + (1 - 3/15*disc(12))*0.2],
-        [1],
-        [0, 0, 0],
-        [0, (1-9/15*disc(6)), (1-7/15*disc(8))],
-        [(1-10/15*disc(5))],
+        [((1)*0.7*0.5 + (1 - 3/15*disc(12))*0.7*0.5 + (1 - 1/15*disc(14))*0.1 + (1)*0.2)],
+        [((1)*0.7*0.5 + (1 - 2/15*disc(13))*0.7*0.5 + (1)*0.1 + (1)*0.2)],
+        [1, 1, 1],
+        [(1-7/15*disc(8)), (1-9/15*disc(6)), (1-9/15*disc(6)), 1],
+        [1, (1-10/15*disc(5))],
     ])
 
     # Tests of the lifetime calculation
@@ -494,9 +497,18 @@ end
         @test all(
             value.(m[:cap_capex])[n, t_inv] ≈
                 value.(m[:cap_add])[n, t_inv] * EMI.capex(inv_data, t_inv) *
-                disc_prof[t_inv] * probability_branch(t_inv)
+                disc_prof[t_inv]
         for t_inv ∈ 𝒯ᴵⁿᵛ)
         @test all(value.(m[:cap_capex])[n, t_inv] ≈ capex[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the branch probabiliyt is correctly included
+        disc_type = Discounter(para[:disc_rate], 𝒯)
+        @test objective_value(m) ≈ -sum(
+            value.(m[:cap_capex])[n, t_inv] *
+                probability_branch(t_inv) * discount(t_inv, 𝒯, para[:disc_rate]) +
+            value.(m[:opex][t_inv]) *
+                duration_strat(t_inv) * objective_weight(t_inv, disc_type; type = "avg")
+        for t_inv ∈ strategic_periods(𝒯))
     end
 end
 

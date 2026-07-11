@@ -1,6 +1,14 @@
 # Release notes
 
-## Unversioned
+## Version 0.9.2 (2026-07-11)
+
+### Bug fix
+
+* Fixed a bug when using `TwoLevelTree` as time structure:
+  * The current system multiplies twice with the branch probability, once in the function `objective_weight` and once within the function `capacity_removal` for calculating the remaining value of the system.
+  * This is uninentional and results in too low CAPEX values in the optimization problem.
+
+### Documentation
 
 * Improved the description for the `AbstractInvData` to highlight the changes.
 

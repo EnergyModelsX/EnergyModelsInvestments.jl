@@ -192,6 +192,8 @@ function capacity_removal!(rem_dict::Dict, t_inv, lifetime_val, 𝒯::TwoLevelTr
     for (scen, disc) ∈ disc_dict
         disc_fact += disc * scen.probability
     end
+    disc_fact = disc_fact/sum(scen.probability for scen ∈ keys(disc_dict))
+
     return disc_fact
 end
 function _cap_rem!(rem_dict::Dict, t_inv, lifetime_val, 𝒯ᴵⁿᵛ::TS.AbstractStratPers, disc_rate)
