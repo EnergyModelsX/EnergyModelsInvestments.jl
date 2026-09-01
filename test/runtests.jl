@@ -21,4 +21,7 @@ include("utils.jl")
     @testset "Investments | Lifetime" begin
         include("test_lifetime.jl")
     end
+    @testset "Investments | Relations" begin
+        include("test_relations.jl")
+    end
 end

@@ -26,6 +26,7 @@ include(joinpath("structures", "legacy_constructors.jl"))
 # Core structure of the code
 include("model.jl")
 include("utils.jl")
+include("relations.jl")
 
 # Functions to be extended by users of EnergyModelsInvestments
 include("interface.jl")
@@ -55,6 +56,15 @@ export TransInvData
 
 # Utility functions
 export has_investment
+
+# Relations
+export max_budget,
+    max_investments,
+    min_investments,
+    requires_capacity,
+    couple_capacity,
+    excludes,
+    precede_capacity
 
 
 end # module
