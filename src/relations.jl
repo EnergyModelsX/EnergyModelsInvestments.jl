@@ -1,14 +1,20 @@
 """
-    max_budget(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; sps_spec = nothing)
+    max_budget(
+        m,
+        limit::Number,
+        investments::Vector{<:Tuple{Symbol, <:Any}},
+        𝒯::Union{TwoLevel, TwoLevelTree};
+        sps_spec = nothing,
+    )
 
 Constrain the total CAPEX of `investments` across the selected strategic periods to be at
 most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `limit`: the maximum total CAPEX allowed across `investments` and the selected periods.
-- `investments`: the `(prefix, element)` tuples whose CAPEX variables are included in the
-  budget.
+- `limit::Number`: the maximum total CAPEX allowed across `investments` and the selected periods.
+- `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose CAPEX
+  variables are included in the budget.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the budget is  applied.
 
@@ -16,7 +22,13 @@ most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
 - `sps_spec`: the strategic periods to include. By default, all strategic periods
   in `𝒯` are selected.
 """
-function max_budget(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; sps_spec = nothing)
+function max_budget(
+    m,
+    limit::Number,
+    investments::Vector{<:Tuple{Symbol, <:Any}},
+    𝒯::Union{TwoLevel, TwoLevelTree};
+    sps_spec = nothing,
+)
     # Extract the strategic periods and identify the strategic periods to be included
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
@@ -30,7 +42,13 @@ function max_budget(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; 
 end
 
 """
-    max_investments(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; sps_spec = nothing)
+    max_investments(
+        m,
+        limit::Number,
+        investments::Vector{<:Tuple{Symbol, <:Any}},
+        𝒯::Union{TwoLevel, TwoLevelTree};
+        sps_spec = nothing,
+    )
 
 Constrain the total number of investments for `investments` across the selected strategic
 periods to be at most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
@@ -38,16 +56,17 @@ This implies that the number of investment actions across the selected strategic
 limited to `limit` while the invested capacity can be larger if using
 [`SemiContinuousInvestment`](@ref) or [`SemiContinuousOffsetInvestment`](@ref).
 
-!!! warning "Supported investmode modes"
+!!! warning "Supported investment modes"
     This relation requires binary `*_invest_b` variables for all elements and strategic periods
     in `𝒯`. This implies that it can be utilized for [`BinaryInvestment`](@ref),
     [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
 
 # Arguments
 - `m`: the JuMP model instance.
-- `limit`: the maximum total number of investment actions allowed across `investments` and
+- `limit::Number`: the maximum total number of investment actions allowed across `investments` and
   the selected periods.
-- `investments`: the `(prefix, element)` tuples whose investment variables are counted.
+- `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose
+  investment variables are counted.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the limit is applied.
 
@@ -55,7 +74,13 @@ limited to `limit` while the invested capacity can be larger if using
 - `sps_spec`: the strategic periods to include. By default, all strategic periods
   in `𝒯` are selected.
 """
-function max_investments(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; sps_spec = nothing)
+function max_investments(
+    m,
+    limit::Number,
+    investments::Vector{<:Tuple{Symbol, <:Any}},
+    𝒯::Union{TwoLevel, TwoLevelTree};
+    sps_spec = nothing,
+)
     # Extract the strategic periods and identify the strategic periods to be included
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
@@ -73,7 +98,13 @@ function max_investments(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTr
 end
 ∈
 """
-    min_investments(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; sps_spec = nothing)
+    min_investments(
+        m,
+        limit::Number,
+        investments::Vector{<:Tuple{Symbol, <:Any}},
+        𝒯::Union{TwoLevel, TwoLevelTree};
+        sps_spec = nothing,
+    )
 
 Constrain the total number of investments for `investments` across the selected strategic
 periods to be at least `limit`. Each item in `investments` is a `(prefix, element)` tuple.
@@ -89,9 +120,10 @@ at least the value of `limit` while the invested capacity is not affected using
 
 # Arguments
 - `m`: the JuMP model instance.
-- `limit`: the minimum total number of investment actions required across `investments`
+- `limit::Number`: the minimum total number of investment actions required across `investments`
   and the selected periods.
-- `investments`: the `(prefix, element)` tuples whose investment variables are counted.
+- `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose
+  investment variables are counted.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the limit is applied.
 
@@ -99,7 +131,13 @@ at least the value of `limit` while the invested capacity is not affected using
 - `sps_spec`: the strategic periods to include. By default, all strategic periods
   in `𝒯` are selected.
 """
-function min_investments(m, limit, investments, 𝒯::Union{TwoLevel, TwoLevelTree}; sps_spec = nothing)
+function min_investments(
+    m,
+    limit::Number,
+    investments::Vector{<:Tuple{Symbol, <:Any}},
+    𝒯::Union{TwoLevel, TwoLevelTree};
+    sps_spec = nothing,
+)
     # Extract the strategic periods and identify the strategic periods to be included
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
@@ -125,7 +163,7 @@ end
         prefix_pre::Symbol,
         element_pre,
         𝒯::Union{TwoLevel, TwoLevelTree};
-        capacity_ratio = 1,
+        capacity_ratio::Number = 1,
     )
 
 Require the installed capacity of one investment to be supported by another investment.
@@ -159,7 +197,7 @@ function requires_capacity(
     prefix_pre::Symbol,
     element_pre,
     𝒯::Union{TwoLevel, TwoLevelTree};
-    capacity_ratio = 1,
+    capacity_ratio::Number = 1,
 )
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -181,7 +219,7 @@ end
         prefix_2::Symbol,
         element_2,
         𝒯::Union{TwoLevel, TwoLevelTree};
-        capacity_ratio = 1,
+        capacity_ratio::Number = 1,
     )
 
 Couple the installed capacities of two investments.
@@ -212,7 +250,7 @@ function couple_capacity(
     prefix_2::Symbol,
     element_2,
     𝒯::Union{TwoLevel, TwoLevelTree};
-    capacity_ratio = 1,
+    capacity_ratio::Number = 1,
 )
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -253,7 +291,7 @@ end
         prefix_pre::Symbol,
         element_pre,
         𝒯::Union{TwoLevel, TwoLevelTree};
-        capacity_ratio = 1,
+        capacity_ratio::Number = 1,
     )
 
 Require prerequisite capacity, specified by `prefix_pre`, of element `element_pre` to exist
@@ -286,7 +324,7 @@ function precede_capacity(
     prefix_pre::Symbol,
     element_pre,
     𝒯::Union{TwoLevel, TwoLevelTree};
-    capacity_ratio = 1,
+    capacity_ratio::Number = 1,
 )
     # Extract the strategic periods and identify the predecessor periods for each strategic
     # period
@@ -357,7 +395,7 @@ function excludes(
     prefix_2::Symbol,
     element_2,
     𝒯::Union{TwoLevel, TwoLevelTree},
-    )
+)
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
