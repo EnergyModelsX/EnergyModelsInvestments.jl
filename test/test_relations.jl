@@ -31,7 +31,7 @@
     nodes = para[:nodes]
     @constraint(model, model[:cap_capex][nodes, strategic] .== 100)
     investments = [(:cap, node) for node in nodes]
-    max_budget(model, 200, investments, periods; strategic_periods = strategic[1:1])
+    max_budget(model, 200, investments, periods; sps_spec = strategic[1:1])
     optimize!(model)
 
     @test termination_status(model) == JuMP.MOI.OPTIMAL
@@ -77,7 +77,7 @@ end
     for node in nodes
         @constraint(model, model[:cap_invest_b][node, strategic[1]] == 0)
     end
-    min_investments(model, 2, investments, periods; strategic_periods = strategic[1:1])
+    min_investments(model, 2, investments, periods; sps_spec = strategic[1:1])
     optimize!(model)
 
     @test termination_status(model) == JuMP.MOI.INFEASIBLE
@@ -91,7 +91,7 @@ end
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
     @constraint(model, model[:cap_invest_b][nodes[1], strategic[1]] == 1)
-    min_investments(model, 1, investments, periods; strategic_periods = strategic[1:1])
+    min_investments(model, 1, investments, periods; sps_spec = strategic[1:1])
     optimize!(model)
 
     @test termination_status(model) == JuMP.MOI.OPTIMAL
