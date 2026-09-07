@@ -367,7 +367,7 @@ function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel, TwoLev
 end
 
 """
-    excludes(
+    excludes_capacity(
         m,
         prefix_1::Symbol,
         element_1,
@@ -393,7 +393,7 @@ two binary investment decision variables may be active.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 """
-function excludes(
+function excludes_capacity(
     m,
     prefix_1::Symbol,
     element_1,

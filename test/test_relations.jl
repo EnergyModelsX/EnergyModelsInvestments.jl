@@ -187,7 +187,7 @@ end
         two_investments = true,
     )
     nodes = para[:nodes]
-    excludes(infeasible, :cap, nodes[1], :cap, nodes[2], periods)
+    excludes_capacity(infeasible, :cap, nodes[1], :cap, nodes[2], periods)
     @constraint(infeasible, infeasible[:cap_invest_b][nodes[1], strategic[1]] == 1)
     @constraint(infeasible, infeasible[:cap_invest_b][nodes[2], strategic[1]] == 1)
     @objective(infeasible, Min, 0)
@@ -202,7 +202,7 @@ end
         two_investments = true,
     )
     nodes = para[:nodes]
-    excludes(feasible, :cap, nodes[1], :cap, nodes[2], periods)
+    excludes_capacity(feasible, :cap, nodes[1], :cap, nodes[2], periods)
     @constraint(feasible, feasible[:cap_invest_b][nodes[1], strategic[1]] == 1)
     @objective(feasible, Min, 0)
     optimize!(feasible)
@@ -228,7 +228,7 @@ end
     )
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
-    @test_throws ArgumentError excludes(
+    @test_throws ArgumentError excludes_capacity(
         integer_model,
         :cap,
         nodes[1],
@@ -243,7 +243,7 @@ end
         simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
-    @test_throws ArgumentError excludes(
+    @test_throws ArgumentError excludes_capacity(
         missing_model,
         :cap,
         nodes[1],
