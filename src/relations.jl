@@ -265,19 +265,24 @@ function couple_capacity(
 end
 
 """
-    _predecessor_periods(𝒯::Union{TwoLevel, TwoLevelTree})
+    _predecessor_periods(𝒯::TwoLevel)
+    _predecessor_periods(𝒯::TwoLevelTree)
 
 Return a dictionary mapping each strategic period to the strategic periods preceding it on
 the same scenario path. For a linear time structure, the predecessors are all earlier
 strategic periods. For a tree structure, only ancestor periods on the corresponding path
 are included.
 """
-function _predecessor_periods(𝒯::Union{TwoLevel, TwoLevelTree})
+function _predecessor_periods(𝒯::TwoLevel)
+    sps = collect(strat_periods(𝒯))
+    return Dict(t_inv => sps[1:idx-1] for (idx, t_inv) ∈ enumerate(sps))
+end
+function _predecessor_periods(𝒯::TwoLevelTree)
     sps_pre = Dict()
     for scenario ∈ strategic_scenarios(𝒯)
         path = collect(strat_periods(scenario))
-        for (index, period) ∈ enumerate(path)
-            haskey(sps_pre, period) || (sps_pre[period] = path[1:(index-1)])
+        for (idx, period) ∈ enumerate(path)
+            !haskey(sps_pre, period) && (sps_pre[period] = path[1:(idx-1)])
         end
     end
     return sps_pre
