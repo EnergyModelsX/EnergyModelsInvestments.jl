@@ -12,18 +12,19 @@ SimpleNode(cap::TimeProfile) = SimpleNode(cap, 1)
 
 """
     simple_model(;
-        ts = TwoLevel(4,5,SimpleTimes(24,1)),
-        initial = FixedProfile(10),
+        ts = TwoLevel(4, 10, SimpleTimes(4, 1)),
+        initial = FixedProfile(0),
         inv_data = NoStartInvData(
-            FixedProfile(1e6),
-            FixedProfile(40),
+            FixedProfile(1000),
+            FixedProfile(30),
             ContinuousInvestment(FixedProfile(0), FixedProfile(10)),
         ),
-        demand = FixedProfile(10),
-        penalty_deficit = FixedProfile(150),
+        demand = StrategicProfile([10, 30, 30, 40]),
+        penalty_deficit = FixedProfile(1e4),
         penalty_surplus = FixedProfile(0),
         fixed_opex = FixedProfile(0),
-        disc_rate = 0.07,
+        disc_rate = 0.05,
+        ret_cost = 0.2,
         two_investments = false,
     )
 
@@ -62,13 +63,11 @@ function simple_model(;
     variables(m, nodes, 𝒯)
 
     # Create the optimization problem
-    @constraint(
-        m,
-        [t ∈ 𝒯],
+    @constraint(m, [t ∈ 𝒯],
         sum(m[:cap_use][node, t] for node ∈ nodes) + m[:deficit][t] ==
         demand[t] + m[:surplus][t]
     )
-    @constraint(m, [node ∈ nodes, t ∈ 𝒯], m[:cap_use][node, t] == m[:cap_inst][node, t])
+    @constraint(m, [node ∈ nodes, t ∈ 𝒯], m[:cap_use][node, t] ≤ m[:cap_inst][node, t])
 
     # Add the investment constraints
     for node ∈ nodes
@@ -76,24 +75,19 @@ function simple_model(;
     end
 
     # Calculation of the OPEX contribution
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         m[:opex][t_inv] ==
         sum(
             (m[:deficit][t] * penalty_deficit[t] + m[:surplus][t] * penalty_surplus[t]) *
-            duration(t) *
-            multiple_strat(t_inv, t) for t ∈ t_inv
-        ) + sum(m[:cap_current][node, t_inv] for node ∈ nodes) * fixed_opex[t_inv]
+            duration(t) * multiple_strat(t_inv, t)
+        for t ∈ t_inv) +
+        sum(m[:cap_current][node, t_inv] for node ∈ nodes) * fixed_opex[t_inv]
     )
 
     # Calculation of the objective function.
-    @objective(
-        m,
-        Max,
+    @objective(m, Max,
         -sum(
-            m[:opex][t_inv] *
-            duration_strat(t_inv) *
+            m[:opex][t_inv] * duration_strat(t_inv) *
             objective_weight(t_inv, disc; type = "avg") +
             sum(m[:cap_capex][node, t_inv] for node ∈ nodes) *
             objective_weight(t_inv, disc) for t_inv ∈ 𝒯ᴵⁿᵛ
@@ -145,7 +139,7 @@ function variables(m, n, 𝒯)
     @variable(m, cap_remove_b[nodes, 𝒯ᴵⁿᵛ] ≥ 0; container = IndexedVarArray)
 
     # Add additional variables
-    @variable(m, opex[𝒯ᴵⁿᵛ] ≥ 0)
+    @variable(m, opex[𝒯ᴵⁿᵛ])
     @variable(m, surplus[𝒯] ≥ 0)
     @variable(m, deficit[𝒯] ≥ 0)
 end

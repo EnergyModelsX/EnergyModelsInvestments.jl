@@ -16,7 +16,7 @@ most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
 - `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose CAPEX
   variables are included in the budget.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
-  over which the budget is  applied.
+    over which the budget is applied.
 
 # Keyword arguments
 - `sps_spec`: the strategic periods to include. By default, all strategic periods
@@ -96,7 +96,7 @@ function max_investments(
         ) ≤ limit,
     )
 end
-∈
+
 """
     min_investments(
         m,
@@ -379,7 +379,7 @@ end
 Make two investments mutually exclusive. For each strategic period, at most one of the
 two binary investment decision variables may be active.
 
-!!! warning "Supported investmode modes"
+!!! warning "Supported investment modes"
     This relation requires binary `*_invest_b` variables for all elements and strategic periods
     in `𝒯`. This implies that it can be utilized for [`BinaryInvestment`](@ref),
     [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
