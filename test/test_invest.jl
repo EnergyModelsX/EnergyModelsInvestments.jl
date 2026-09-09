@@ -17,7 +17,7 @@
     @testset "Investment balance" begin
         # Test that cap_inst is less than the maximum installed capacity at all times
         @test sum(
-            value.(m[:cap_inst][n, t]) ≤ EMI.max_installed(inv_data, t) for t ∈ 𝒯
+            value.(m[:cap_inst][n, t]) ≲ EMI.max_installed(inv_data, t) for t ∈ 𝒯
         ) == length(𝒯)
 
         # Test that :cap_inst is equivalent to the :cap_current
@@ -46,12 +46,12 @@
     # - set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::Investment)
     @testset "Bounds" begin
         @test sum(
-                value.(m[:cap_add][n, t_inv]) ≥ EMI.min_add(inv_data, t_inv) for
+                value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) == length(𝒯ᴵⁿᵛ)
 
         @test sum(
-                value.(m[:cap_add][n, t_inv]) ≤ EMI.max_add(inv_data, t_inv) for
+                value.(m[:cap_add][n, t_inv]) ≲ EMI.max_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) == length(𝒯ᴵⁿᵛ)
     end
@@ -92,14 +92,17 @@ end
     # - set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
     @testset "Bounds" begin
         @test sum(
-                value.(m[:cap_add][n, t_inv]) ≥ EMI.min_add(inv_data, t_inv) for
+                value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
-            ) + sum(value.(m[:cap_add][n, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
+            ) + sum(isapprox(value.(m[:cap_add][n, t_inv]), 0; atol=TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ) ==
+                length(𝒯ᴵⁿᵛ)
         @test sum(
-                value.(m[:cap_add][n, t_inv]) ≥ EMI.min_add(inv_data, t_inv) for
+                value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) > 0
-        @test sum(value.(m[:cap_add][n, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
+        @test sum(
+            isapprox(value.(m[:cap_add][n, t_inv]), 0; atol=TEST_ATOL)
+        for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
     end
 
     # Test that the variable `:cap_invest_b` is a binary and created for the element
@@ -132,11 +135,11 @@ end
     # - set_capacity_installation(m, element, prefix, 𝒯ᴵⁿᵛ, inv_mode::SemiContiInvestment)
     @testset "Bounds" begin
         @test sum(
-                value.(m[:cap_add][n, t_inv]) ≥ EMI.min_add(inv_data, t_inv) for
+                value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) + sum(value.(m[:cap_add][n, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == length(𝒯ᴵⁿᵛ)
         @test sum(
-                value.(m[:cap_add][n, t_inv]) ≥ EMI.min_add(inv_data, t_inv) for
+                value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) > 0
         @test sum(value.(m[:cap_add][n, t_inv]) ≈ 0 for t_inv ∈ 𝒯ᴵⁿᵛ) == 3

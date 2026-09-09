@@ -314,3 +314,18 @@ In general, three different cases can be differentiated:
 ```@docs
 RollingLife
 ```
+
+## [Investment relationships](@id lib-pub-rel)
+
+`EnergyModelsInvestments` provides the user with the potential of specifying relationships between investment options.
+These relationships can be added after the model is created.
+
+```@docs
+max_budget
+max_investments
+min_investments
+requires_capacity
+couple_capacity
+precede_capacity
+excludes_capacity
+```
