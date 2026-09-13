@@ -55,5 +55,6 @@ export has_investment
 # Relations
 export max_budget, max_investments, min_investments
 export requires_capacity, couple_capacity, excludes_capacity, precede_capacity
+export require_investment, couple_investment
 
 end # module

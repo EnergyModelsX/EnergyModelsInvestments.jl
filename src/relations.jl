@@ -369,6 +369,105 @@ function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel, TwoLev
 end
 
 """
+    require_investment(
+        m,
+        prefix_dep::Symbol,
+        element_dep,
+        prefix_pre::Symbol,
+        element_pre,
+        𝒯::Union{TwoLevel, TwoLevelTree},
+    )
+
+Require the prerequisite investment binary to be active whenever the dependent investment
+binary is active in the same strategic period. The prerequisite binary may be active
+without the dependent binary being active. This relation does not constrain capacity ratios.
+
+!!! warning "Supported investment modes"
+    This relation requires binary `*_invest_b` variables for both elements and all strategic
+    periods in `𝒯`. It can be utilized for [`BinaryInvestment`](@ref),
+    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
+    For [`BinaryInvestment`](@ref), the binary controls installed capacity above baseline.
+    For semicontinuous modes, it enables capacity additions, which can be zero when the
+    minimum addition is zero. This relation links binary activations, not necessarily
+    positive capacity additions.
+
+# Arguments
+- `m`: the JuMP model instance.
+- `prefix_dep::Symbol`: the prefix used to identify the dependent investment variable family.
+- `element_dep`: the element whose investment binary requires prerequisite activation.
+- `prefix_pre::Symbol`: the prefix used to identify the prerequisite investment variable family.
+- `element_pre`: the element providing the prerequisite investment binary.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
+  over which the relation is applied.
+"""
+function require_investment(
+    m,
+    prefix_dep::Symbol,
+    element_dep,
+    prefix_pre::Symbol,
+    element_pre,
+    𝒯::Union{TwoLevel, TwoLevelTree},
+)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    var_invest_b_dep = _get_binary_investment(m, prefix_dep, element_dep, 𝒯)
+    var_invest_b_pre = _get_binary_investment(m, prefix_pre, element_pre, 𝒯)
+
+    return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_invest_b_dep[element_dep, t_inv] ≤ var_invest_b_pre[element_pre, t_inv],
+    )
+end
+
+"""
+    couple_investment(
+        m,
+        prefix_1::Symbol,
+        element_1,
+        prefix_2::Symbol,
+        element_2,
+        𝒯::Union{TwoLevel, TwoLevelTree},
+    )
+
+Couple two investment binaries. For each strategic period, both binaries must be active
+or both must be inactive. The capacities of the two investments can be sized independently.
+
+!!! warning "Supported investment modes"
+    This relation requires binary `*_invest_b` variables for both elements and all strategic
+    periods in `𝒯`. It can be utilized for [`BinaryInvestment`](@ref),
+    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
+    For [`BinaryInvestment`](@ref), the binary controls installed capacity above baseline.
+    For semicontinuous modes, it enables capacity additions, which can be zero when the
+    minimum addition is zero. This relation links binary activations, not necessarily
+    positive capacity additions.
+
+# Arguments
+- `m`: the JuMP model instance.
+- `prefix_1::Symbol`: the prefix used to identify the first investment variable family.
+- `element_1`: the element corresponding to the first investment.
+- `prefix_2::Symbol`: the prefix used to identify the second investment variable family.
+- `element_2`: the element corresponding to the second investment.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
+  over which the relation is applied.
+"""
+function couple_investment(
+    m,
+    prefix_1::Symbol,
+    element_1,
+    prefix_2::Symbol,
+    element_2,
+    𝒯::Union{TwoLevel, TwoLevelTree},
+)
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    var_invest_b_1 = _get_binary_investment(m, prefix_1, element_1, 𝒯)
+    var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
+
+    return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_invest_b_1[element_1, t_inv] == var_invest_b_2[element_2, t_inv],
+    )
+end
+
+"""
     excludes_capacity(
         m,
         prefix_1::Symbol,

@@ -328,4 +328,6 @@ requires_capacity
 couple_capacity
 precede_capacity
 excludes_capacity
+require_investment
+couple_investment
 ```
