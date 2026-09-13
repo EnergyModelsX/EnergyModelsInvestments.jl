@@ -211,6 +211,96 @@ end
     @test value(feasible[:cap_invest_b][nodes[2], strategic[1]]) ≈ 0
 end
 
+@testset "Require investment" begin
+    # Creation of the model with positive investment costs and no demand
+    inv_data = NoStartInvData(
+        FixedProfile(1),
+        FixedProfile(1000),
+        SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
+    )
+    m, para = simple_model(; demand = FixedProfile(0), inv_data, two_investments = true)
+
+    # Extraction of required data and addition of the investment relation
+    nodes = para[:nodes]
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    activation = StrategicProfile([0, 1, 0, 1])
+    require_investment(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
+
+    # Dependent investments must activate the prerequisite in the same periods
+    @testset "Dependent activation" begin
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_invest_b][nodes[1], t_inv], activation[t_inv]; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            value(m[:cap_invest_b][nodes[1], t_inv]) ≲
+                value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            isapprox(value(m[:cap_invest_b][nodes[2], t_inv]), activation[t_inv];
+                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
+
+    # Prerequisite investments alone must not force dependent investments
+    @testset "Prerequisite activation" begin
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            unfix(m[:cap_invest_b][nodes[1], t_inv])
+            fix(m[:cap_invest_b][nodes[2], t_inv], activation[t_inv]; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            isapprox(value(m[:cap_invest_b][nodes[1], t_inv]), 0; atol = TEST_ATOL)
+            for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
+end
+
+@testset "Couple investment" begin
+    # Creation of the model with positive investment costs and no demand
+    inv_data = NoStartInvData(
+        FixedProfile(1),
+        FixedProfile(1000),
+        SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
+    )
+    m, para = simple_model(; demand = FixedProfile(0), inv_data, two_investments = true)
+
+    # Extraction of required data and addition of the investment relation
+    nodes = para[:nodes]
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    activation = StrategicProfile([0, 1, 0, 1])
+    couple_investment(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
+
+    # Either element must activate its partner, and both remain inactive in other periods
+    @testset "Activation by element $node" for node ∈ nodes
+        for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
+            is_fixed(m[:cap_invest_b][element, t_inv]) &&
+                unfix(m[:cap_invest_b][element, t_inv])
+        end
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_invest_b][node, t_inv], activation[t_inv]; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            value(m[:cap_invest_b][nodes[1], t_inv]) ≈
+                value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            isapprox(value(m[:cap_invest_b][element, t_inv]), activation[t_inv];
+                atol = TEST_ATOL) for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(nodes) * length(𝒯ᴵⁿᵛ)
+    end
+end
+
+
 @testset "Excludes - no binary investment variables" begin
     periods = TwoLevel(2, 1, SimpleTimes(1, 1))
     strategic = collect(strat_periods(periods))
