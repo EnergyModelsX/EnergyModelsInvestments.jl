@@ -1,100 +1,186 @@
 @testset "Max budget" begin
-    periods = TwoLevel(2, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
+    # Investment data with positive costs and continuous capacity additions
+    inv_data = NoStartInvData(
+        FixedProfile(1),
+        FixedProfile(1000),
+        ContinuousInvestment(FixedProfile(0), FixedProfile(1000)),
+    )
 
-    function budget_status(limit)
-        inv_data = NoStartInvData(
-            FixedProfile(1),
-            FixedProfile(1000),
-            ContinuousInvestment(FixedProfile(0), FixedProfile(1000)),
-        )
-        model, para = simple_model(;
-            ts = periods,
+    # A budget below the combined CAPEX is infeasible
+    @testset "Insufficient budget" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
             two_investments = true,
         )
+
+        # Extraction of required data and addition of the investment relation
         nodes = para[:nodes]
-        @constraint(model, model[:cap_capex][nodes[1], strategic[1]] == 100)
-        @constraint(model, model[:cap_capex][nodes[2], strategic[1]] == 100)
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
         investments = [(:cap, node) for node in nodes]
-        max_budget(model, limit, investments, periods)
-        optimize!(model)
-        termination_status(model)
+        max_budget(m, 150, investments, 𝒯)
+        for node ∈ nodes
+            fix(m[:cap_capex][node, first(𝒯ᴵⁿᵛ)], 100; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
     end
 
-    @test budget_status(150) == JuMP.MOI.INFEASIBLE
-    @test budget_status(250) == JuMP.MOI.OPTIMAL
+    # A budget covering the combined CAPEX is feasible
+    @testset "Sufficient budget" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
+            demand = FixedProfile(0),
+            inv_data,
+            two_investments = true,
+        )
 
-    model, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
-    nodes = para[:nodes]
-    @constraint(model, model[:cap_capex][nodes, strategic] .== 100)
-    investments = [(:cap, node) for node in nodes]
-    max_budget(model, 200, investments, periods; sps_spec = strategic[1:1])
-    optimize!(model)
+        # Extraction of required data and addition of the investment relation
+        nodes = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+        investments = [(:cap, node) for node in nodes]
+        max_budget(m, 250, investments, 𝒯)
+        for node ∈ nodes
+            fix(m[:cap_capex][node, first(𝒯ᴵⁿᵛ)], 100; force = true)
+        end
+        optimize!(m)
 
-    @test termination_status(model) == JuMP.MOI.OPTIMAL
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+    end
+
+    # CAPEX outside the selected strategic periods must not consume the budget
+    @testset "Selected periods" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
+            demand = FixedProfile(0),
+            inv_data,
+            two_investments = true,
+        )
+
+        # Extraction of required data and addition of the investment relation
+        nodes = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+        investments = [(:cap, node) for node in nodes]
+        max_budget(m, 200, investments, 𝒯; sps_spec = [first(𝒯ᴵⁿᵛ)])
+        for node ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_capex][node, t_inv], 100; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+    end
 end
 
 @testset "Investment count limits" begin
-    periods = TwoLevel(2, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
+    # Investment data with positive costs and binary investment decisions
     inv_data = NoStartInvData(
         FixedProfile(1),
         FixedProfile(1000),
         BinaryInvestment(FixedProfile(1)),
     )
 
-    function maximum_status(limit)
-        model, para = simple_model(;
-            ts = periods,
+    # A maximum count below the number of active investments is infeasible
+    @testset "Insufficient maximum count" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
             two_investments = true,
         )
+
+        # Extraction of required data and addition of the investment relation
         nodes = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
         investments = [(:cap, node) for node in nodes]
-        for node in nodes
-            @constraint(model, model[:cap_invest_b][node, strategic[1]] == 1)
+        max_investments(m, 1, investments, 𝒯)
+        for node ∈ nodes
+            fix(m[:cap_invest_b][node, first(𝒯ᴵⁿᵛ)], 1; force = true)
         end
-        max_investments(model, limit, investments, periods)
-        optimize!(model)
-        termination_status(model)
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
     end
 
-    @test maximum_status(1) == JuMP.MOI.INFEASIBLE
-    @test maximum_status(2) == JuMP.MOI.OPTIMAL
+    # A maximum count covering all active investments is feasible
+    @testset "Sufficient maximum count" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
+            demand = FixedProfile(0),
+            inv_data,
+            two_investments = true,
+        )
 
-    model, para = simple_model(;
-        ts = periods,
-        demand = FixedProfile(0),
-        inv_data,
-        two_investments = true,
-    )
-    nodes = para[:nodes]
-    investments = [(:cap, node) for node in nodes]
-    for node in nodes
-        @constraint(model, model[:cap_invest_b][node, strategic[1]] == 0)
+        # Extraction of required data and addition of the investment relation
+        nodes = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+        investments = [(:cap, node) for node in nodes]
+        max_investments(m, 2, investments, 𝒯)
+        for node ∈ nodes
+            fix(m[:cap_invest_b][node, first(𝒯ᴵⁿᵛ)], 1; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
     end
-    min_investments(model, 2, investments, periods; sps_spec = strategic[1:1])
-    optimize!(model)
 
-    @test termination_status(model) == JuMP.MOI.INFEASIBLE
+    # A minimum count above the number of active investments is infeasible
+    @testset "Insufficient minimum count" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
+            demand = FixedProfile(0),
+            inv_data,
+            two_investments = true,
+        )
 
-    model, para = simple_model(;
-        ts = periods,
-        demand = FixedProfile(0),
-        inv_data,
-        two_investments = true,
-    )
-    nodes = para[:nodes]
-    investments = [(:cap, node) for node in nodes]
-    @constraint(model, model[:cap_invest_b][nodes[1], strategic[1]] == 1)
-    min_investments(model, 1, investments, periods; sps_spec = strategic[1:1])
-    optimize!(model)
+        # Extraction of required data and addition of the investment relation
+        nodes = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+        investments = [(:cap, node) for node in nodes]
+        min_investments(m, 2, investments, 𝒯; sps_spec = [first(𝒯ᴵⁿᵛ)])
+        for node ∈ nodes
+            fix(m[:cap_invest_b][node, first(𝒯ᴵⁿᵛ)], 0; force = true)
+        end
+        optimize!(m)
 
-    @test termination_status(model) == JuMP.MOI.OPTIMAL
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
+    end
+
+    # A minimum count met by one active investment is feasible
+    @testset "Sufficient minimum count" begin
+        # Creation of the model with positive investment costs and no demand
+        m, para = simple_model(;
+            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
+            demand = FixedProfile(0),
+            inv_data,
+            two_investments = true,
+        )
+
+        # Extraction of required data and addition of the investment relation
+        nodes = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+        investments = [(:cap, node) for node in nodes]
+        min_investments(m, 1, investments, 𝒯; sps_spec = [first(𝒯ᴵⁿᵛ)])
+        fix(m[:cap_invest_b][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
+        fix(m[:cap_invest_b][nodes[2], first(𝒯ᴵⁿᵛ)], 0; force = true)
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+    end
 end
 
 @testset "Requires capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
