@@ -25,15 +25,16 @@ most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
 function max_budget(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{Symbol, <:Any}},
-    𝒯::Union{TwoLevel, TwoLevelTree};
+    investments::Vector{<:Tuple{Symbol,<:Any}},
+    𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
     # Extract the strategic periods and identify the strategic periods to be included
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
-    @constraint(m,
+    @constraint(
+        m,
         sum(
             get_var_capex(m, prefix)[element, t_inv] for
             (prefix, element) in investments, t_inv in sps_select
@@ -77,8 +78,8 @@ limited to `limit` while the invested capacity can be larger if using
 function max_investments(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{Symbol, <:Any}},
-    𝒯::Union{TwoLevel, TwoLevelTree};
+    investments::Vector{<:Tuple{Symbol,<:Any}},
+    𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
     # Extract the strategic periods and identify the strategic periods to be included
@@ -89,7 +90,8 @@ function max_investments(
     for (prefix, element) ∈ investments
         _get_binary_investment(m, prefix, element, 𝒯)
     end
-    return @constraint(m,
+    return @constraint(
+        m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv] for
             (prefix, element) ∈ investments, t_inv ∈ sps_select
@@ -134,8 +136,8 @@ at least the value of `limit` while the invested capacity is not affected using
 function min_investments(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{Symbol, <:Any}},
-    𝒯::Union{TwoLevel, TwoLevelTree};
+    investments::Vector{<:Tuple{Symbol,<:Any}},
+    𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
     # Extract the strategic periods and identify the strategic periods to be included
@@ -146,7 +148,8 @@ function min_investments(
     for (prefix, element) ∈ investments
         _get_binary_investment(m, prefix, element, 𝒯)
     end
-    return @constraint(m,
+    return @constraint(
+        m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv] for
             (prefix, element) ∈ investments, t_inv ∈ sps_select
@@ -196,7 +199,7 @@ function requires_capacity(
     element_dep,
     prefix_pre::Symbol,
     element_pre,
-    𝒯::Union{TwoLevel, TwoLevelTree};
+    𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
     # Extract the strategic periods
@@ -206,7 +209,9 @@ function requires_capacity(
     var_current_dep = get_var_current(m, prefix_dep, element_dep)
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
 
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_dep[t_inv] ≤ capacity_ratio * var_current_pre[t_inv],
     )
 end
@@ -249,7 +254,7 @@ function couple_capacity(
     element_1,
     prefix_2::Symbol,
     element_2,
-    𝒯::Union{TwoLevel, TwoLevelTree};
+    𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
     # Extract the strategic periods
@@ -259,7 +264,9 @@ function couple_capacity(
     var_current_1 = get_var_current(m, prefix_1, element_1)
     var_current_2 = get_var_current(m, prefix_2, element_2)
 
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_1[t_inv] == capacity_ratio * var_current_2[t_inv],
     )
 end
@@ -275,7 +282,7 @@ are included.
 """
 function _predecessor_periods(𝒯::TwoLevel)
     sps = collect(strat_periods(𝒯))
-    return Dict(t_inv => sps[1:idx-1] for (idx, t_inv) ∈ enumerate(sps))
+    return Dict(t_inv => sps[1:(idx-1)] for (idx, t_inv) ∈ enumerate(sps))
 end
 function _predecessor_periods(𝒯::TwoLevelTree)
     sps_pre = Dict()
@@ -330,7 +337,7 @@ function precede_capacity(
     element_dep,
     prefix_pre::Symbol,
     element_pre,
-    𝒯::Union{TwoLevel, TwoLevelTree};
+    𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
     # Extract the strategic periods and identify the predecessor periods for each strategic
@@ -343,13 +350,15 @@ function precede_capacity(
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
     var_add_pre = get_var_add(m, prefix_pre, element_pre)
 
-    return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    return @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_dep[t_inv] ≤
-            capacity_ratio * (var_current_pre[t_inv] - var_add_pre[t_inv]),
+        capacity_ratio * (var_current_pre[t_inv] - var_add_pre[t_inv]),
     )
 end
 
-function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel, TwoLevelTree})
+function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel,TwoLevelTree})
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
@@ -406,14 +415,16 @@ function require_investment(
     element_dep,
     prefix_pre::Symbol,
     element_pre,
-    𝒯::Union{TwoLevel, TwoLevelTree},
+    𝒯::Union{TwoLevel,TwoLevelTree},
 )
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     var_invest_b_dep = _get_binary_investment(m, prefix_dep, element_dep, 𝒯)
     var_invest_b_pre = _get_binary_investment(m, prefix_pre, element_pre, 𝒯)
 
-    return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    return @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_invest_b_dep[element_dep, t_inv] ≤ var_invest_b_pre[element_pre, t_inv],
     )
 end
@@ -455,14 +466,16 @@ function couple_investment(
     element_1,
     prefix_2::Symbol,
     element_2,
-    𝒯::Union{TwoLevel, TwoLevelTree},
+    𝒯::Union{TwoLevel,TwoLevelTree},
 )
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     var_invest_b_1 = _get_binary_investment(m, prefix_1, element_1, 𝒯)
     var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
 
-    return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    return @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_invest_b_1[element_1, t_inv] == var_invest_b_2[element_2, t_inv],
     )
 end
@@ -500,7 +513,7 @@ function excludes_capacity(
     element_1,
     prefix_2::Symbol,
     element_2,
-    𝒯::Union{TwoLevel, TwoLevelTree},
+    𝒯::Union{TwoLevel,TwoLevelTree},
 )
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
@@ -510,7 +523,9 @@ function excludes_capacity(
     var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
 
     # Add the constraint that only one investment can happen in each strategic period
-    return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+    return @constraint(
+        m,
+        [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_invest_b_1[element_1, t_inv] + var_invest_b_2[element_2, t_inv] ≤ 1,
     )
 end

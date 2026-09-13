@@ -204,10 +204,14 @@ end
         @test termination_status(m) == JuMP.MOI.OPTIMAL
         @test sum(
             value(m[:cap_current][nodes[1], t_inv]) ≲
-                capacity_ratio * value(m[:cap_current][nodes[2], t_inv])
-            for t_inv ∈ 𝒯ᴵⁿᵛ
+            capacity_ratio * value(m[:cap_current][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
         ) == length(𝒯ᴵⁿᵛ)
-        @test matches_profile(m[:cap_current], nodes[2], capacity * (1 / capacity_ratio), 𝒯ᴵⁿᵛ)
+        @test matches_profile(
+            m[:cap_current],
+            nodes[2],
+            capacity * (1 / capacity_ratio),
+            𝒯ᴵⁿᵛ,
+        )
     end
 
     # Prerequisite capacity alone must not force dependent capacity
@@ -255,9 +259,11 @@ end
 
         @test termination_status(m) == JuMP.MOI.OPTIMAL
         @test sum(
-            isapprox(value(m[:cap_current][nodes[1], t_inv]),
+            isapprox(
+                value(m[:cap_current][nodes[1], t_inv]),
                 capacity_ratio * value(m[:cap_current][nodes[2], t_inv]);
-                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+                atol = TEST_ATOL,
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
         ) == length(𝒯ᴵⁿᵛ)
         @test matches_profile(m[:cap_current], node, capacity, 𝒯ᴵⁿᵛ)
     end
@@ -295,17 +301,20 @@ end
     @testset "Earlier prerequisite capacity" begin
         for t_inv ∈ 𝒯ᴵⁿᵛ
             fix(m[:cap_current][nodes[1], t_inv], capacity[t_inv]; force = true)
-            fix(m[:cap_current][nodes[2], t_inv], prerequisite[t_inv] / capacity_ratio;
-                force = true)
+            fix(
+                m[:cap_current][nodes[2], t_inv],
+                prerequisite[t_inv] / capacity_ratio;
+                force = true,
+            )
         end
         optimize!(m)
 
         @test termination_status(m) == JuMP.MOI.OPTIMAL
         @test sum(
-            value(m[:cap_current][nodes[1], t_inv]) ≲ capacity_ratio * (
-                value(m[:cap_current][nodes[2], t_inv]) -
-                value(m[:cap_add][nodes[2], t_inv])
-            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+            value(m[:cap_current][nodes[1], t_inv]) ≲
+            capacity_ratio *
+            (value(m[:cap_current][nodes[2], t_inv]) - value(m[:cap_add][nodes[2], t_inv]))
+            for t_inv ∈ 𝒯ᴵⁿᵛ
         ) == length(𝒯ᴵⁿᵛ)
         @test matches_profile(m[:cap_current], nodes[1], capacity, 𝒯ᴵⁿᵛ)
     end
@@ -313,8 +322,11 @@ end
     # Prerequisite additions in the same period cannot support dependent capacity
     @testset "Same-period prerequisite capacity" begin
         for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_current][nodes[2], t_inv], capacity[t_inv] / capacity_ratio;
-                force = true)
+            fix(
+                m[:cap_current][nodes[2], t_inv],
+                capacity[t_inv] / capacity_ratio;
+                force = true,
+            )
         end
         optimize!(m)
 
@@ -322,8 +334,11 @@ end
     end
 end
 
-@testset "Capacity retention - $relation" for
-    relation ∈ [requires_capacity, precede_capacity, couple_capacity]
+@testset "Capacity retention - $relation" for relation ∈ [
+    requires_capacity,
+    precede_capacity,
+    couple_capacity,
+]
     # Creation of the model with early retirement and an incentive to avoid fixed OPEX
     inv_data = NoStartInvData(
         FixedProfile(1000),
@@ -354,8 +369,7 @@ end
     for t_inv ∈ 𝒯ᴵⁿᵛ
         fix(m[:cap_add][nodes[2], t_inv], prerequisite_add[t_inv]; force = true)
         fix(m[:cap_add][nodes[1], t_inv], dependent_add[t_inv]; force = true)
-        fix(m[:cap_current][nodes[1], t_inv], dependent_capacity[t_inv];
-            force = true)
+        fix(m[:cap_current][nodes[1], t_inv], dependent_capacity[t_inv]; force = true)
     end
     optimize!(m)
     objective_without_relation = objective_value(m)
@@ -411,8 +425,8 @@ end
         @test termination_status(m) == JuMP.MOI.OPTIMAL
         @test matches_profile(m[:cap_invest_b], node, activation, 𝒯ᴵⁿᵛ)
         @test all(
-            matches_profile(m[:cap_invest_b], element, FixedProfile(0), 𝒯ᴵⁿᵛ)
-            for element ∈ setdiff(nodes, [node])
+            matches_profile(m[:cap_invest_b], element, FixedProfile(0), 𝒯ᴵⁿᵛ) for
+            element ∈ setdiff(nodes, [node])
         )
     end
 end
@@ -443,7 +457,7 @@ end
         @test termination_status(m) == JuMP.MOI.OPTIMAL
         @test sum(
             value(m[:cap_invest_b][nodes[1], t_inv]) ≲
-                value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
+            value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
         ) == length(𝒯ᴵⁿᵛ)
         @test matches_profile(m[:cap_invest_b], nodes[2], activation, 𝒯ᴵⁿᵛ)
     end
@@ -491,11 +505,10 @@ end
         @test termination_status(m) == JuMP.MOI.OPTIMAL
         @test sum(
             value(m[:cap_invest_b][nodes[1], t_inv]) ≈
-                value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
+            value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
         ) == length(𝒯ᴵⁿᵛ)
         @test all(
-            matches_profile(m[:cap_invest_b], element, activation, 𝒯ᴵⁿᵛ)
-            for element ∈ nodes
+            matches_profile(m[:cap_invest_b], element, activation, 𝒯ᴵⁿᵛ) for element ∈ nodes
         )
     end
 end
