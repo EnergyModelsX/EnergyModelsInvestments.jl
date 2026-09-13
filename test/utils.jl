@@ -112,6 +112,18 @@ function simple_model(;
     return m, para
 end
 
+"""
+    matches_profile(variables, element, profile, periods; atol = TEST_ATOL)
+
+Return whether the solved variable values match the profile in every period.
+"""
+function matches_profile(variables, element, profile, periods; atol = TEST_ATOL)
+    return all(
+        isapprox(value(variables[element, period]), profile[period]; atol)
+        for period ∈ periods
+    )
+end
+
 # Function required for utilizing EnergyModelsInvestments
 EMI.start_cap(n::SimpleNode, t_inv, inv_data::NoStartInvData, cap) = n.cap[t_inv]
 
