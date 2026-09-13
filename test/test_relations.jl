@@ -171,44 +171,43 @@ end
     @test termination_status(feasible) == JuMP.MOI.OPTIMAL
 end
 
-@testset "Excludes" begin
-    periods = TwoLevel(2, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
+@testset "Excludes capacity" begin
+    # Creation of the model with positive investment costs and no demand
     inv_data = NoStartInvData(
         FixedProfile(1),
         FixedProfile(1000),
-        SemiContinuousInvestment(FixedProfile(0), FixedProfile(10)),
+        SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
     )
+    m, para = simple_model(; demand = FixedProfile(0), inv_data, two_investments = true)
 
-    infeasible, para = simple_model(;
-        ts = periods,
-        demand = FixedProfile(0),
-        inv_data,
-        two_investments = true,
-    )
+    # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
-    excludes_capacity(infeasible, :cap, nodes[1], :cap, nodes[2], periods)
-    @constraint(infeasible, infeasible[:cap_invest_b][nodes[1], strategic[1]] == 1)
-    @constraint(infeasible, infeasible[:cap_invest_b][nodes[2], strategic[1]] == 1)
-    @objective(infeasible, Min, 0)
-    optimize!(infeasible)
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    activation = StrategicProfile([0, 1, 0, 1])
+    excludes_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
 
-    @test termination_status(infeasible) == JuMP.MOI.INFEASIBLE
+    # Either element can activate, but its partner must remain inactive
+    @testset "Activation by element $node" for node ∈ nodes
+        for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
+            is_fixed(m[:cap_invest_b][element, t_inv]) &&
+                unfix(m[:cap_invest_b][element, t_inv])
+        end
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_invest_b][node, t_inv], activation[t_inv]; force = true)
+        end
+        optimize!(m)
 
-    feasible, para = simple_model(;
-        ts = periods,
-        demand = FixedProfile(0),
-        inv_data,
-        two_investments = true,
-    )
-    nodes = para[:nodes]
-    excludes_capacity(feasible, :cap, nodes[1], :cap, nodes[2], periods)
-    @constraint(feasible, feasible[:cap_invest_b][nodes[1], strategic[1]] == 1)
-    @objective(feasible, Min, 0)
-    optimize!(feasible)
-
-    @test termination_status(feasible) == JuMP.MOI.OPTIMAL
-    @test value(feasible[:cap_invest_b][nodes[2], strategic[1]]) ≈ 0
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            isapprox(value(m[:cap_invest_b][node, t_inv]), activation[t_inv];
+                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            isapprox(value(m[:cap_invest_b][element, t_inv]), 0; atol = TEST_ATOL)
+            for element ∈ setdiff(nodes, [node]), t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
 end
 
 @testset "Require investment" begin
@@ -301,10 +300,10 @@ end
 end
 
 
-@testset "Excludes - no binary investment variables" begin
+@testset "Binary relations - no binary investment variables" begin
     periods = TwoLevel(2, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
 
+    # Discrete investments do not create binary investment variables
     inv_data = NoStartInvData(
         FixedProfile(1),
         FixedProfile(1000),
@@ -318,7 +317,25 @@ end
     )
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
+
+    # Binary relations require binary investment variables for both elements
     @test_throws ArgumentError excludes_capacity(
+        integer_model,
+        :cap,
+        nodes[1],
+        :cap,
+        nodes[2],
+        periods,
+    )
+    @test_throws ArgumentError require_investment(
+        integer_model,
+        :cap,
+        nodes[1],
+        :cap,
+        nodes[2],
+        periods,
+    )
+    @test_throws ArgumentError couple_investment(
         integer_model,
         :cap,
         nodes[1],
@@ -329,11 +346,30 @@ end
     @test_throws ArgumentError max_investments(integer_model, 1, investments, periods)
     @test_throws ArgumentError min_investments(integer_model, 1, investments, periods)
 
+    # Models without investment data also lack binary investment variables
     missing_model, para =
         simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
+
+    # Every binary relation must reject models without binary investment variables
     @test_throws ArgumentError excludes_capacity(
+        missing_model,
+        :cap,
+        nodes[1],
+        :cap,
+        nodes[2],
+        periods,
+    )
+    @test_throws ArgumentError require_investment(
+        missing_model,
+        :cap,
+        nodes[1],
+        :cap,
+        nodes[2],
+        periods,
+    )
+    @test_throws ArgumentError couple_investment(
         missing_model,
         :cap,
         nodes[1],
