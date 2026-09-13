@@ -97,78 +97,155 @@ end
     @test termination_status(model) == JuMP.MOI.OPTIMAL
 end
 
-@testset "Requires capacity" begin
-    periods = TwoLevel(2, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
+@testset "Requires capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
+    # Creation of the model with positive investment costs and no demand
+    m, para = simple_model(; demand = FixedProfile(0), two_investments = true)
 
-    infeasible, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
+    # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
-    requires_capacity(infeasible, :cap, nodes[1], :cap, nodes[2], periods)
-    @constraint(infeasible, infeasible[:cap_current][nodes[1], strategic[1]] == 1)
-    @constraint(infeasible, infeasible[:cap_current][nodes[2], strategic[1]] == 0)
-    optimize!(infeasible)
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    capacity = StrategicProfile([0, 2, 4, 6])
+    requires_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯; capacity_ratio)
 
-    @test termination_status(infeasible) == JuMP.MOI.INFEASIBLE
+    # Dependent capacity must be supported by prerequisite capacity in each period
+    @testset "Dependent capacity" begin
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_current][nodes[1], t_inv], capacity[t_inv]; force = true)
+        end
+        optimize!(m)
 
-    feasible, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
-    nodes = para[:nodes]
-    requires_capacity(feasible, :cap, nodes[1], :cap, nodes[2], periods; capacity_ratio = 2)
-    @constraint(feasible, feasible[:cap_current][nodes[1], strategic[1]] == 2)
-    @constraint(feasible, feasible[:cap_current][nodes[2], strategic[1]] == 1)
-    optimize!(feasible)
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            value(m[:cap_current][nodes[1], t_inv]) ≲
+                capacity_ratio * value(m[:cap_current][nodes[2], t_inv])
+            for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            isapprox(value(m[:cap_current][nodes[2], t_inv]), capacity[t_inv] / capacity_ratio;
+                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
 
-    @test termination_status(feasible) == JuMP.MOI.OPTIMAL
+    # Prerequisite capacity alone must not force dependent capacity
+    @testset "Prerequisite capacity" begin
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            unfix(m[:cap_current][nodes[1], t_inv])
+            fix(m[:cap_current][nodes[2], t_inv], capacity[t_inv]; force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            isapprox(value(m[:cap_current][nodes[1], t_inv]), 0; atol = TEST_ATOL)
+            for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
+
+    # Dependent capacity without supporting prerequisite capacity is infeasible
+    @testset "Unsupported capacity" begin
+        fix(m[:cap_current][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
+    end
 end
 
-@testset "Couple capacity" begin
-    periods = TwoLevel(2, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
+@testset "Couple capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
+    # Creation of the model with positive investment costs and no demand
+    m, para = simple_model(; demand = FixedProfile(0), two_investments = true)
 
-    infeasible, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
+    # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
-    couple_capacity(infeasible, :cap, nodes[1], :cap, nodes[2], periods)
-    @constraint(infeasible, infeasible[:cap_current][nodes[1], strategic[1]] == 1)
-    @constraint(infeasible, infeasible[:cap_current][nodes[2], strategic[1]] == 0)
-    optimize!(infeasible)
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    capacity = StrategicProfile([0, 2, 4, 6])
+    couple_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯; capacity_ratio)
 
-    @test termination_status(infeasible) == JuMP.MOI.INFEASIBLE
+    # Either element must establish the corresponding capacity of its partner
+    @testset "Capacity by element $node" for node ∈ nodes
+        for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
+            is_fixed(m[:cap_current][element, t_inv]) &&
+                unfix(m[:cap_current][element, t_inv])
+        end
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_current][node, t_inv], capacity[t_inv]; force = true)
+        end
+        optimize!(m)
 
-    feasible, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
-    nodes = para[:nodes]
-    couple_capacity(feasible, :cap, nodes[1], :cap, nodes[2], periods; capacity_ratio = 2)
-    @constraint(feasible, feasible[:cap_current][nodes[1], strategic[1]] == 2)
-    @constraint(feasible, feasible[:cap_current][nodes[2], strategic[1]] == 1)
-    optimize!(feasible)
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            isapprox(value(m[:cap_current][nodes[1], t_inv]),
+                capacity_ratio * value(m[:cap_current][nodes[2], t_inv]);
+                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            isapprox(value(m[:cap_current][node, t_inv]), capacity[t_inv];
+                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
 
-    @test termination_status(feasible) == JuMP.MOI.OPTIMAL
+    # Capacities that violate the coupling ratio are infeasible
+    @testset "Mismatched capacity" begin
+        fix(m[:cap_current][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
+    end
 end
 
-@testset "Precede capacity" begin
-    periods = TwoLevel(3, 1, SimpleTimes(1, 1))
-    strategic = collect(strat_periods(periods))
+@testset "Precede capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
+    # Creation of the model with positive investment costs and no demand
+    m, para = simple_model(; demand = FixedProfile(0), two_investments = true)
 
-    infeasible, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
+    # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
-    precede_capacity(infeasible, :cap, nodes[1], :cap, nodes[2], periods)
-    @constraint(infeasible, infeasible[:cap_add][nodes[1], strategic[1]] == 1)
-    optimize!(infeasible)
+    𝒯 = para[:T]
+    𝒯ᴵⁿᵛ = strat_periods(𝒯)
+    capacity = StrategicProfile([0, 2, 4, 6])
+    prerequisite = StrategicProfile([2, 4, 6, 6])
+    precede_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯; capacity_ratio)
 
-    @test termination_status(infeasible) == JuMP.MOI.INFEASIBLE
+    # Without initial capacity, dependent capacity cannot exist in the first period
+    @testset "First-period capacity" begin
+        fix(m[:cap_current][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
+        optimize!(m)
 
-    feasible, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
-    nodes = para[:nodes]
-    precede_capacity(feasible, :cap, nodes[1], :cap, nodes[2], periods)
-    @constraint(feasible, feasible[:cap_add][nodes[1], strategic[2]] == 1)
-    @constraint(feasible, feasible[:cap_current][nodes[2], strategic[1]] == 1)
-    optimize!(feasible)
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
+    end
 
-    @test termination_status(feasible) == JuMP.MOI.OPTIMAL
+    # Earlier prerequisite additions must support dependent capacity in later periods
+    @testset "Earlier prerequisite capacity" begin
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_current][nodes[1], t_inv], capacity[t_inv]; force = true)
+            fix(m[:cap_current][nodes[2], t_inv], prerequisite[t_inv] / capacity_ratio;
+                force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.OPTIMAL
+        @test sum(
+            value(m[:cap_current][nodes[1], t_inv]) ≲ capacity_ratio * (
+                value(m[:cap_current][nodes[2], t_inv]) -
+                value(m[:cap_add][nodes[2], t_inv])
+            ) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+        @test sum(
+            isapprox(value(m[:cap_current][nodes[1], t_inv]), capacity[t_inv];
+                atol = TEST_ATOL) for t_inv ∈ 𝒯ᴵⁿᵛ
+        ) == length(𝒯ᴵⁿᵛ)
+    end
+
+    # Prerequisite additions in the same period cannot support dependent capacity
+    @testset "Same-period prerequisite capacity" begin
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            fix(m[:cap_current][nodes[2], t_inv], capacity[t_inv] / capacity_ratio;
+                force = true)
+        end
+        optimize!(m)
+
+        @test termination_status(m) == JuMP.MOI.INFEASIBLE
+    end
 end
 
 @testset "Excludes capacity" begin
