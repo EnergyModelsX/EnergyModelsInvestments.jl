@@ -299,28 +299,30 @@ end
         capacity_ratio::Number = 1,
     )
 
-Require prerequisite capacity, specified by `prefix_pre`, of element `element_pre` to exist
-before a capacity, specified by `prefix_dep`, can be added to a dependent investment element
-`element_dep`.
+Require all installed dependent capacity, specified by `prefix_dep`, of element `element_dep`
+to have prerequisite capacity, specified by `prefix_pre`, of `element_pre` available in the
+same strategic period, excluding prerequisite additions made in that period.
+
+This requirement applies in every strategic period, including to initial dependent capacity.
+Initial prerequisite capacity can provide support in the first period.
 
 The default `capacity_ratio = 1` is appropriate when both capacities use the same unit.
-Set it explicitly when one unit of prerequisite capacity supports a different amount of
-dependent capacity. The first strategic period on every path cannot receive dependent
-capacity through this relation.
+Set it explicitly when one unit of the second investment corresponds to a different amount
+of the first investment.
 
 # Arguments
 - `m`: the JuMP model instance.
 - `prefix_dep::Symbol`: the prefix used to identify the dependent capacity variable family.
-- `element_dep`: the element receiving the capacity addition.
+- `element_dep`: the element whose installed capacity requires support.
 - `prefix_pre::Symbol`: the prefix used to identify the prerequisite capacity variable
   family.
 - `element_pre`: the element whose installed capacity must already exist.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
-  and scenario paths used to determine predecessor periods.
+  over which this relation is applied.
 
 # Keyword arguments
-- `capacity_ratio`: the maximum dependent capacity addition supported by one unit of
-  prerequisite capacity from earlier periods. The value must be positive.
+- `capacity_ratio`: maximum dependent installed capacity supported per unit of available
+  prerequisite capacity.
 """
 function precede_capacity(
     m,
@@ -337,13 +339,13 @@ function precede_capacity(
     sps_pre = _predecessor_periods(𝒯)
 
     # Extract the variables
-    var_add_dep = get_var_add(m, prefix_dep, element_dep)
+    var_current_dep = get_var_current(m, prefix_dep, element_dep)
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
+    var_add_pre = get_var_add(m, prefix_pre, element_pre)
 
     return @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_add_dep[t_inv] ≤
-            capacity_ratio *
-            sum(var_current_pre[prev] for prev ∈ sps_pre[t_inv]; init = 0),
+        var_current_dep[t_inv] ≤
+            capacity_ratio * (var_current_pre[t_inv] - var_add_pre[t_inv]),
     )
 end
 
