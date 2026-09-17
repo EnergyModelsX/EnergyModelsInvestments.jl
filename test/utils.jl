@@ -25,7 +25,7 @@ SimpleNode(cap::TimeProfile) = SimpleNode(cap, 1)
         fixed_opex = FixedProfile(0),
         disc_rate = 0.05,
         ret_cost = 0.2,
-        two_investments = false,
+        num_invest = 1,
     )
 
 Create a simple JuMP model that is utilized for testing the individual functionality of the
@@ -46,8 +46,12 @@ function simple_model(;
     fixed_opex = FixedProfile(0),
     disc_rate = 0.05,
     ret_cost = 0.2,
-    two_investments = false,
+    num_invest = 1,
 )
+    # Modification of the input if required
+    if isa(fixed_opex, TimeProfile)
+        fixed_opex = [fixed_opex for _ ∈ 1:num_invest]
+    end
 
     # Creation of the model and extraction of strategic periods
     m = JuMP.Model()
@@ -56,16 +60,13 @@ function simple_model(;
     disc = Discounter(disc_rate, 𝒯)
 
     # Call of the function for variable declaration
-    nodes =
-        two_investments ? [SimpleNode(initial, 1), SimpleNode(initial, 2)] :
-        [SimpleNode(initial)]
-    n = first(nodes)
+    nodes = [SimpleNode(initial, k) for k ∈ 1:num_invest]
     variables(m, nodes, 𝒯)
 
     # Create the optimization problem
     @constraint(m, [t ∈ 𝒯],
         sum(m[:cap_use][node, t] for node ∈ nodes) + m[:deficit][t] ==
-        demand[t] + m[:surplus][t]
+            demand[t] + m[:surplus][t]
     )
     @constraint(m, [node ∈ nodes, t ∈ 𝒯], m[:cap_use][node, t] ≤ m[:cap_inst][node, t])
 
@@ -77,28 +78,34 @@ function simple_model(;
     # Calculation of the OPEX contribution
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         m[:opex][t_inv] ==
-        sum(
-            (m[:deficit][t] * penalty_deficit[t] + m[:surplus][t] * penalty_surplus[t]) *
-            duration(t) * multiple_strat(t_inv, t)
-        for t ∈ t_inv) +
-        sum(m[:cap_current][node, t_inv] for node ∈ nodes) * fixed_opex[t_inv]
-    )
+            sum(
+                (m[:deficit][t] * penalty_deficit[t] + m[:surplus][t] * penalty_surplus[t]) *
+                duration(t) * multiple_strat(t_inv, t)
+            for t ∈ t_inv) +
+            sum(
+                m[:cap_current][node, t_inv]* fixed_opex[k][t_inv]
+            for (k, node) ∈ enumerate(nodes))
+        )
 
     # Calculation of the objective function.
     @objective(m, Max,
         -sum(
             m[:opex][t_inv] * duration_strat(t_inv) *
-            objective_weight(t_inv, disc; type = "avg") +
+                objective_weight(t_inv, disc; type = "avg") +
             sum(m[:cap_capex][node, t_inv] for node ∈ nodes) *
-            objective_weight(t_inv, disc) for t_inv ∈ 𝒯ᴵⁿᵛ
-        )
+                objective_weight(t_inv, disc)
+         for t_inv ∈ 𝒯ᴵⁿᵛ)
     )
     set_optimizer(m, HiGHS.Optimizer)
     set_optimizer_attribute(m, MOI.Silent(), true)
     optimize!(m)
 
+    # Reset the fixed opex, if only a single node is used
+    if num_invest == 1
+        fixed_opex = fixed_opex[1]
+    end
     para = Dict(
-        :node => n,
+        :node => first(nodes),
         :nodes => nodes,
         :T => 𝒯,
         :initial => initial,

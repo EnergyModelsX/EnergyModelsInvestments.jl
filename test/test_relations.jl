@@ -13,7 +13,7 @@
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -37,7 +37,7 @@
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -61,7 +61,7 @@
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -94,7 +94,7 @@ end
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -118,7 +118,7 @@ end
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -142,7 +142,7 @@ end
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -166,7 +166,7 @@ end
             ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
             demand = FixedProfile(0),
             inv_data,
-            two_investments = true,
+            num_invest = 2,
         )
 
         # Extraction of required data and addition of the investment relation
@@ -185,7 +185,7 @@ end
 
 @testset "Requires capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
     # Creation of the model with positive investment costs and no demand
-    m, para = simple_model(; demand = FixedProfile(0), two_investments = true)
+    m, para = simple_model(; demand = FixedProfile(0), num_invest = 2)
 
     # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
@@ -237,7 +237,7 @@ end
 
 @testset "Couple capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
     # Creation of the model with positive investment costs and no demand
-    m, para = simple_model(; demand = FixedProfile(0), two_investments = true)
+    m, para = simple_model(; demand = FixedProfile(0), num_invest = 2)
 
     # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
@@ -279,7 +279,7 @@ end
 
 @testset "Precede capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
     # Creation of the model with positive investment costs and no demand
-    m, para = simple_model(; demand = FixedProfile(0), two_investments = true)
+    m, para = simple_model(; demand = FixedProfile(0), num_invest = 2)
 
     # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
@@ -350,7 +350,7 @@ end
         demand = FixedProfile(0),
         fixed_opex = FixedProfile(10),
         inv_data,
-        two_investments = true,
+        num_invest = 2,
     )
 
     # Extraction of required data and prevention of replacement investments
@@ -402,7 +402,7 @@ end
         FixedProfile(1000),
         SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
     )
-    m, para = simple_model(; demand = FixedProfile(0), inv_data, two_investments = true)
+    m, para = simple_model(; demand = FixedProfile(0), inv_data, num_invest = 2)
 
     # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
@@ -438,7 +438,7 @@ end
         FixedProfile(1000),
         SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
     )
-    m, para = simple_model(; demand = FixedProfile(0), inv_data, two_investments = true)
+    m, para = simple_model(; demand = FixedProfile(0), inv_data, num_invest = 2)
 
     # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
@@ -482,7 +482,7 @@ end
         FixedProfile(1000),
         SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
     )
-    m, para = simple_model(; demand = FixedProfile(0), inv_data, two_investments = true)
+    m, para = simple_model(; demand = FixedProfile(0), inv_data, num_invest = 2)
 
     # Extraction of required data and addition of the investment relation
     nodes = para[:nodes]
@@ -527,7 +527,7 @@ end
         ts = periods,
         demand = FixedProfile(0),
         inv_data,
-        two_investments = true,
+        num_invest = 2,
     )
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
@@ -562,7 +562,7 @@ end
 
     # Models without investment data also lack binary investment variables
     missing_model, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), two_investments = true)
+        simple_model(; ts = periods, demand = FixedProfile(0), num_invest = 2)
     nodes = para[:nodes]
     investments = [(:cap, node) for node in nodes]
 
