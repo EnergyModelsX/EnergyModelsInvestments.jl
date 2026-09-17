@@ -33,11 +33,11 @@ function max_budget(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
-    @constraint(
-        m,
+    # Add the constraint on the total budget
+    @constraint(m,
         sum(
             get_var_capex(m, prefix)[element, t_inv] for
-            (prefix, element) in investments, t_inv in sps_select
+            (prefix, element) ∈ investments, t_inv ∈ sps_select
         ) ≤ limit,
     )
 end
@@ -53,6 +53,7 @@ end
 
 Constrain the total number of investments for `investments` across the selected strategic
 periods to be at most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
+
 This implies that the number of investment actions across the selected strategic periods is
 limited to `limit` while the invested capacity can be larger if using
 [`SemiContinuousInvestment`](@ref) or [`SemiContinuousOffsetInvestment`](@ref).
@@ -90,8 +91,9 @@ function max_investments(
     for (prefix, element) ∈ investments
         _get_binary_investment(m, prefix, element, 𝒯)
     end
-    return @constraint(
-        m,
+
+    # Add the constraint on the total limit
+    @constraint(m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv] for
             (prefix, element) ∈ investments, t_inv ∈ sps_select
@@ -148,8 +150,9 @@ function min_investments(
     for (prefix, element) ∈ investments
         _get_binary_investment(m, prefix, element, 𝒯)
     end
-    return @constraint(
-        m,
+
+    # Add the constraint on the minimum limit
+    @constraint(m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv] for
             (prefix, element) ∈ investments, t_inv ∈ sps_select
@@ -170,9 +173,9 @@ end
     )
 
 Require the installed capacity of one investment to be supported by another investment.
-For each selected strategic period, the dependent capacity specified by `prefix_dep` for
-element `element_dep` must be at most `capacity_ratio` times the prerequisite capacity
-specified by `prefix_pre` for element `element_pre`.
+For each strategic period, the dependent capacity specified by `prefix_dep` for element
+`element_dep` must be at most `capacity_ratio` times the prerequisite capacity specified by
+`prefix_pre` for element `element_pre`.
 
 The default `capacity_ratio = 1` is appropriate when both capacities use the same unit.
 Set it explicitly when one unit of prerequisite capacity supports a different amount of
@@ -209,9 +212,8 @@ function requires_capacity(
     var_current_dep = get_var_current(m, prefix_dep, element_dep)
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
 
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    # Add the constraint on the upper limit on the capacity ratio
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_dep[t_inv] ≤ capacity_ratio * var_current_pre[t_inv],
     )
 end
@@ -227,7 +229,9 @@ end
         capacity_ratio::Number = 1,
     )
 
-Couple the installed capacities of two investments.
+Couple the installed capacities of two investments. This implies that the capacities (given
+by `prefix_1` and `prefix_2`) of the two technologies (`element_1` and `element_2`) must be
+equal in each strategic period.
 
 The default `capacity_ratio = 1` is appropriate when both capacities use the same unit.
 Set it explicitly when one unit of the second investment corresponds to a different amount
@@ -264,9 +268,8 @@ function couple_capacity(
     var_current_1 = get_var_current(m, prefix_1, element_1)
     var_current_2 = get_var_current(m, prefix_2, element_2)
 
-    @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    # Add the constraint on the capacity ratio
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_1[t_inv] == capacity_ratio * var_current_2[t_inv],
     )
 end
@@ -307,7 +310,7 @@ end
     )
 
 Require all installed dependent capacity, specified by `prefix_dep`, of element `element_dep`
-to have prerequisite capacity, specified by `prefix_pre`, of `element_pre` available in the
+to have a prerequisite capacity, specified by `prefix_pre`, of `element_pre` available in the
 same strategic period, excluding prerequisite additions made in that period.
 
 This requirement applies in every strategic period, including to initial dependent capacity.
@@ -350,11 +353,10 @@ function precede_capacity(
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
     var_add_pre = get_var_add(m, prefix_pre, element_pre)
 
-    return @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    # Add the constraint on the dependency on the initial capacity in the sp
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_dep[t_inv] ≤
-        capacity_ratio * (var_current_pre[t_inv] - var_add_pre[t_inv]),
+            capacity_ratio * (var_current_pre[t_inv] - var_add_pre[t_inv]),
     )
 end
 
@@ -387,9 +389,14 @@ end
         𝒯::Union{TwoLevel, TwoLevelTree},
     )
 
-Require the prerequisite investment binary to be active whenever the dependent investment
-binary is active in the same strategic period. The prerequisite binary may be active
-without the dependent binary being active. This relation does not constrain capacity ratios.
+Require investments to the prerequisite technology, specified by `prefix_dep` and element
+`element_dep`, whenever there should be ivnestments to the dependent technology, specified
+by `prefix_pre` and element `element_pre`, in the same strategic period.
+
+However, it is possible to have capacity additions in the prerequisite investment without
+additions in the dependent investment.
+
+The actual capacity additions are not affected, only if there are capacity additions.
 
 !!! warning "Supported investment modes"
     This relation requires binary `*_invest_b` variables for both elements and all strategic
@@ -417,14 +424,15 @@ function require_investment(
     element_pre,
     𝒯::Union{TwoLevel,TwoLevelTree},
 )
+    # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Extract the variables
     var_invest_b_dep = _get_binary_investment(m, prefix_dep, element_dep, 𝒯)
     var_invest_b_pre = _get_binary_investment(m, prefix_pre, element_pre, 𝒯)
 
-    return @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    # Add the constraint on the dependency of investment actions
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_invest_b_dep[element_dep, t_inv] ≤ var_invest_b_pre[element_pre, t_inv],
     )
 end
@@ -439,8 +447,11 @@ end
         𝒯::Union{TwoLevel, TwoLevelTree},
     )
 
-Couple two investment binaries. For each strategic period, both binaries must be active
-or both must be inactive. The capacities of the two investments can be sized independently.
+Couple two investments, specified by `prefix_1` and element `element_1` as well as
+`prefix_2` and element `element_2`. For each strategic period, it is only possible to
+invest in both investments or in none of the technologies.
+
+The actual capacity additions are not affected, only if there are capacity additions.
 
 !!! warning "Supported investment modes"
     This relation requires binary `*_invest_b` variables for both elements and all strategic
@@ -468,14 +479,15 @@ function couple_investment(
     element_2,
     𝒯::Union{TwoLevel,TwoLevelTree},
 )
+    # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Extract the variables
     var_invest_b_1 = _get_binary_investment(m, prefix_1, element_1, 𝒯)
     var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
 
-    return @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    # Add the constraint on the dependency of investment actions
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_invest_b_1[element_1, t_inv] == var_invest_b_2[element_2, t_inv],
     )
 end
@@ -490,7 +502,8 @@ end
         𝒯::Union{TwoLevel, TwoLevelTree},
     )
 
-Make two investments mutually exclusive. For each strategic period, at most one of the
+Make two investments, specified by `prefix_1` and element `element_1` as well as `prefix_2`
+and element `element_2`, mutually exclusive. For each strategic period, at most one of the
 two binary investment decision variables may be active.
 
 !!! warning "Supported investment modes"
@@ -523,9 +536,7 @@ function excludes_capacity(
     var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
 
     # Add the constraint that only one investment can happen in each strategic period
-    return @constraint(
-        m,
-        [t_inv ∈ 𝒯ᴵⁿᵛ],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_invest_b_1[element_1, t_inv] + var_invest_b_2[element_2, t_inv] ≤ 1,
     )
 end
