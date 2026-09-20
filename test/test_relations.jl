@@ -1,596 +1,641 @@
-@testset "Max budget" begin
+@testset "`max_budget`" begin
+    # A budget requiring investments in the expensive node with the high fixed OPEX
     # Investment data with positive costs and continuous capacity additions
-    inv_data = NoStartInvData(
+    fixed_opex = [
+        FixedProfile(0),
         FixedProfile(1),
-        FixedProfile(1000),
-        ContinuousInvestment(FixedProfile(0), FixedProfile(1000)),
-    )
+        FixedProfile(10),
+    ]
 
-    # A budget below the combined CAPEX is infeasible
-    @testset "Insufficient budget" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        max_budget(m, 150, investments, 𝒯)
-        for node ∈ nodes
-            fix(m[:cap_capex][node, first(𝒯ᴵⁿᵛ)], 100; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-
-    # A budget covering the combined CAPEX is feasible
-    @testset "Sufficient budget" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        max_budget(m, 250, investments, 𝒯)
-        for node ∈ nodes
-            fix(m[:cap_capex][node, first(𝒯ᴵⁿᵛ)], 100; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-    end
-
-    # CAPEX outside the selected strategic periods must not consume the budget
-    @testset "Selected periods" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        max_budget(m, 200, investments, 𝒯; sps_spec = [first(𝒯ᴵⁿᵛ)])
-        for node ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_capex][node, t_inv], 100; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-    end
-end
-
-@testset "Investment count limits" begin
-    # Investment data with positive costs and binary investment decisions
+    # Creation of the model with positive investment costs and no demand
     inv_data = NoStartInvData(
-        FixedProfile(1),
-        FixedProfile(1000),
-        BinaryInvestment(FixedProfile(1)),
-    )
-
-    # A maximum count below the number of active investments is infeasible
-    @testset "Insufficient maximum count" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        max_investments(m, 1, investments, 𝒯)
-        for node ∈ nodes
-            fix(m[:cap_invest_b][node, first(𝒯ᴵⁿᵛ)], 1; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-
-    # A maximum count covering all active investments is feasible
-    @testset "Sufficient maximum count" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        max_investments(m, 2, investments, 𝒯)
-        for node ∈ nodes
-            fix(m[:cap_invest_b][node, first(𝒯ᴵⁿᵛ)], 1; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-    end
-
-    # A minimum count above the number of active investments is infeasible
-    @testset "Insufficient minimum count" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        min_investments(m, 2, investments, 𝒯; sps_spec = [first(𝒯ᴵⁿᵛ)])
-        for node ∈ nodes
-            fix(m[:cap_invest_b][node, first(𝒯ᴵⁿᵛ)], 0; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-
-    # A minimum count met by one active investment is feasible
-    @testset "Sufficient minimum count" begin
-        # Creation of the model with positive investment costs and no demand
-        m, para = simple_model(;
-            ts = TwoLevel(2, 1, SimpleTimes(1, 1)),
-            demand = FixedProfile(0),
-            inv_data,
-            num_invest = 2,
-        )
-
-        # Extraction of required data and addition of the investment relation
-        nodes = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-        investments = [(:cap, node) for node in nodes]
-        min_investments(m, 1, investments, 𝒯; sps_spec = [first(𝒯ᴵⁿᵛ)])
-        fix(m[:cap_invest_b][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
-        fix(m[:cap_invest_b][nodes[2], first(𝒯ᴵⁿᵛ)], 0; force = true)
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-    end
-end
-
-@testset "Requires capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
-    # Creation of the model with positive investment costs and no demand
-    m, para = simple_model(; demand = FixedProfile(0), num_invest = 2)
-
-    # Extraction of required data and addition of the investment relation
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    capacity = StrategicProfile([0, 2, 4, 6])
-    requires_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯; capacity_ratio)
-
-    # Dependent capacity must be supported by prerequisite capacity in each period
-    @testset "Dependent capacity" begin
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_current][nodes[1], t_inv], capacity[t_inv]; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test sum(
-            value(m[:cap_current][nodes[1], t_inv]) ≲
-            capacity_ratio * value(m[:cap_current][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
-        ) == length(𝒯ᴵⁿᵛ)
-        @test matches_profile(
-            m[:cap_current],
-            nodes[2],
-            capacity * (1 / capacity_ratio),
-            𝒯ᴵⁿᵛ,
-        )
-    end
-
-    # Prerequisite capacity alone must not force dependent capacity
-    @testset "Prerequisite capacity" begin
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            unfix(m[:cap_current][nodes[1], t_inv])
-            fix(m[:cap_current][nodes[2], t_inv], capacity[t_inv]; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test matches_profile(m[:cap_current], nodes[1], FixedProfile(0), 𝒯ᴵⁿᵛ)
-    end
-
-    # Dependent capacity without supporting prerequisite capacity is infeasible
-    @testset "Unsupported capacity" begin
-        fix(m[:cap_current][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-end
-
-@testset "Couple capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
-    # Creation of the model with positive investment costs and no demand
-    m, para = simple_model(; demand = FixedProfile(0), num_invest = 2)
-
-    # Extraction of required data and addition of the investment relation
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    capacity = StrategicProfile([0, 2, 4, 6])
-    couple_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯; capacity_ratio)
-
-    # Either element must establish the corresponding capacity of its partner
-    @testset "Capacity by element $node" for node ∈ nodes
-        for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
-            is_fixed(m[:cap_current][element, t_inv]) &&
-                unfix(m[:cap_current][element, t_inv])
-        end
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_current][node, t_inv], capacity[t_inv]; force = true)
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test sum(
-            isapprox(
-                value(m[:cap_current][nodes[1], t_inv]),
-                capacity_ratio * value(m[:cap_current][nodes[2], t_inv]);
-                atol = TEST_ATOL,
-            ) for t_inv ∈ 𝒯ᴵⁿᵛ
-        ) == length(𝒯ᴵⁿᵛ)
-        @test matches_profile(m[:cap_current], node, capacity, 𝒯ᴵⁿᵛ)
-    end
-
-    # Capacities that violate the coupling ratio are infeasible
-    @testset "Mismatched capacity" begin
-        fix(m[:cap_current][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-end
-
-@testset "Precede capacity - ratio $capacity_ratio" for capacity_ratio ∈ [1, 2]
-    # Creation of the model with positive investment costs and no demand
-    m, para = simple_model(; demand = FixedProfile(0), num_invest = 2)
-
-    # Extraction of required data and addition of the investment relation
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    capacity = StrategicProfile([0, 2, 4, 6])
-    prerequisite = StrategicProfile([2, 4, 6, 6])
-    precede_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯; capacity_ratio)
-
-    # Without initial capacity, dependent capacity cannot exist in the first period
-    @testset "First-period capacity" begin
-        fix(m[:cap_current][nodes[1], first(𝒯ᴵⁿᵛ)], 1; force = true)
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-
-    # Earlier prerequisite additions must support dependent capacity in later periods
-    @testset "Earlier prerequisite capacity" begin
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_current][nodes[1], t_inv], capacity[t_inv]; force = true)
-            fix(
-                m[:cap_current][nodes[2], t_inv],
-                prerequisite[t_inv] / capacity_ratio;
-                force = true,
-            )
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test sum(
-            value(m[:cap_current][nodes[1], t_inv]) ≲
-            capacity_ratio *
-            (value(m[:cap_current][nodes[2], t_inv]) - value(m[:cap_add][nodes[2], t_inv]))
-            for t_inv ∈ 𝒯ᴵⁿᵛ
-        ) == length(𝒯ᴵⁿᵛ)
-        @test matches_profile(m[:cap_current], nodes[1], capacity, 𝒯ᴵⁿᵛ)
-    end
-
-    # Prerequisite additions in the same period cannot support dependent capacity
-    @testset "Same-period prerequisite capacity" begin
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(
-                m[:cap_current][nodes[2], t_inv],
-                capacity[t_inv] / capacity_ratio;
-                force = true,
-            )
-        end
-        optimize!(m)
-
-        @test termination_status(m) == JuMP.MOI.INFEASIBLE
-    end
-end
-
-@testset "Capacity retention - $relation" for relation ∈ [
-    requires_capacity,
-    precede_capacity,
-    couple_capacity,
-]
-    # Creation of the model with early retirement and an incentive to avoid fixed OPEX
-    inv_data = NoStartInvData(
-        FixedProfile(1000),
-        FixedProfile(30),
+        FixedProfile(10),
+        FixedProfile(10),
         ContinuousInvestment(FixedProfile(0), FixedProfile(10)),
-        StudyLife(FixedProfile(40)),
     )
-    m, para = simple_model(;
-        demand = FixedProfile(0),
-        fixed_opex = FixedProfile(10),
-        inv_data,
-        num_invest = 2,
-    )
+    demand = FixedProfile(20)
 
-    # Extraction of required data and prevention of replacement investments
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    prerequisite_add = StrategicProfile([1, 0, 0, 0])
-    # Coupled capacities must be present together from the first investment period
-    if relation == couple_capacity
-        dependent_add = StrategicProfile([1, 0, 0, 0])
-        dependent_capacity = StrategicProfile([1, 1, 1, 0])
-    else
-        dependent_add = StrategicProfile([0, 1, 0, 0])
-        dependent_capacity = StrategicProfile([0, 1, 1, 0])
-    end
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        fix(m[:cap_add][nodes[2], t_inv], prerequisite_add[t_inv]; force = true)
-        fix(m[:cap_add][nodes[1], t_inv], dependent_add[t_inv]; force = true)
-        fix(m[:cap_current][nodes[1], t_inv], dependent_capacity[t_inv]; force = true)
-    end
-    optimize!(m)
-    objective_without_relation = objective_value(m)
+    @testset "No constraints added" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
 
-    # Without a relation, the prerequisite retires immediately to avoid fixed OPEX
-    @testset "Retirement without relation" begin
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test matches_profile(m[:cap_current], nodes[2], prerequisite_add, 𝒯ᴵⁿᵛ)
-        @test isapprox(value(m[:cap_rem][nodes[2], 𝒯ᴵⁿᵛ[1]]), 1; atol = TEST_ATOL)
+        # Extraction of required data
+        n_1, n_2, n_3 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Variable reassignment
+        var_cur = value.(m[:cap_current])
+
+        # Test that without any limits, it only invests in node 1 and 2 in the first period
+        prof_cur_1 = FixedProfile(10)
+        prof_cur_2 = FixedProfile(10)
+        prof_cur_3 = FixedProfile(0)
+        @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_cur[n_3, t_inv] ≈ prof_cur_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 
-    # The relation retains prerequisite capacity despite the additional fixed OPEX
-    @testset "Retention while required" begin
-        relation(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
-        optimize!(m)
-        prerequisite_capacity = StrategicProfile([1, 1, 1, 0])
-        prerequisite_removal = StrategicProfile([0, 0, 1, 0])
+    @testset "`max_budget`" begin
+        @testset "All strategic periods" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
 
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test matches_profile(m[:cap_current], nodes[2], prerequisite_capacity, 𝒯ᴵⁿᵛ)
-        @test matches_profile(m[:cap_rem], nodes[2], prerequisite_removal, 𝒯ᴵⁿᵛ)
-        @test objective_value(m) < objective_without_relation - TEST_ATOL
+            # Extraction of required data
+            n_1, n_2, n_3 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Variable reassignment
+            var_cur = value.(m[:cap_current])
+
+            # Addition of the investment relation and reoptimization
+            investments = [(:cap, n_1), (:cap, n_2)]
+            max_budget(m, 150, investments, 𝒯)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+
+            # Test that with limits, it must invest in node 3 in the first period to avoid a
+            # deficit
+            prof_cur_1 = FixedProfile(10)
+            prof_cur_2 = FixedProfile(5)
+            prof_cur_3 = FixedProfile(5)
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_3, t_inv] ≈ prof_cur_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # Test that the budget is not violated
+            @test sum(
+                value.(m[:cap_capex][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, n ∈ [n_1, n_2]
+            ) ≲ 150
+        end
+    end
+
+    @testset "`max_budget`" begin
+        @testset "Limited strategic periods" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
+
+            # Extraction of required data
+            n_1, n_2, n_3 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimizationc
+            sps_spec = collect(𝒯ᴵⁿᵛ)[1:2]
+            investments = [(:cap, n_1), (:cap, n_2)]
+            max_budget(m, 150, investments, 𝒯; sps_spec)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+
+            # Test that with limits, it must invest in node 3 in the first period to avoid a
+            # deficit, but reinvests in node 2 in period 3 with removal of the capacity of node 1
+            prof_cur_1 = FixedProfile(10)
+            prof_cur_2 = StrategicProfile([5, 5, 10, 10])
+            prof_cur_3 = StrategicProfile([5, 5, 0, 0])
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_3, t_inv] ≈ prof_cur_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # Test that the budget is not violated
+            @test sum(
+                value.(m[:cap_capex][n, t_inv]) for t_inv ∈ sps_spec, n ∈ [n_1, n_2]
+            ) ≲ 150
+        end
     end
 end
 
-@testset "Excludes capacity" begin
-    # Creation of the model with positive investment costs and no demand
+@testset "`max_investments` and `min_investment`" begin
+    # Investment data with positive costs and semi continuous investment decisions
     inv_data = NoStartInvData(
-        FixedProfile(1),
-        FixedProfile(1000),
-        SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
+        FixedProfile(100),
+        FixedProfile(60),
+        SemiContinuousOffsetInvestment(FixedProfile(5), FixedProfile(20), FixedProfile(500)),
     )
-    m, para = simple_model(; demand = FixedProfile(0), inv_data, num_invest = 2)
+    demand = StrategicProfile([30, 40, 50, 40])
+    fixed_opex = [FixedProfile(1), FixedProfile(1.1)]
 
-    # Extraction of required data and addition of the investment relation
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    activation = StrategicProfile([0, 1, 0, 1])
-    excludes_capacity(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
 
-    # Either element can activate, but its partner must remain inactive
-    @testset "Activation by element $node" for node ∈ nodes
-        for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
-            is_fixed(m[:cap_invest_b][element, t_inv]) &&
-                unfix(m[:cap_invest_b][element, t_inv])
+    @testset "No constraints added" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Variable reassignment
+        var_add = value.(m[:cap_add])
+
+        # Test that without any limits, it invests according to the demand increase
+        prof_add_1 = StrategicProfile([20, 10, 10, 0])
+        prof_add_2 = StrategicProfile([10, 0, 0, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that 4 investments is optimal
+        @test sum(value.(m[:cap_invest_b][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, n ∈ [n_1, n_2]) ≈ 4
+    end
+
+    @testset "`max_investments`" begin
+        @testset "All strategic periods" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            investments = [(:cap, n_1), (:cap, n_2)]
+            max_investments(m, 2, investments, 𝒯)
+            optimize!(m)
+            var_add = value.(m[:cap_add])
+
+            # Test that with limits, it must overinvest in node 2 in the first period to avoid a
+            # deficit
+            prof_add_1 = StrategicProfile([20, 0, 0, 0])
+            prof_add_2 = StrategicProfile([20, 0, 0, 0])
+            @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # Test that the budget is not violated
+            @test sum(
+                value.(m[:cap_invest_b][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, n ∈ [n_1, n_2]
+            ) ≲ 2
+
+            # Test that this leads to a deficit in periods 3 and 4, despite its significant cost
+            prof_def = StrategicProfile([0, 0, 10, 0])
+            @test all(value.(m[:deficit][t]) ≈ prof_def[t] for t ∈ 𝒯)
         end
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_invest_b][node, t_inv], activation[t_inv]; force = true)
-        end
-        optimize!(m)
+    end
 
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test matches_profile(m[:cap_invest_b], node, activation, 𝒯ᴵⁿᵛ)
-        @test all(
-            matches_profile(m[:cap_invest_b], element, FixedProfile(0), 𝒯ᴵⁿᵛ) for
-            element ∈ setdiff(nodes, [node])
+    @testset "`max_investments`" begin
+        @testset "Limited strategic periods" begin
+            # Creation of the model with positive investment costs and no demand
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimizationc
+            sps_spec = collect(𝒯ᴵⁿᵛ)[1:2]
+            investments = [(:cap, n_1), (:cap, n_2)]
+            max_investments(m, 2, investments, 𝒯; sps_spec)
+            optimize!(m)
+            var_add = value.(m[:cap_add])
+
+            # Test that with limits, it must overinvest in node 2 in the first period to avoid a
+            # deficit in the second. The additional investment in the third period is no longer
+            # covered by the limit
+            prof_add_1 = StrategicProfile([20, 0, 10, 0])
+            prof_add_2 = StrategicProfile([20, 0, 0, 0])
+            @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # Test that the budget is not violated in the relevant periods
+            @test sum(
+                value.(m[:cap_invest_b][n, t_inv]) for t_inv ∈ sps_spec, n ∈ [n_1, n_2]
+            ) ≲ 2
+
+            # Test that there is not deficit in any period
+            @test all(value.(m[:deficit][t]) ≈ 0 for t ∈ 𝒯)
+        end
+    end
+
+    @testset "`min_investments`" begin
+        @testset "All strategic periods" begin
+            # Creation of the model with positive investment costs and no demand
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            investments = [(:cap, n_1), (:cap, n_2)]
+            min_investments(m, 5, investments, 𝒯)
+            optimize!(m)
+            var_add = value.(m[:cap_add])
+
+            # Test that with limits, it must invest in period 3 in both the cheap and expensive
+            # technology to maintain the limit
+            prof_add_1 = StrategicProfile([20, 10, 5, 0])
+            prof_add_2 = StrategicProfile([10, 0, 5, 0])
+            @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # Test that the budget is not violated
+            @test sum(value.(m[:cap_invest_b][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, n ∈ [n_1, n_2]) ≳ 5
+        end
+    end
+
+    @testset "`min_investments`" begin
+        @testset "Limited strategic periods" begin
+            # Creation of the model with positive investment costs and no demand
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            sps_spec = collect(𝒯ᴵⁿᵛ)[1:2]
+            investments = [(:cap, n_1), (:cap, n_2)]
+            min_investments(m, 4, investments, 𝒯; sps_spec)
+            optimize!(m)
+            var_add = value.(m[:cap_add])
+
+            # Test that with limits, it must invest in period 2 in both the cheap and expensive
+            # technology to maintain the limit
+            prof_add_1 = StrategicProfile([20, 5, 10, 0])
+            prof_add_2 = StrategicProfile([10, 5, 0, 0])
+            @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # Test that the budget is not violated
+            @test sum(value.(m[:cap_invest_b][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, n ∈ [n_1, n_2]) ≳ 4
+        end
+    end
+
+    @testset "Binary relations - no binary investment variables" begin
+        # Continuous investments do not create binary investment variables
+        inv_data = NoStartInvData(
+            FixedProfile(100),
+            FixedProfile(60),
+            ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
         )
+        m, para = simple_model(;inv_data, num_invest = 2)
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        investments = [(:cap, node) for node ∈ para[:nodes]]
+        @test_throws ArgumentError max_investments(m, 1, investments, 𝒯)
+        @test_throws ArgumentError min_investments(m, 1, investments, 𝒯)
+
+        # No investment data also does not create binary variables
+        m, para = simple_model(; num_invest = 2)
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        investments = [(:cap, node) for node ∈ para[:nodes]]
+        @test_throws ArgumentError max_investments(m, 1, investments, 𝒯)
+        @test_throws ArgumentError min_investments(m, 1, investments, 𝒯)
     end
 end
 
-@testset "Require investment" begin
-    # Creation of the model with positive investment costs and no demand
+@testset "`requires_capacity`, `couple_capacity`, and `precede_capacity`" begin
+    # Investment data with positive costs and semi continuous investment decisions
+    # The semi continuous investment can lead to early capacity retirement
     inv_data = NoStartInvData(
-        FixedProfile(1),
-        FixedProfile(1000),
-        SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
+        FixedProfile(100),
+        FixedProfile(60),
+        SemiContinuousInvestment(FixedProfile(5), FixedProfile(30)),
     )
-    m, para = simple_model(; demand = FixedProfile(0), inv_data, num_invest = 2)
+    demand = StrategicProfile([30, 40, 50, 40])
+    fixed_opex = [FixedProfile(1), FixedProfile(1.1)]
 
-    # Extraction of required data and addition of the investment relation
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    activation = StrategicProfile([0, 1, 0, 1])
-    require_investment(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
+    @testset "No constraints added" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
 
-    # Dependent investments must activate the prerequisite in the same periods
-    @testset "Dependent activation" begin
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_invest_b][nodes[1], t_inv], activation[t_inv]; force = true)
-        end
-        optimize!(m)
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
 
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test sum(
-            value(m[:cap_invest_b][nodes[1], t_inv]) ≲
-            value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
-        ) == length(𝒯ᴵⁿᵛ)
-        @test matches_profile(m[:cap_invest_b], nodes[2], activation, 𝒯ᴵⁿᵛ)
+        # Variable reassignment
+        var_cur = value.(m[:cap_current])
+
+        # Test that without any constraints, it invests according to the demand in node 1 to
+        # satisfy the demand
+        prof_cur_2 = FixedProfile(0)
+        @test all(var_cur[n_1, t_inv] ≈ demand[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 
-    # Prerequisite investments alone must not force dependent investments
-    @testset "Prerequisite activation" begin
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            unfix(m[:cap_invest_b][nodes[1], t_inv])
-            fix(m[:cap_invest_b][nodes[2], t_inv], activation[t_inv]; force = true)
-        end
-        optimize!(m)
+    @testset "`requires_capacity`" begin
+        @testset "no keyword argument used" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
 
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test matches_profile(m[:cap_invest_b], nodes[1], FixedProfile(0), 𝒯ᴵⁿᵛ)
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            requires_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+
+            # Test that with limits, it must have at most the same capacity in node 1 as in
+            # node 2
+            prof_cur = StrategicProfile([15, 20, 25, 20])
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        end
+    end
+
+    @testset "`requires_capacity`" begin
+        @testset "Keyword argument used" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            capacity_ratio = 2
+            requires_capacity(m, :cap, n_1, :cap, n_2, 𝒯; capacity_ratio)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+
+            # Test that with limits, it must have at most the same capacity in node 1 as in
+            # node 2 times the value `capacity_ratio`
+            # The difference in strategic periods 2 and 3 is due to the semicontinuous investment
+            prof_cur_1 = StrategicProfile([20, 25, 30, 40*2/3])
+            prof_cur_2 = StrategicProfile([10, 15, 20, 40*1/3])
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(
+                var_cur[n_1, t_inv] ≲ var_cur[n_2, t_inv] * capacity_ratio
+            for t_inv ∈ 𝒯ᴵⁿᵛ)
+        end
+    end
+
+    @testset "`couple_capacity`" begin
+        @testset "No keyword argument used" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            couple_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+
+            # Test that with limits, it must have the same capacity in both nodes
+            prof_cur = StrategicProfile([15, 20, 25, 20])
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        end
+    end
+
+    @testset "`couple_capacity`" begin
+        @testset "Keyword argument used" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            capacity_ratio = 2
+            ratio = 1 / (capacity_ratio + 1)
+            couple_capacity(m, :cap, n_1, :cap, n_2, 𝒯; capacity_ratio)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+            var_rem = value.(m[:cap_rem])
+
+            # Test that with limits, the capacities are linked through the parameter
+            # `capacity_ratio`
+            @test all(
+                var_cur[n_1, t_inv] ≈ demand[t_inv] * ratio * capacity_ratio
+            for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ demand[t_inv] * ratio for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(
+                var_cur[n_1, t_inv] ≈ var_cur[n_2, t_inv] * capacity_ratio
+            for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+            # The removal is based on the semi continuous investments in periods 1 and 2 to
+            # avoid overinvestments in periods 2 and 3 (prof_rem_2) and based on the ratio
+            # in period 3
+            prof_rem_1 = StrategicProfile([0, 0, 10 * ratio * capacity_ratio, 0])
+            prof_rem_2 = StrategicProfile([5 * ratio, 5 * ratio, 10 * ratio, 0])
+            @test all(var_rem[n_1, t_inv] ≈ prof_rem_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_rem[n_2, t_inv] ≈ prof_rem_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        end
+    end
+
+    @testset "`precede_capacity`" begin
+        @testset "No keyword argument used" begin
+            # Creation of the model
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            precede_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+            var_add = value.(m[:cap_add])
+
+            # Test that with limits, it must invest in node 2 in the first period to avoid a
+            # deficit as it is a prerequisite while subsequent investments are in node 1
+            prof_cur_1 = StrategicProfile([0, 10, 20, 20])
+            prof_cur_2 = StrategicProfile([30, 30, 30, 20])
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(
+                var_cur[n_1, t_inv] ≲ var_cur[n_2, t_inv] - var_add[n_2, t_inv]
+            for t_inv ∈ 𝒯ᴵⁿᵛ)
+            end
+    end
+
+    @testset "`couple_capacity`" begin
+        @testset "Keyword argument used" begin
+            # Creation of the model
+            demand = StrategicProfile([10, 30, 50, 40])
+            m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+            # Extraction of required data
+            n_1, n_2 = para[:nodes]
+            𝒯 = para[:T]
+            𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+            # Addition of the investment relation and reoptimization
+            capacity_ratio = 2
+            ratio = 1 / (capacity_ratio + 1)
+            precede_capacity(m, :cap, n_1, :cap, n_2, 𝒯; capacity_ratio)
+            optimize!(m)
+            var_cur = value.(m[:cap_current])
+            var_add = value.(m[:cap_add])
+
+            # Test that with limits, it must invest in node 2 in the first period to avoid a
+            # deficit. The investment in node 2 in period 2 is a prequisite for the
+            # investments in node 1 in period 3
+            prof_cur_1 = StrategicProfile([0, 20, 50, 40]) * ratio * capacity_ratio
+            prof_cur_2 = StrategicProfile([10, 50 * ratio, 50 * ratio, 40 * ratio])
+            @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+            @test all(
+                var_cur[n_1, t_inv] ≲
+                    (var_cur[n_2, t_inv] - var_add[n_2, t_inv]) * capacity_ratio
+            for t_inv ∈ 𝒯ᴵⁿᵛ)
+        end
     end
 end
 
-@testset "Couple investment" begin
-    # Creation of the model with positive investment costs and no demand
+@testset "`require_investment`, `couple_investment`, and `excludes_capacity`" begin
+    # Investment data with positive costs and semi continuous investment decisions
+    # The semi continuous investment can lead to early capacity retirement
     inv_data = NoStartInvData(
-        FixedProfile(1),
-        FixedProfile(1000),
-        SemiContinuousInvestment(FixedProfile(1), FixedProfile(10)),
+        FixedProfile(100),
+        FixedProfile(60),
+        SemiContinuousInvestment(FixedProfile(5), FixedProfile(30)),
     )
-    m, para = simple_model(; demand = FixedProfile(0), inv_data, num_invest = 2)
+    demand = StrategicProfile([30, 40, 50, 40])
+    fixed_opex = [StrategicProfile([1, 1, 1.1, 1]), StrategicProfile([1.1, 1.1, 1, 1.1])]
 
-    # Extraction of required data and addition of the investment relation
-    nodes = para[:nodes]
-    𝒯 = para[:T]
-    𝒯ᴵⁿᵛ = strat_periods(𝒯)
-    activation = StrategicProfile([0, 1, 0, 1])
-    couple_investment(m, :cap, nodes[1], :cap, nodes[2], 𝒯)
+    @testset "No constraints added" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
 
-    # Either element must activate its partner, and both remain inactive in other periods
-    @testset "Activation by element $node" for node ∈ nodes
-        for element ∈ nodes, t_inv ∈ 𝒯ᴵⁿᵛ
-            is_fixed(m[:cap_invest_b][element, t_inv]) &&
-                unfix(m[:cap_invest_b][element, t_inv])
-        end
-        for t_inv ∈ 𝒯ᴵⁿᵛ
-            fix(m[:cap_invest_b][node, t_inv], activation[t_inv]; force = true)
-        end
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Variable reassignment
+        var_cur = value.(m[:cap_current])
+
+        # Test that without any constraints, it invests according to the demand in node 1 in
+        # periods 1 and 2 and node 2 in period 3 to satisfy the demand
+        prof_cur_1 = StrategicProfile([30, 40, 40, 40])
+        prof_cur_2 = StrategicProfile([0, 0, 10, 0])
+        @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
+    @testset "`require_investment`" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Addition of the investment relation and reoptimization
+        require_investment(m, :cap, n_1, :cap, n_2, 𝒯)
         optimize!(m)
+        var_add = value.(m[:cap_add])
 
-        @test termination_status(m) == JuMP.MOI.OPTIMAL
-        @test sum(
-            value(m[:cap_invest_b][nodes[1], t_inv]) ≈
-            value(m[:cap_invest_b][nodes[2], t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ
-        ) == length(𝒯ᴵⁿᵛ)
-        @test all(
-            matches_profile(m[:cap_invest_b], element, activation, 𝒯ᴵⁿᵛ) for element ∈ nodes
+        # Test that with limits, it invests in node 2 in periods 1 and 2 as prerequisite but
+        # in period 3 due to the lower OPEX without investing in nide 1
+        prof_add_1 = StrategicProfile([25, 5, 0, 0])
+        prof_add_2 = StrategicProfile([5, 5, 10, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the activation is following the profile and is equal
+        prof_act_1 = StrategicProfile([1, 1, 0, 0])
+        prof_act_2 = StrategicProfile([1, 1, 1, 0])
+        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
+    @testset "`couple_investment`" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Addition of the investment relation and reoptimization
+        couple_investment(m, :cap, n_1, :cap, n_2, 𝒯)
+        optimize!(m)
+        var_add = value.(m[:cap_add])
+
+        # Test that with limits, it invests in node 2 in all periods when it invests in node
+        # 1 given the minimum investment.
+        prof_add_1 = StrategicProfile([25, 5, 5, 0])
+        prof_add_2 = StrategicProfile([5, 5, 5, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the activation is following the profile and is equal
+        prof_act = StrategicProfile([1, 1, 1, 0])
+        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
+    @testset "`excludes_capacity`" begin
+        # Creation of the model
+        inv_data = NoStartInvData(
+            FixedProfile(100),
+            FixedProfile(60),
+            SemiContinuousInvestment(FixedProfile(5), FixedProfile(25)),
         )
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Addition of the investment relation and reoptimization
+        excludes_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+        optimize!(m)
+        var_add = value.(m[:cap_add])
+
+        # Test that with limits, it cannot satisfy the demand in period 1 due to the max
+        # capacity addition
+        prof_add_1 = StrategicProfile([25, 15, 0, 0])
+        prof_add_2 = StrategicProfile([0, 0, 10, 0])
+        prof_def = StrategicProfile([5, 0, 0, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:deficit][t]) ≈ prof_def[t] for t ∈ 𝒯)
+
+        # Test that the activation is following the profile and is exclisove
+        prof_act_1 = StrategicProfile([1, 1, 0, 0])
+        prof_act_2 = StrategicProfile([0, 0, 1, 0])
+        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
-end
 
+    @testset "Binary relations - no binary investment variables" begin
+        # Continuous investments do not create binary investment variables
+        inv_data = NoStartInvData(
+            FixedProfile(100),
+            FixedProfile(60),
+            ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
+        )
+        m, para = simple_model(;inv_data, num_invest = 2)
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        investments = [(:cap, node) for node ∈ para[:nodes]]
 
-@testset "Binary relations - no binary investment variables" begin
-    periods = TwoLevel(2, 1, SimpleTimes(1, 1))
+        @test_throws ArgumentError excludes_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+        @test_throws ArgumentError require_investment(m, :cap, n_1, :cap, n_2, 𝒯)
+        @test_throws ArgumentError couple_investment(m, :cap, n_1, :cap, n_2, 𝒯)
 
-    # Discrete investments do not create binary investment variables
-    inv_data = NoStartInvData(
-        FixedProfile(1),
-        FixedProfile(1000),
-        DiscreteInvestment(FixedProfile(1)),
-    )
-    integer_model, para = simple_model(;
-        ts = periods,
-        demand = FixedProfile(0),
-        inv_data,
-        num_invest = 2,
-    )
-    nodes = para[:nodes]
-    investments = [(:cap, node) for node in nodes]
+        # Models without investment data also lack binary investment variables
+        m, para = simple_model(; num_invest = 2)
+        n_1, n_2 = para[:nodes]
+        investments = [(:cap, node) for node ∈ para[:nodes]]
 
-    # Binary relations require binary investment variables for both elements
-    @test_throws ArgumentError excludes_capacity(
-        integer_model,
-        :cap,
-        nodes[1],
-        :cap,
-        nodes[2],
-        periods,
-    )
-    @test_throws ArgumentError require_investment(
-        integer_model,
-        :cap,
-        nodes[1],
-        :cap,
-        nodes[2],
-        periods,
-    )
-    @test_throws ArgumentError couple_investment(
-        integer_model,
-        :cap,
-        nodes[1],
-        :cap,
-        nodes[2],
-        periods,
-    )
-    @test_throws ArgumentError max_investments(integer_model, 1, investments, periods)
-    @test_throws ArgumentError min_investments(integer_model, 1, investments, periods)
-
-    # Models without investment data also lack binary investment variables
-    missing_model, para =
-        simple_model(; ts = periods, demand = FixedProfile(0), num_invest = 2)
-    nodes = para[:nodes]
-    investments = [(:cap, node) for node in nodes]
-
-    # Every binary relation must reject models without binary investment variables
-    @test_throws ArgumentError excludes_capacity(
-        missing_model,
-        :cap,
-        nodes[1],
-        :cap,
-        nodes[2],
-        periods,
-    )
-    @test_throws ArgumentError require_investment(
-        missing_model,
-        :cap,
-        nodes[1],
-        :cap,
-        nodes[2],
-        periods,
-    )
-    @test_throws ArgumentError couple_investment(
-        missing_model,
-        :cap,
-        nodes[1],
-        :cap,
-        nodes[2],
-        periods,
-    )
-    @test_throws ArgumentError max_investments(missing_model, 1, investments, periods)
-    @test_throws ArgumentError min_investments(missing_model, 1, investments, periods)
+        @test_throws ArgumentError excludes_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+        @test_throws ArgumentError require_investment(m, :cap, n_1, :cap, n_2, 𝒯)
+        @test_throws ArgumentError couple_investment(m, :cap, n_1, :cap, n_2, 𝒯)
+    end
 end
