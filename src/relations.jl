@@ -493,7 +493,7 @@ function couple_investment(
 end
 
 """
-    excludes_capacity(
+    exclude_investment(
         m,
         prefix_1::Symbol,
         element_1,
@@ -520,7 +520,7 @@ two binary investment decision variables may be active.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 """
-function excludes_capacity(
+function exclude_investment(
     m,
     prefix_1::Symbol,
     element_1,

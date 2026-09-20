@@ -492,7 +492,7 @@ end
     end
 end
 
-@testset "`require_investment`, `couple_investment`, and `excludes_capacity`" begin
+@testset "`require_investment`, `couple_investment`, and `exclude_investment`" begin
     # Investment data with positive costs and semi continuous investment decisions
     # The semi continuous investment can lead to early capacity retirement
     inv_data = NoStartInvData(
@@ -578,7 +578,7 @@ end
         @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 
-    @testset "`excludes_capacity`" begin
+    @testset "`exclude_investment`" begin
         # Creation of the model
         inv_data = NoStartInvData(
             FixedProfile(100),
@@ -593,7 +593,7 @@ end
         𝒯ᴵⁿᵛ = strat_periods(𝒯)
 
         # Addition of the investment relation and reoptimization
-        excludes_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+        exclude_investment(m, :cap, n_1, :cap, n_2, 𝒯)
         optimize!(m)
         var_add = value.(m[:cap_add])
 
@@ -625,7 +625,7 @@ end
         𝒯 = para[:T]
         investments = [(:cap, node) for node ∈ para[:nodes]]
 
-        @test_throws ArgumentError excludes_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+        @test_throws ArgumentError exclude_investment(m, :cap, n_1, :cap, n_2, 𝒯)
         @test_throws ArgumentError require_investment(m, :cap, n_1, :cap, n_2, 𝒯)
         @test_throws ArgumentError couple_investment(m, :cap, n_1, :cap, n_2, 𝒯)
 
@@ -634,7 +634,7 @@ end
         n_1, n_2 = para[:nodes]
         investments = [(:cap, node) for node ∈ para[:nodes]]
 
-        @test_throws ArgumentError excludes_capacity(m, :cap, n_1, :cap, n_2, 𝒯)
+        @test_throws ArgumentError exclude_investment(m, :cap, n_1, :cap, n_2, 𝒯)
         @test_throws ArgumentError require_investment(m, :cap, n_1, :cap, n_2, 𝒯)
         @test_throws ArgumentError couple_investment(m, :cap, n_1, :cap, n_2, 𝒯)
     end
