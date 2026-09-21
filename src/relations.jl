@@ -319,10 +319,8 @@ function precede_capacity(
     𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
-    # Extract the strategic periods and identify the predecessor periods for each strategic
-    # period
+    # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-    sps_pre = _predecessor_periods(𝒯)
 
     # Extract the variables
     var_current_dep = get_var_current(m, prefix_dep, element_dep)
