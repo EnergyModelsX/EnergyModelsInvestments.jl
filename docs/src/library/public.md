@@ -327,6 +327,7 @@ min_investments
 requires_capacity
 couple_capacity
 precede_capacity
+retire_capacity
 exclude_investment
 require_investment
 couple_investment

@@ -490,6 +490,58 @@ end
             for t_inv ∈ 𝒯ᴵⁿᵛ)
         end
     end
+
+    @testset "`retire_capacity`" begin
+        # Creation and solving of the model
+        fixed_opex = FixedProfile(-10)
+        demand = FixedProfile(40)
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Add constraints for usage
+        prof_min = StrategicProfile([30, 0, 0, 0])
+        @constraint(m, [t ∈ 𝒯],m[:cap_use][n_1, t] ≥ prof_min[t])
+        prof_max = StrategicProfile([50, 50, 50, 0])
+        @constraint(m, [t ∈ 𝒯],m[:cap_use][n_1, t] ≤ prof_max[t])
+        optimize!(m)
+
+        # Variable reassignment
+        var_add = value.(m[:cap_add])
+        var_rem = value.(m[:cap_rem])
+
+        # Test that the maximum investments is happening in the first period for both nodes
+        # and no retirement of node 1 due to the negative fixed OPEX
+        prof_add = StrategicProfile([30, 30, 0, 0])
+        prof_rem = FixedProfile(0)
+        @test all(var_add[n, t_inv] ≈ prof_add[t_inv] for n ∈ para[:nodes], t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_rem[n, t_inv] ≈ prof_rem[t_inv] for n ∈ para[:nodes], t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the number of variables
+        n_var = 140
+        @test num_variables(m) == n_var
+
+        # Add exlusivity constraints
+        retire_capacity(m, :cap, n_1, inv_data, :cap, n_2, inv_data, 𝒯)
+        optimize!(m)
+        var_add = value.(m[:cap_add])
+        var_rem = value.(m[:cap_rem])
+
+        # Test that the number of variables is increased by 4
+        @test num_variables(m) == n_var + 4
+
+        # Test that the 2 investments are mutually exlusive and node 1 is removed at the end
+        # of period 3 to be able to invest in node 2 in period 4 to avoid a deficit
+        prof_rem_1 = StrategicProfile([0, 0, 60, 0])
+        prof_add_2 = StrategicProfile([0, 0, 0, 30])
+        @test all(var_add[n_1, t_inv] ≈ prof_add[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_rem[n_1, t_inv] ≈ prof_rem_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_rem[n_2, t_inv] ≈ prof_rem[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
 end
 
 @testset "`require_investment`, `couple_investment`, and `exclude_investment`" begin

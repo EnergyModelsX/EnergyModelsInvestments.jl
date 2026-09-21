@@ -380,6 +380,79 @@ function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel,TwoLeve
 end
 
 """
+    retire_capacity(
+        m,
+        prefix_dep::Symbol,
+        element_dep,
+        inv_data_dep::AbstractInvData,
+        prefix_pre::Symbol,
+        element_pre,
+        inv_data_pre::AbstractInvData,
+        𝒯::Union{TwoLevel, TwoLevelTree};
+    )
+
+Require all prerequisite capacity, specified by `prefix_pre`, of `element_pre` to be removed
+before investments in dependent capacity, specified by `prefix_dep`, of element `element_dep`
+can take place.
+
+No investments in `element_pre` can occur after initial investments in `element_dep` took place.
+
+This requirement applies in every strategic period, including to initial dependent capacity.
+In this case, no investments in `element_dep` can occur in the first strategic period.
+
+!!! warning "Binary variables"
+    This method includes binary variables to the model. The number of binary variables is
+    equal to the number of strategic periods
+
+# Arguments
+- `m`: the JuMP model instance.
+- `prefix_dep::Symbol`: the prefix used to identify the dependent capacity variable family.
+- `element_dep`: the element whose installed capacity requires support.
+- `inv_data_dep::AbstractInvData`: the investment data of the dependent capacity.
+- `prefix_pre::Symbol`: the prefix used to identify the prerequisite capacity variable
+  family.
+- `element_pre`: the element whose installed capacity must be removed.
+- `inv_data_pre::AbstractInvData`: the investment data of the prerequisite capacity.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
+  over which this relation is applied.
+"""
+function retire_capacity(
+    m,
+    prefix_dep::Symbol,
+    element_dep,
+    inv_data_dep::AbstractInvData,
+    prefix_pre::Symbol,
+    element_pre,
+    inv_data_pre::AbstractInvData,
+    𝒯::Union{TwoLevel, TwoLevelTree},
+)
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Extract the variables
+    var_current_dep = get_var_current(m, prefix_dep, element_dep)
+    var_current_pre = get_var_current(m, prefix_pre, element_pre)
+
+    # Create an anonymous variable
+    var_bin = @variable(m, [𝒯ᴵⁿᵛ], Bin)
+
+    # Add the constraint that once element_pre is retired, it cannot be added again
+    @constraint(m, [(t_inv_pre, t_inv) ∈ withprev(𝒯ᴵⁿᵛ); !isnothing(t_inv_pre)],
+        var_bin[t_inv] ≥ var_bin[t_inv_pre],
+    )
+
+    # Add upper bounds to the current capacity.
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_current_dep[t_inv] ≤
+            (1 - var_bin[t_inv]) * max_installed(inv_data_dep, t_inv),
+    )
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        var_current_pre[t_inv] ≤
+            var_bin[t_inv] * max_installed(inv_data_pre, t_inv),
+    )
+end
+
+"""
     require_investment(
         m,
         prefix_dep::Symbol,
