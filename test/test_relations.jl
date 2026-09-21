@@ -105,7 +105,7 @@
     end
 end
 
-@testset "`max_investments` and `min_investment`" begin
+@testset "`max_investments` and `min_investments`" begin
     # Investment data with positive costs and semi continuous investment decisions
     inv_data = NoStartInvData(
         FixedProfile(100),
@@ -170,9 +170,7 @@ end
             prof_def = StrategicProfile([0, 0, 10, 0])
             @test all(value.(m[:deficit][t]) ≈ prof_def[t] for t ∈ 𝒯)
         end
-    end
 
-    @testset "`max_investments`" begin
         @testset "Limited strategic periods" begin
             # Creation of the model with positive investment costs and no demand
             m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
@@ -233,9 +231,7 @@ end
             # Test that the budget is not violated
             @test sum(value.(m[:cap_invest_b][n, t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ, n ∈ [n_1, n_2]) ≳ 5
         end
-    end
 
-    @testset "`min_investments`" begin
         @testset "Limited strategic periods" begin
             # Creation of the model with positive investment costs and no demand
             m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
@@ -288,7 +284,7 @@ end
     end
 end
 
-@testset "`requires_capacity`, `couple_capacity`, and `precede_capacity`" begin
+@testset "`requires_capacity`, `couple_capacity`, `precede_capacity`, and `retire_capacity`" begin
     # Investment data with positive costs and semi continuous investment decisions
     # The semi continuous investment can lead to early capacity retirement
     inv_data = NoStartInvData(
@@ -339,9 +335,7 @@ end
             @test all(var_cur[n_1, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
             @test all(var_cur[n_2, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
         end
-    end
 
-    @testset "`requires_capacity`" begin
         @testset "Keyword argument used" begin
             # Creation of the model
             m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
@@ -390,9 +384,7 @@ end
             @test all(var_cur[n_1, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
             @test all(var_cur[n_2, t_inv] ≈ prof_cur[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
         end
-    end
 
-    @testset "`couple_capacity`" begin
         @testset "Keyword argument used" begin
             # Creation of the model
             m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
@@ -455,10 +447,8 @@ end
             @test all(
                 var_cur[n_1, t_inv] ≲ var_cur[n_2, t_inv] - var_add[n_2, t_inv]
             for t_inv ∈ 𝒯ᴵⁿᵛ)
-            end
-    end
+        end
 
-    @testset "`couple_capacity`" begin
         @testset "Keyword argument used" begin
             # Creation of the model
             demand = StrategicProfile([10, 30, 50, 40])
