@@ -348,12 +348,12 @@ end
 
 Require all prerequisite capacity, specified by `prefix_pre`, of `element_pre` to be removed
 before investments in dependent capacity, specified by `prefix_dep`, of element `element_dep`
-can take place.
+can take place. No investments in `element_pre` can occur after initial investments in
+`element_dep` took place.
 
-No investments in `element_pre` can occur after initial investments in `element_dep` took place.
-
-This requirement applies in every strategic period, including to initial dependent capacity.
-In this case, no investments in `element_dep` can occur in the first strategic period.
+This requirement applies in every strategic period, including to initial prerequisite capacity.
+In this case, no investments in `element_dep` can occur in the first strategic period and
+any initial capacity results in an infeasible model.
 
 !!! warning "Binary variables"
     This method includes binary variables to the model. The number of binary variables is
@@ -362,11 +362,13 @@ In this case, no investments in `element_dep` can occur in the first strategic p
 # Arguments
 - `m`: the JuMP model instance.
 - `prefix_dep::Symbol`: the prefix used to identify the dependent capacity variable family.
-- `element_dep`: the element whose installed capacity requires support.
+- `element_dep`: the element whose installed capacity requires the retirement of the
+  prerequisite element.
 - `inv_data_dep::AbstractInvData`: the investment data of the dependent capacity.
 - `prefix_pre::Symbol`: the prefix used to identify the prerequisite capacity variable
   family.
-- `element_pre`: the element whose installed capacity must be removed.
+- `element_pre`: the element whose installed capacity must be removed to allow for a capacity
+  in the dependent element.
 - `inv_data_pre::AbstractInvData`: the investment data of the prerequisite capacity.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which this relation is applied.
@@ -381,8 +383,21 @@ function retire_capacity(
     inv_data_pre::AbstractInvData,
     𝒯::Union{TwoLevel, TwoLevelTree},
 )
-    # Extract the strategic periods
+    # Extract the strategic periods and the initial capacity of the two elements
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Exception handling for infeasible models
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        cap_init_pre = start_cap(element_pre, t_inv, inv_data_pre, prefix_pre)
+        cap_init_dep = start_cap(element_dep, t_inv, inv_data_dep, prefix_dep)
+        if cap_init_pre > 0 && cap_init_dep > 0
+            throw(ArgumentError(
+                "The initial capacity in strategic period $(t_inv) of both the dependent " *
+                "element and the prerequisite model is larger than 0. This would lead to " *
+                "an infeasible model. It is hence not allowed."
+            ))
+        end
+    end
 
     # Extract the variables
     var_current_dep = get_var_current(m, prefix_dep, element_dep)
@@ -398,12 +413,12 @@ function retire_capacity(
 
     # Add upper bounds to the current capacity.
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_current_dep[t_inv] ≤
-            (1 - var_bin[t_inv]) * max_installed(inv_data_dep, t_inv),
+        var_current_pre[t_inv] ≤
+            (1 - var_bin[t_inv]) * max_installed(inv_data_pre, t_inv),
     )
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_current_pre[t_inv] ≤
-            var_bin[t_inv] * max_installed(inv_data_pre, t_inv),
+        var_current_dep[t_inv] ≤
+            var_bin[t_inv] * max_installed(inv_data_dep, t_inv),
     )
 end
 

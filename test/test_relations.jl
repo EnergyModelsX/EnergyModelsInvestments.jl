@@ -515,7 +515,7 @@ end
         @test num_variables(m) == n_var
 
         # Add exlusivity constraints
-        retire_capacity(m, :cap, n_1, inv_data, :cap, n_2, inv_data, 𝒯)
+        retire_capacity(m, :cap, n_2, inv_data, :cap, n_1, inv_data, 𝒯)
         optimize!(m)
         var_add = value.(m[:cap_add])
         var_rem = value.(m[:cap_rem])
@@ -531,6 +531,16 @@ end
         @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
         @test all(var_rem[n_1, t_inv] ≈ prof_rem_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
         @test all(var_rem[n_2, t_inv] ≈ prof_rem[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that there is an argument error with a specified initial capacity
+        inv_data = StartInvData(
+            FixedProfile(100),
+            FixedProfile(60),
+            FixedProfile(10),
+            SemiContinuousInvestment(FixedProfile(5), FixedProfile(30)),
+        )
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+        @test_throws ArgumentError retire_capacity(m, :cap, n_2, inv_data, :cap, n_1, inv_data, 𝒯)
     end
 end
 
