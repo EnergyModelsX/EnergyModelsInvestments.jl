@@ -46,6 +46,7 @@ EnergyModelsInvestments.lifetime
 ```@docs
 EnergyModelsInvestments._init_rem_dict
 EnergyModelsInvestments._predecessor_periods
+EnergyModelsInvestments._get_binary_investment
 EnergyModelsInvestments.capacity_removal!
 EnergyModelsInvestments.populate_lifetime_vectors!
 EnergyModelsInvestments.set_capex_discounter

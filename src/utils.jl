@@ -282,3 +282,55 @@ function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife,
         end
     end
 end
+
+"""
+    _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel,TwoLevelTree})
+
+Returns the binary variable prefix+`_invest_b` for a given `element`. If the element does
+not have a binary variable due to its investment mode, it throws and Argumenterror
+"""
+function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel,TwoLevelTree})
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Extract the investment variables
+    var_invest_b = get_var_invest_b(m, prefix)
+
+    # Identify whether the element `element` has a binary investment variable for each
+    # strategic period.
+    for t_inv ∈ 𝒯ᴵⁿᵛ
+        var = var_invest_b[element, t_inv]
+        if !(isa(var, JuMP.GenericVariableRef) && JuMP.is_binary(var))
+            throw(ArgumentError(
+                "Investment relations for capacity `prefix` of `element` require binary " *
+                "investment variables."
+            ))
+        end
+    end
+
+    return var_invest_b
+end
+
+"""
+    _predecessor_periods(𝒯::TwoLevel)
+    _predecessor_periods(𝒯::TwoLevelTree)
+
+Return a dictionary mapping each strategic period to the strategic periods preceding it on
+the same scenario path. For a linear time structure, the predecessors are all earlier
+strategic periods. For a tree structure, only ancestor periods on the corresponding path
+are included.
+"""
+function _predecessor_periods(𝒯::TwoLevel)
+    sps = collect(strat_periods(𝒯))
+    return Dict(t_inv => sps[1:(idx-1)] for (idx, t_inv) ∈ enumerate(sps))
+end
+function _predecessor_periods(𝒯::TwoLevelTree)
+    sps_pre = Dict()
+    for scenario ∈ strategic_scenarios(𝒯)
+        path = collect(strat_periods(scenario))
+        for (idx, period) ∈ enumerate(path)
+            !haskey(sps_pre, period) && (sps_pre[period] = path[1:(idx-1)])
+        end
+    end
+    return sps_pre
+end
