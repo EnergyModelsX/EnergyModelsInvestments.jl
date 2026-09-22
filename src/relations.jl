@@ -433,7 +433,7 @@ end
     )
 
 Require investments to the prerequisite technology, specified by `prefix_dep` and element
-`element_dep`, whenever there should be ivnestments to the dependent technology, specified
+`element_dep`, whenever there should be investments to the dependent technology, specified
 by `prefix_pre` and element `element_pre`, in the same strategic period.
 
 However, it is possible to have capacity additions in the prerequisite investment without

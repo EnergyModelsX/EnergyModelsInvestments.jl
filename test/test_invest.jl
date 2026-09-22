@@ -100,7 +100,7 @@ end
                 value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) > 0
-        @test sum(
+        @test count(x->isapprox(x,0, atol=TEST_ATOL), (value(m[:cap_add][n, t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
             isapprox(value.(m[:cap_add][n, t_inv]), 0; atol=TEST_ATOL)
         for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
     end
