@@ -100,9 +100,10 @@ end
                 value.(m[:cap_add][n, t_inv]) ≳ EMI.min_add(inv_data, t_inv) for
                 t_inv ∈ 𝒯ᴵⁿᵛ
             ) > 0
-        @test count(x->isapprox(x,0, atol=TEST_ATOL), (value(m[:cap_add][n, t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
-            isapprox(value.(m[:cap_add][n, t_inv]), 0; atol=TEST_ATOL)
-        for t_inv ∈ 𝒯ᴵⁿᵛ) == 2
+        @test count(
+            x -> isapprox(x, 0, atol=TEST_ATOL),
+            Array(value.(m[:cap_add][n, :]))
+        ) == 2
     end
 
     # Test that the variable `:cap_invest_b` is a binary and created for the element
