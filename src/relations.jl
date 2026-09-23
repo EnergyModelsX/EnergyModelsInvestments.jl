@@ -2,21 +2,21 @@
     max_budget(
         m,
         limit::Number,
-        investments::Vector{<:Tuple{Symbol, <:Any}},
+        investments::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree};
         sps_spec = nothing,
     )
 
 Constrain the total CAPEX of `investments` across the selected strategic periods to be at
-most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
+most `limit`. Each item in `investments` is an `(element, prefix)` tuple.
 
 # Arguments
 - `m`: the JuMP model instance.
 - `limit::Number`: the maximum total CAPEX allowed across `investments` and the selected periods.
-- `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose CAPEX
+- `investments::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples whose CAPEX
   variables are included in the budget.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
-    over which the budget is applied.
+  over which the budget is applied.
 
 # Keyword arguments
 - `sps_spec`: the strategic periods to include. By default, all strategic periods
@@ -25,7 +25,7 @@ most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
 function max_budget(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{Symbol,<:Any}},
+    investments::Vector{<:Tuple{<:Any,Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
@@ -37,7 +37,7 @@ function max_budget(
     @constraint(m,
         sum(
             get_var_capex(m, prefix)[element, t_inv] for
-            (prefix, element) ∈ investments, t_inv ∈ sps_select
+            (element, prefix) ∈ investments, t_inv ∈ sps_select
         ) ≤ limit,
     )
 end
@@ -46,13 +46,13 @@ end
     max_investments(
         m,
         limit::Number,
-        investments::Vector{<:Tuple{Symbol, <:Any}},
+        investments::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree};
         sps_spec = nothing,
     )
 
 Constrain the total number of investments for `investments` across the selected strategic
-periods to be at most `limit`. Each item in `investments` is a `(prefix, element)` tuple.
+periods to be at most `limit`. Each item in `investments` is an `(element, prefix)` tuple.
 
 This implies that the number of investment actions across the selected strategic periods is
 limited to `limit` while the invested capacity can be larger if using
@@ -67,8 +67,8 @@ limited to `limit` while the invested capacity can be larger if using
 - `m`: the JuMP model instance.
 - `limit::Number`: the maximum total number of investment actions allowed across `investments` and
   the selected periods.
-- `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose
-  investment variables are counted.
+- `investments::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples representing
+  the elements whose binary investment variables are considered.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the limit is applied.
 
@@ -79,7 +79,7 @@ limited to `limit` while the invested capacity can be larger if using
 function max_investments(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{Symbol,<:Any}},
+    investments::Vector{<:Tuple{<:Any,Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
@@ -88,7 +88,7 @@ function max_investments(
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
     # Identify whether the elements have binary investments
-    for (prefix, element) ∈ investments
+    for (element, prefix) ∈ investments
         _get_binary_investment(m, prefix, element, 𝒯)
     end
 
@@ -96,7 +96,7 @@ function max_investments(
     @constraint(m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv] for
-            (prefix, element) ∈ investments, t_inv ∈ sps_select
+            (element, prefix) ∈ investments, t_inv ∈ sps_select
         ) ≤ limit,
     )
 end
@@ -105,13 +105,13 @@ end
     min_investments(
         m,
         limit::Number,
-        investments::Vector{<:Tuple{Symbol, <:Any}},
+        investments::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree};
         sps_spec = nothing,
     )
 
 Constrain the total number of investments for `investments` across the selected strategic
-periods to be at least `limit`. Each item in `investments` is a `(prefix, element)` tuple.
+periods to be at least `limit`. Each item in `investments` is an `(element, prefix)` tuple.
 
 This implies that the number of investment actions across the selected strategic periods is
 at least the value of `limit` while the invested capacity is not affected using
@@ -126,8 +126,8 @@ at least the value of `limit` while the invested capacity is not affected using
 - `m`: the JuMP model instance.
 - `limit::Number`: the minimum total number of investment actions required across `investments`
   and the selected periods.
-- `investments::Vector{<:Tuple{Symbol, <:Any}}`: the `(prefix, element)` tuples whose
-  investment variables are counted.
+- `investments::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples representing
+  the elements whose binary investment variables are considered.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the limit is applied.
 
@@ -138,7 +138,7 @@ at least the value of `limit` while the invested capacity is not affected using
 function min_investments(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{Symbol,<:Any}},
+    investments::Vector{<:Tuple{<:Any,Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
@@ -147,7 +147,7 @@ function min_investments(
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
     # Identify whether the elements have binary investments
-    for (prefix, element) ∈ investments
+    for (element, prefix) ∈ investments
         _get_binary_investment(m, prefix, element, 𝒯)
     end
 
@@ -155,27 +155,25 @@ function min_investments(
     @constraint(m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv] for
-            (prefix, element) ∈ investments, t_inv ∈ sps_select
+            (element, prefix) ∈ investments, t_inv ∈ sps_select
         ) ≥ limit,
     )
 end
 
-
 """
     requires_capacity(
         m,
-        prefix_dep::Symbol,
-        element_dep,
-        prefix_pre::Symbol,
-        element_pre,
+        elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+        element_pre::Tuple,
         𝒯::Union{TwoLevel, TwoLevelTree};
         capacity_ratio::Number = 1,
     )
 
-Require the installed capacity of one investment to be supported by another investment.
-For each strategic period, the dependent capacity specified by `prefix_dep` for element
-`element_dep` must be at most `capacity_ratio` times the prerequisite capacity specified by
-`prefix_pre` for element `element_pre`.
+Require the installed capacity of each dependent investment to be supported by one
+prerequisite investment. For each strategic period, the dependent capacity specified by
+each `(element_dep, prefix_dep)` tuple in `elements_dep` must be at most
+`capacity_ratio` times the prerequisite capacity specified by the `(element_pre, prefix_pre)`
+tuple in `element_pre`.
 
 The default `capacity_ratio = 1` is appropriate when both capacities use the same unit.
 Set it explicitly when one unit of prerequisite capacity supports a different amount of
@@ -183,12 +181,9 @@ dependent capacity.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_dep::Symbol`: the prefix used to identify the dependent capacity variable family.
-- `element_dep`: the element whose installed capacity depends on the prerequisite
-  investment.
-- `prefix_pre::Symbol`: the prefix used to identify the prerequisite capacity variable
-  family.
-- `element_pre`: the element providing the prerequisite installed capacity.
+- `elements_dep::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  representing the dependent elements.
+- `element_pre::Tuple{<:Any, Symbol}`: the prerequisite element and its capacity `prefix`.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 
@@ -198,10 +193,8 @@ dependent capacity.
 """
 function requires_capacity(
     m,
-    prefix_dep::Symbol,
-    element_dep,
-    prefix_pre::Symbol,
-    element_pre,
+    elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+    element_pre::Tuple,
     𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
@@ -209,29 +202,27 @@ function requires_capacity(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Extract the variables
-    var_current_dep = get_var_current(m, prefix_dep, element_dep)
+    element_pre, prefix_pre = element_pre
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
 
-    # Add the constraint on the upper limit on the capacity ratio
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_current_dep[t_inv] ≤ capacity_ratio * var_current_pre[t_inv],
+    # Add the constraints on the upper limit on the capacity ratio
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep) ∈ elements_dep],
+        get_var_current(m, prefix_dep, element_dep)[t_inv] ≤
+            capacity_ratio * var_current_pre[t_inv],
     )
 end
 
 """
     couple_capacity(
         m,
-        prefix_1::Symbol,
-        element_1,
-        prefix_2::Symbol,
-        element_2,
+        element_1::Tuple{<:Any, Symbol},
+        element_2::Tuple{<:Any, Symbol},
         𝒯::Union{TwoLevel, TwoLevelTree};
         capacity_ratio::Number = 1,
     )
 
-Couple the installed capacities of two investments. This implies that the capacities (given
-by `prefix_1` and `prefix_2`) of the two technologies (`element_1` and `element_2`) must be
-equal in each strategic period.
+Couple the installed capacities of two investments specified by `(element, prefix)` tuples.
+This implies that the capacities of the two investments must be equal in each strategic period.
 
 The default `capacity_ratio = 1` is appropriate when both capacities use the same unit.
 Set it explicitly when one unit of the second investment corresponds to a different amount
@@ -239,12 +230,10 @@ of the first investment.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_1::Symbol`: the prefix used to identify the first capacity variable family.
-- `element_1`: the element whose installed capacity is on the left-hand side of the
-  coupling relation.
-- `prefix_2::Symbol`: the prefix used to identify the second capacity variable family.
-- `element_2`: the element whose installed capacity is on the right-hand side of the
-  coupling relation.
+- `element_1::Tuple{<:Any, Symbol}`: an `(element_1, prefix_1)` tuple identifying the first
+  capacity variable.
+- `element_2`::Tuple{<:Any, Symbol}: an `(element_2, prefix_2)` tuple identifying the second
+  capacity variable.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 
@@ -254,10 +243,8 @@ of the first investment.
 """
 function couple_capacity(
     m,
-    prefix_1::Symbol,
-    element_1,
-    prefix_2::Symbol,
-    element_2,
+    element_1::Tuple{<:Any, Symbol},
+    element_2::Tuple{<:Any, Symbol},
     𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
@@ -265,6 +252,8 @@ function couple_capacity(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Extract the variables
+    element_1, prefix_1 = element_1
+    element_2, prefix_2 = element_2
     var_current_1 = get_var_current(m, prefix_1, element_1)
     var_current_2 = get_var_current(m, prefix_2, element_2)
 
@@ -277,17 +266,16 @@ end
 """
     precede_capacity(
         m,
-        prefix_dep::Symbol,
-        element_dep,
-        prefix_pre::Symbol,
-        element_pre,
+        elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+        element_pre::Tuple{<:Any, Symbol},
         𝒯::Union{TwoLevel, TwoLevelTree};
         capacity_ratio::Number = 1,
     )
 
-Require all installed dependent capacity, specified by `prefix_dep`, of element `element_dep`
-to have a prerequisite capacity, specified by `prefix_pre`, of `element_pre` available in the
-same strategic period, excluding prerequisite additions made in that period.
+Require all installed dependent capacities specified by the `(element_dep, prefix_dep)` tuples
+in `elements_dep` to have the prerequisite capacity specified by the `(element_pre, prefix_pre)`
+tuple in `element_pre` available in the same strategic period, excluding prerequisite additions
+made in that period.
 
 This requirement applies in every strategic period, including to initial dependent capacity.
 Initial prerequisite capacity can provide support in the first period.
@@ -298,11 +286,9 @@ of the first investment.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_dep::Symbol`: the prefix used to identify the dependent capacity variable family.
-- `element_dep`: the element whose installed capacity requires support.
-- `prefix_pre::Symbol`: the prefix used to identify the prerequisite capacity variable
-  family.
-- `element_pre`: the element whose installed capacity must already exist.
+- `elements_dep::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  representing the dependent elements.
+- `element_pre::Tuple{<:Any, Symbol}`: the prerequisite element and its capacity `prefix`.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which this relation is applied.
 
@@ -312,10 +298,8 @@ of the first investment.
 """
 function precede_capacity(
     m,
-    prefix_dep::Symbol,
-    element_dep,
-    prefix_pre::Symbol,
-    element_pre,
+    elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+    element_pre::Tuple{<:Any, Symbol},
     𝒯::Union{TwoLevel,TwoLevelTree};
     capacity_ratio::Number = 1,
 )
@@ -323,13 +307,13 @@ function precede_capacity(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Extract the variables
-    var_current_dep = get_var_current(m, prefix_dep, element_dep)
+    element_pre, prefix_pre = element_pre
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
     var_add_pre = get_var_add(m, prefix_pre, element_pre)
 
     # Add the constraint on the dependency on the initial capacity in the sp
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_current_dep[t_inv] ≤
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep) ∈ elements_dep],
+        get_var_current(m, prefix_dep, element_dep)[t_inv] ≤
             capacity_ratio * (var_current_pre[t_inv] - var_add_pre[t_inv]),
     )
 end
@@ -337,23 +321,18 @@ end
 """
     retire_capacity(
         m,
-        prefix_dep::Symbol,
-        element_dep,
-        inv_data_dep::AbstractInvData,
-        prefix_pre::Symbol,
-        element_pre,
-        inv_data_pre::AbstractInvData,
+        elements_dep::Vector{<:Tuple{<:Any, Symbol, <:AbstractInvData}},
+        element_pre::Tuple{<:Any, Symbol, <:AbstractInvData},
         𝒯::Union{TwoLevel, TwoLevelTree};
     )
 
-Require all prerequisite capacity, specified by `prefix_pre`, of `element_pre` to be removed
-before investments in dependent capacity, specified by `prefix_dep`, of element `element_dep`
-can take place. No investments in `element_pre` can occur after initial investments in
-`element_dep` took place.
+Require all prerequisite capacity specified by `element_pre` to be removed before investments
+in any dependent capacity specified by `elements_dep` can take place. No investments in the
+prerequisite element can occur after initial investments in a dependent element took place.
 
 This requirement applies in every strategic period, including to initial prerequisite capacity.
-In this case, no investments in `element_dep` can occur in the first strategic period and
-any initial capacity results in an infeasible model.
+In this case, no investments in any dependent element can occur in the first strategic period
+and any initial capacity pair results in an infeasible model.
 
 !!! warning "Binary variables"
     This method includes binary variables to the model. The number of binary variables is
@@ -361,46 +340,46 @@ any initial capacity results in an infeasible model.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_dep::Symbol`: the prefix used to identify the dependent capacity variable family.
-- `element_dep`: the element whose installed capacity requires the retirement of the
-  prerequisite element.
-- `inv_data_dep::AbstractInvData`: the investment data of the dependent capacity.
-- `prefix_pre::Symbol`: the prefix used to identify the prerequisite capacity variable
-  family.
-- `element_pre`: the element whose installed capacity must be removed to allow for a capacity
-  in the dependent element.
-- `inv_data_pre::AbstractInvData`: the investment data of the prerequisite capacity.
+- `elements_dep::Vector{<:Tuple{<:Any, Symbol, <:AbstractInvData}}`: a vector of
+  `(element, prefix, inv_data)` tuples representing the dependent elements.
+- `element_pre::Tuple{<:Any, Symbol <:AbstractInvData}}`: the prerequisite element, its
+  capacity `prefix`, and its investment data.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which this relation is applied.
 """
 function retire_capacity(
     m,
-    prefix_dep::Symbol,
-    element_dep,
-    inv_data_dep::AbstractInvData,
-    prefix_pre::Symbol,
-    element_pre,
-    inv_data_pre::AbstractInvData,
+    elements_dep::Vector{<:Tuple{<:Any, Symbol, <:AbstractInvData}},
+    element_pre::Tuple{<:Any, Symbol, <:AbstractInvData},
     𝒯::Union{TwoLevel, TwoLevelTree},
 )
-    # Extract the strategic periods and the initial capacity of the two elements
+    # Extract the strategic periods and the prerequisite element
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+    element_pre, prefix_pre, inv_data_pre = element_pre
 
     # Exception handling for infeasible models
+    track_dict = Dict()
     for t_inv ∈ 𝒯ᴵⁿᵛ
         cap_init_pre = start_cap(element_pre, t_inv, inv_data_pre, prefix_pre)
-        cap_init_dep = start_cap(element_dep, t_inv, inv_data_dep, prefix_dep)
-        if cap_init_pre > 0 && cap_init_dep > 0
-            throw(ArgumentError(
-                "The initial capacity in strategic period $(t_inv) of both the dependent " *
-                "element and the prerequisite model is larger than 0. This would lead to " *
-                "an infeasible model. It is hence not allowed."
-            ))
+        track_dict[t_inv] = Any[]
+        for (element_dep, prefix_dep, inv_data) ∈ elements_dep
+            cap_init_dep = start_cap(element_dep, t_inv, inv_data, prefix_dep)
+            if cap_init_pre > 0 && cap_init_dep > 0
+                push!(track_dict[t_inv], element_dep)
+            end
         end
+    end
+    if any([!isempty(track_dict[t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ])
+        msg = "The initial capacities are not consistent:\n"
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            if !isempty(track_dict[t_inv])
+                msg *= " - $t_inv: Elements $(track_dict[t_inv])\n"
+            end
+        end
+        throw(ArgumentError(msg))
     end
 
     # Extract the variables
-    var_current_dep = get_var_current(m, prefix_dep, element_dep)
     var_current_pre = get_var_current(m, prefix_pre, element_pre)
 
     # Create an anonymous variable
@@ -411,30 +390,28 @@ function retire_capacity(
         var_bin[t_inv] ≥ var_bin[t_inv_pre],
     )
 
-    # Add upper bounds to the current capacity.
+    # Add upper bounds to the prerequisite capacity and all dependent capacities.
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
         var_current_pre[t_inv] ≤
             (1 - var_bin[t_inv]) * max_installed(inv_data_pre, t_inv),
     )
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_current_dep[t_inv] ≤
-            var_bin[t_inv] * max_installed(inv_data_dep, t_inv),
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep, inv_data) ∈ elements_dep],
+        get_var_current(m, prefix_dep, element_dep)[t_inv] ≤
+            var_bin[t_inv] * max_installed(inv_data, t_inv),
     )
 end
 
 """
     require_investment(
         m,
-        prefix_dep::Symbol,
-        element_dep,
-        prefix_pre::Symbol,
-        element_pre,
+        elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+        element_pre::Tuple{<:Any, Symbol},
         𝒯::Union{TwoLevel, TwoLevelTree},
     )
 
-Require investments to the prerequisite technology, specified by `prefix_dep` and element
-`element_dep`, whenever there should be investments to the dependent technology, specified
-by `prefix_pre` and element `element_pre`, in the same strategic period.
+Require investments in the prerequisite technology specified by `element_pre` whenever there
+should be investments in any dependent technology specified by `elements_dep` in the same
+strategic period.
 
 However, it is possible to have capacity additions in the prerequisite investment without
 additions in the dependent investment.
@@ -452,47 +429,41 @@ The actual capacity additions are not affected, only if there are capacity addit
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_dep::Symbol`: the prefix used to identify the dependent investment variable family.
-- `element_dep`: the element whose investment binary requires prerequisite activation.
-- `prefix_pre::Symbol`: the prefix used to identify the prerequisite investment variable family.
-- `element_pre`: the element providing the prerequisite investment binary.
+- `elements_dep::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  representing the dependent elements.
+- `element_pre::Tuple{<:Any, Symbol}`: the prerequisite element and its capacity `prefix`.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 """
 function require_investment(
     m,
-    prefix_dep::Symbol,
-    element_dep,
-    prefix_pre::Symbol,
-    element_pre,
+    elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+    element_pre::Tuple{<:Any, Symbol},
     𝒯::Union{TwoLevel,TwoLevelTree},
 )
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Extract the variables
-    var_invest_b_dep = _get_binary_investment(m, prefix_dep, element_dep, 𝒯)
+    element_pre, prefix_pre = element_pre
     var_invest_b_pre = _get_binary_investment(m, prefix_pre, element_pre, 𝒯)
 
     # Add the constraint on the dependency of investment actions
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_invest_b_dep[element_dep, t_inv] ≤ var_invest_b_pre[element_pre, t_inv],
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep) ∈ elements_dep],
+        _get_binary_investment(m, prefix_dep, element_dep, 𝒯)[element_dep, t_inv] ≤
+            var_invest_b_pre[element_pre, t_inv],
     )
 end
 
 """
     couple_investment(
         m,
-        prefix_1::Symbol,
-        element_1,
-        prefix_2::Symbol,
-        element_2,
+        elements::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree},
     )
 
-Couple two investments, specified by `prefix_1` and element `element_1` as well as
-`prefix_2` and element `element_2`. For each strategic period, it is only possible to
-invest in both investments or in none of the technologies.
+Couple all investments specified by `elements`. For each strategic period, it is only
+possible to invest in all investments or in none of the elements
 
 The actual capacity additions are not affected, only if there are capacity additions.
 
@@ -507,47 +478,39 @@ The actual capacity additions are not affected, only if there are capacity addit
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_1::Symbol`: the prefix used to identify the first investment variable family.
-- `element_1`: the element corresponding to the first investment.
-- `prefix_2::Symbol`: the prefix used to identify the second investment variable family.
-- `element_2`: the element corresponding to the second investment.
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  specifying the coupled elements.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 """
 function couple_investment(
     m,
-    prefix_1::Symbol,
-    element_1,
-    prefix_2::Symbol,
-    element_2,
+    elements::Vector{<:Tuple{<:Any, Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree},
 )
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    # Extract the variables
+    # Use the first investment as the reference activation
+    element_1, prefix_1 = first(elements)
     var_invest_b_1 = _get_binary_investment(m, prefix_1, element_1, 𝒯)
-    var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
 
-    # Add the constraint on the dependency of investment actions
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_invest_b_1[element_1, t_inv] == var_invest_b_2[element_2, t_inv],
+    # Add the constraints coupling all investment actions
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element, prefix) ∈ elements[2:end]],
+        var_invest_b_1[element_1, t_inv] ==
+            _get_binary_investment(m, prefix, element, 𝒯)[element, t_inv],
     )
 end
 
 """
     exclude_investment(
         m,
-        prefix_1::Symbol,
-        element_1,
-        prefix_2::Symbol,
-        element_2,
+        elements::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree},
     )
 
-Make two investments, specified by `prefix_1` and element `element_1` as well as `prefix_2`
-and element `element_2`, mutually exclusive. For each strategic period, at most one of the
-two binary investment decision variables may be active.
+Make all investments specified by `elements` mutually exclusive. For each strategic period,
+at most one of the binary investment decision variables may be active.
 
 !!! warning "Supported investment modes"
     This relation requires binary `*_invest_b` variables for all elements and strategic periods
@@ -556,30 +519,23 @@ two binary investment decision variables may be active.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `prefix_1::Symbol`: the prefix used to identify the first investment variable family.
-- `element_1`: the element corresponding to the first investment.
-- `prefix_2::Symbol`: the prefix used to identify the second investment variable family.
-- `element_2`: the element corresponding to the second investment.
+- `elements`: a vector of `(element, prefix)` tuples specifying the investments to exclude.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 """
 function exclude_investment(
     m,
-    prefix_1::Symbol,
-    element_1,
-    prefix_2::Symbol,
-    element_2,
+    elements::Vector{<:Tuple{<:Any, Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree},
 )
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
-    # Extract the variables
-    var_invest_b_1 = _get_binary_investment(m, prefix_1, element_1, 𝒯)
-    var_invest_b_2 = _get_binary_investment(m, prefix_2, element_2, 𝒯)
-
     # Add the constraint that only one investment can happen in each strategic period
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        var_invest_b_1[element_1, t_inv] + var_invest_b_2[element_2, t_inv] ≤ 1,
+        sum(
+            _get_binary_investment(m, prefix, element, 𝒯)[element, t_inv]
+            for (element, prefix) ∈ elements
+        ) ≤ 1,
     )
 end
