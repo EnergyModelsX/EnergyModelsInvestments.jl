@@ -284,29 +284,33 @@ function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife,
 end
 
 """
-    _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel,TwoLevelTree})
+    _check_binary_invest(m, elements::Vector{<:Tuple{<:Any, Symbol}}, 𝒯::Union{TwoLevel,TwoLevelTree})
 
-Returns the binary variable prefix+`_invest_b` for a given `element`. If the element does
-not have a binary variable due to its investment mode, it throws and Argumenterror
+Throws an argument error if any of the elements represented by the `(element, prefix)`
+its tuple does not include binary investment variables.
 """
-function _get_binary_investment(m, prefix, element, 𝒯::Union{TwoLevel,TwoLevelTree})
+function _check_binary_invest(m, elements::Vector{<:Tuple{<:Any, Symbol}}, 𝒯::Union{TwoLevel,TwoLevelTree})
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
     # Extract the investment variables
-    var_invest_b = get_var_invest_b(m, prefix)
+    track_dict = Dict(t_inv => Any[] for t_inv in 𝒯ᴵⁿᵛ)
 
     # Identify whether the element `element` has a binary investment variable for each
     # strategic period.
-    for t_inv ∈ 𝒯ᴵⁿᵛ
-        var = var_invest_b[element, t_inv]
+    for t_inv ∈ 𝒯ᴵⁿᵛ, (element, prefix) ∈ elements
+        var = get_var_invest_b(m, prefix)[element, t_inv]
         if !(isa(var, JuMP.GenericVariableRef) && JuMP.is_binary(var))
-            throw(ArgumentError(
-                "Investment relations for capacity `prefix` of `element` require binary " *
-                "investment variables."
-            ))
+            push!(track_dict[t_inv], element)
         end
     end
-
-    return var_invest_b
+    if any([!isempty(track_dict[t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ])
+        msg = "Some of the capacities do not have binary investment variables:\n"
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            if !isempty(track_dict[t_inv])
+                msg *= " - $t_inv: Elements $(track_dict[t_inv])\n"
+            end
+        end
+        throw(ArgumentError(msg))
+    end
 end

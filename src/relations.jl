@@ -36,9 +36,9 @@ function max_budget(
     # Add the constraint on the total budget
     @constraint(m,
         sum(
-            get_var_capex(m, prefix)[element, t_inv] for
-            (element, prefix) ∈ investments, t_inv ∈ sps_select
-        ) ≤ limit,
+            get_var_capex(m, prefix)[element, t_inv]
+        for(element, prefix) ∈ investments, t_inv ∈ sps_select) ≤
+            limit,
     )
 end
 
@@ -87,17 +87,15 @@ function max_investments(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
-    # Identify whether the elements have binary investments
-    for (element, prefix) ∈ investments
-        _get_binary_investment(m, prefix, element, 𝒯)
-    end
+    # Check that all investments have binary investment variables
+    _check_binary_invest(m, investments, 𝒯)
 
     # Add the constraint on the total limit
     @constraint(m,
         sum(
-            get_var_invest_b(m, prefix)[element, t_inv] for
-            (element, prefix) ∈ investments, t_inv ∈ sps_select
-        ) ≤ limit,
+            get_var_invest_b(m, prefix)[element, t_inv]
+        for (element, prefix) ∈ investments, t_inv ∈ sps_select) ≤
+                limit,
     )
 end
 
@@ -146,17 +144,15 @@ function min_investments(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
-    # Identify whether the elements have binary investments
-    for (element, prefix) ∈ investments
-        _get_binary_investment(m, prefix, element, 𝒯)
-    end
+    # Check that all investments have binary investment variables
+    _check_binary_invest(m, investments, 𝒯)
 
     # Add the constraint on the minimum limit
     @constraint(m,
         sum(
-            get_var_invest_b(m, prefix)[element, t_inv] for
-            (element, prefix) ∈ investments, t_inv ∈ sps_select
-        ) ≥ limit,
+            get_var_invest_b(m, prefix)[element, t_inv]
+        for (element, prefix) ∈ investments, t_inv ∈ sps_select) ≥
+            limit,
     )
 end
 
@@ -358,10 +354,9 @@ function retire_capacity(
     element_pre, prefix_pre, inv_data_pre = element_pre
 
     # Exception handling for infeasible models
-    track_dict = Dict()
+    track_dict = Dict(t_inv => Any[] for t_inv in 𝒯ᴵⁿᵛ)
     for t_inv ∈ 𝒯ᴵⁿᵛ
         cap_init_pre = start_cap(element_pre, t_inv, inv_data_pre, prefix_pre)
-        track_dict[t_inv] = Any[]
         for (element_dep, prefix_dep, inv_data) ∈ elements_dep
             cap_init_dep = start_cap(element_dep, t_inv, inv_data, prefix_dep)
             if cap_init_pre > 0 && cap_init_dep > 0
@@ -444,14 +439,16 @@ function require_investment(
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, vcat(elements_dep, [element_pre]), 𝒯)
+
     # Extract the variables
     element_pre, prefix_pre = element_pre
-    var_invest_b_pre = _get_binary_investment(m, prefix_pre, element_pre, 𝒯)
 
     # Add the constraint on the dependency of investment actions
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep) ∈ elements_dep],
-        _get_binary_investment(m, prefix_dep, element_dep, 𝒯)[element_dep, t_inv] ≤
-            var_invest_b_pre[element_pre, t_inv],
+        get_var_invest_b(m, prefix_dep)[element_dep, t_inv] ≤
+            get_var_invest_b(m, prefix_pre)[element_pre, t_inv],
     )
 end
 
@@ -491,14 +488,16 @@ function couple_investment(
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, elements, 𝒯)
+
     # Use the first investment as the reference activation
     element_1, prefix_1 = first(elements)
-    var_invest_b_1 = _get_binary_investment(m, prefix_1, element_1, 𝒯)
 
     # Add the constraints coupling all investment actions
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element, prefix) ∈ elements[2:end]],
-        var_invest_b_1[element_1, t_inv] ==
-            _get_binary_investment(m, prefix, element, 𝒯)[element, t_inv],
+        get_var_invest_b(m, prefix_1)[element_1, t_inv] ==
+            get_var_invest_b(m, prefix)[element, t_inv],
     )
 end
 
@@ -519,7 +518,8 @@ at most one of the binary investment decision variables may be active.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `elements`: a vector of `(element, prefix)` tuples specifying the investments to exclude.
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  specifying the investments to exclude.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the relation is applied.
 """
@@ -531,11 +531,11 @@ function exclude_investment(
     # Extract the strategic periods
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
 
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, elements, 𝒯)
+
     # Add the constraint that only one investment can happen in each strategic period
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        sum(
-            _get_binary_investment(m, prefix, element, 𝒯)[element, t_inv]
-            for (element, prefix) ∈ elements
-        ) ≤ 1,
+        sum(get_var_invest_b(m, prefix)[element, t_inv] for (element, prefix) ∈ elements) ≤ 1,
     )
 end
