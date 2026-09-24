@@ -10,6 +10,9 @@
 Constrain the total CAPEX of `investments` across the selected strategic periods to be at
 most `limit`. Each item in `elements` is an `(element, prefix)` tuple.
 
+!!! note "Undiscounted CAPEX"
+    The CAPEX is not discounted.
+
 # Arguments
 - `m`: the JuMP model instance.
 - `limit::Number`: the maximum total CAPEX allowed across `elements` and the selected periods.

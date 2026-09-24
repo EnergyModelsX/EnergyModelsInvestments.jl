@@ -18,6 +18,7 @@ Pages = [
     "manual/philosophy.md",
     "manual/optimization-variables.md",
     "manual/math_desc.md",
+    "manual/relations.md",
     "manual/simple-example.md",
     "manual/NEWS.md",
 ]

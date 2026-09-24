@@ -1,12 +1,31 @@
 # Release notes
 
+## Unversioned
+
+### Incorporation of relations
+
+* Multiple functions for incorporating relations between capacities or investment actions are incorporated.
+* Capacity relation functions:
+  * `require_capacity` - a capacity of a specified element must be available in an investment period to be able to have capacities with a given `capacity_ratio` in the other elements,
+  * `couple_capacity` - two capacities are linked, that is they must be equal with a given `capacity_ratio`,
+  * `precede_capacity` - a capacity of a specified element must be available at the beginning of an investment period (without any additions in the period) to be able to have capacities with a given `capacity_ratio` in the other elements, and
+  * `retire_capacity` - a capacity of a specified element must be retired before being able to invest in other elements.
+* Investment relations:
+  * `max_investments` - the maximum number of investment actions is specified for the elements,
+  * `min_investments` - the minimum number of investment actions is specified for the elements,
+  * `require_investment` - investment actions in the dependent elements require an investment in the prerequisite element.
+  * `couple_investments` - investments in one element requires investment in all included elements.
+  * `exclude_investments` - investments in all included elements are mutually exclusive.
+* Investment limits:
+  * `max_budget` - the maximum budget available for the undiscounted CAPEX of the included elements.
+
 ## Version 0.9.2 (2026-07-11)
 
 ### Bug fix
 
 * Fixed a bug when using `TwoLevelTree` as time structure:
   * The current system multiplies twice with the branch probability, once in the function `objective_weight` and once within the function `capacity_removal` for calculating the remaining value of the system.
-  * This is uninentional and results in too low CAPEX values in the optimization problem.
+  * This is unintentional and results in too low CAPEX values in the optimization problem.
 
 ### Documentation
 
@@ -287,7 +306,7 @@ In addition this version includes:
 
 ## Version 0.2.0 (2023-02-03)
 
-### Adjustmends to updates in EnergyModelsBase
+### Adjustments to updates in EnergyModelsBase
 
 Adjustment to version 0.3.0, namely:
 

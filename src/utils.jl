@@ -3,7 +3,7 @@
     get_var_capex(m, prefix::Symbol, element)
 
 Extracts the CAPEX variable with a given `prefix` from the model or only the variable for
-    the specified `element`.
+the specified `element`.
 """
 get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
 get_var_capex(m, prefix::Symbol, element) = m[Symbol(prefix, :_capex)][element, :]
@@ -54,6 +54,11 @@ get_var_rem(m, prefix::Symbol, element) = m[Symbol(prefix, :_rem)][element, :]
 
 Extracts the binary investment variable with a given `prefix` from the model or only the
 variable for the specified `element`.
+
+!!! warning
+    As we utilize `SparseVariables` for introducing the variables, it is necessary to call
+    the output when specifying the `element` as `(element, t_inv)`. This implies, the element
+    must be included in the function call
 """
 get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
 get_var_invest_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_invest_b)][element, :]
@@ -64,6 +69,11 @@ get_var_invest_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_invest_b)][ele
 
 Extracts the binary retirement variable with a given `prefix` from the model or only the
 variable for the specified `element`.
+
+!!! warning
+    As we utilize `SparseVariables` for introducing the variables, it is necessary to call
+    the output when specifying the `element` as `(element, t_inv)`. This implies, the element
+    must be included in the function call
 """
 get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
 get_var_remove_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_remove_b)][element, :]
