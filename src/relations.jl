@@ -2,18 +2,18 @@
     max_budget(
         m,
         limit::Number,
-        investments::Vector{<:Tuple{<:Any, Symbol}},
+        elements::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree};
         sps_spec = nothing,
     )
 
 Constrain the total CAPEX of `investments` across the selected strategic periods to be at
-most `limit`. Each item in `investments` is an `(element, prefix)` tuple.
+most `limit`. Each item in `elements` is an `(element, prefix)` tuple.
 
 # Arguments
 - `m`: the JuMP model instance.
-- `limit::Number`: the maximum total CAPEX allowed across `investments` and the selected periods.
-- `investments::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples whose CAPEX
+- `limit::Number`: the maximum total CAPEX allowed across `elements` and the selected periods.
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples whose CAPEX
   variables are included in the budget.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the budget is applied.
@@ -25,7 +25,7 @@ most `limit`. Each item in `investments` is an `(element, prefix)` tuple.
 function max_budget(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{<:Any,Symbol}},
+    elements::Vector{<:Tuple{<:Any,Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
@@ -37,7 +37,7 @@ function max_budget(
     @constraint(m,
         sum(
             get_var_capex(m, prefix)[element, t_inv]
-        for(element, prefix) ∈ investments, t_inv ∈ sps_select) ≤
+        for(element, prefix) ∈ elements, t_inv ∈ sps_select) ≤
             limit,
     )
 end
@@ -46,13 +46,13 @@ end
     max_investments(
         m,
         limit::Number,
-        investments::Vector{<:Tuple{<:Any, Symbol}},
+        elements::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree};
         sps_spec = nothing,
     )
 
-Constrain the total number of investments for `investments` across the selected strategic
-periods to be at most `limit`. Each item in `investments` is an `(element, prefix)` tuple.
+Constrain the total number of investments for `elements` across the selected strategic
+periods to be at most `limit`. Each item in `elements` is an `(element, prefix)` tuple.
 
 This implies that the number of investment actions across the selected strategic periods is
 limited to `limit` while the invested capacity can be larger if using
@@ -65,9 +65,9 @@ limited to `limit` while the invested capacity can be larger if using
 
 # Arguments
 - `m`: the JuMP model instance.
-- `limit::Number`: the maximum total number of investment actions allowed across `investments` and
-  the selected periods.
-- `investments::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples representing
+- `limit::Number`: the maximum total number of investment actions allowed across `elements`
+  and the selected periods.
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples representing
   the elements whose binary investment variables are considered.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the limit is applied.
@@ -79,7 +79,7 @@ limited to `limit` while the invested capacity can be larger if using
 function max_investments(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{<:Any,Symbol}},
+    elements::Vector{<:Tuple{<:Any,Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
@@ -87,14 +87,14 @@ function max_investments(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
-    # Check that all investments have binary investment variables
-    _check_binary_invest(m, investments, 𝒯)
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, elements, 𝒯)
 
     # Add the constraint on the total limit
     @constraint(m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv]
-        for (element, prefix) ∈ investments, t_inv ∈ sps_select) ≤
+        for (element, prefix) ∈ elements, t_inv ∈ sps_select) ≤
                 limit,
     )
 end
@@ -103,13 +103,13 @@ end
     min_investments(
         m,
         limit::Number,
-        investments::Vector{<:Tuple{<:Any, Symbol}},
+        elements::Vector{<:Tuple{<:Any, Symbol}},
         𝒯::Union{TwoLevel, TwoLevelTree};
         sps_spec = nothing,
     )
 
-Constrain the total number of investments for `investments` across the selected strategic
-periods to be at least `limit`. Each item in `investments` is an `(element, prefix)` tuple.
+Constrain the total number of investments for `elements` across the selected strategic
+periods to be at least `limit`. Each item in `elements` is an `(element, prefix)` tuple.
 
 This implies that the number of investment actions across the selected strategic periods is
 at least the value of `limit` while the invested capacity is not affected using
@@ -122,9 +122,9 @@ at least the value of `limit` while the invested capacity is not affected using
 
 # Arguments
 - `m`: the JuMP model instance.
-- `limit::Number`: the minimum total number of investment actions required across `investments`
+- `limit::Number`: the minimum total number of investment actions required across `elements`
   and the selected periods.
-- `investments::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples representing
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: the `(element, prefix)` tuples representing
   the elements whose binary investment variables are considered.
 - `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
   over which the limit is applied.
@@ -136,7 +136,7 @@ at least the value of `limit` while the invested capacity is not affected using
 function min_investments(
     m,
     limit::Number,
-    investments::Vector{<:Tuple{<:Any,Symbol}},
+    elements::Vector{<:Tuple{<:Any,Symbol}},
     𝒯::Union{TwoLevel,TwoLevelTree};
     sps_spec = nothing,
 )
@@ -144,20 +144,164 @@ function min_investments(
     𝒯ᴵⁿᵛ = strategic_periods(𝒯)
     sps_select = isnothing(sps_spec) ? 𝒯ᴵⁿᵛ : sps_spec
 
-    # Check that all investments have binary investment variables
-    _check_binary_invest(m, investments, 𝒯)
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, elements, 𝒯)
 
     # Add the constraint on the minimum limit
     @constraint(m,
         sum(
             get_var_invest_b(m, prefix)[element, t_inv]
-        for (element, prefix) ∈ investments, t_inv ∈ sps_select) ≥
+        for (element, prefix) ∈ elements, t_inv ∈ sps_select) ≥
             limit,
     )
 end
 
 """
-    requires_capacity(
+    require_investment(
+        m,
+        elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+        element_pre::Tuple{<:Any, Symbol},
+        𝒯::Union{TwoLevel, TwoLevelTree},
+    )
+
+Require investments in the prerequisite technology specified by `element_pre` whenever there
+should be investments in any dependent technology specified by `elements_dep` in the same
+strategic period.
+
+However, it is possible to have capacity additions in the prerequisite investment without
+additions in the dependent investment.
+
+The actual capacity additions are not affected, only if there are capacity additions.
+
+!!! warning "Supported investment modes"
+    This relation requires binary `*_invest_b` variables for both elements and all strategic
+    periods in `𝒯`. It can be utilized for [`BinaryInvestment`](@ref),
+    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
+    For [`BinaryInvestment`](@ref), the binary controls installed capacity above baseline.
+    For semicontinuous modes, it enables capacity additions, which can be zero when the
+    minimum addition is zero. This relation links binary activations, not necessarily
+    positive capacity additions.
+
+# Arguments
+- `m`: the JuMP model instance.
+- `elements_dep::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  representing the dependent elements.
+- `element_pre::Tuple{<:Any, Symbol}`: the prerequisite element and its capacity `prefix`.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
+  over which the relation is applied.
+"""
+function require_investment(
+    m,
+    elements_dep::Vector{<:Tuple{<:Any, Symbol}},
+    element_pre::Tuple{<:Any, Symbol},
+    𝒯::Union{TwoLevel,TwoLevelTree},
+)
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, vcat(elements_dep, [element_pre]), 𝒯)
+
+    # Extract the variables
+    element_pre, prefix_pre = element_pre
+
+    # Add the constraint on the dependency of investment actions
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep) ∈ elements_dep],
+        get_var_invest_b(m, prefix_dep)[element_dep, t_inv] ≤
+            get_var_invest_b(m, prefix_pre)[element_pre, t_inv],
+    )
+end
+
+"""
+    couple_investments(
+        m,
+        elements::Vector{<:Tuple{<:Any, Symbol}},
+        𝒯::Union{TwoLevel, TwoLevelTree},
+    )
+
+Couple all investments specified by `elements`. For each strategic period, it is only
+possible to invest in all elements or in none of the elements
+
+The actual capacity additions are not affected, only if there are capacity additions.
+
+!!! warning "Supported investment modes"
+    This relation requires binary `*_invest_b` variables for both elements and all strategic
+    periods in `𝒯`. It can be utilized for [`BinaryInvestment`](@ref),
+    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
+    For [`BinaryInvestment`](@ref), the binary controls installed capacity above baseline.
+    For semicontinuous modes, it enables capacity additions, which can be zero when the
+    minimum addition is zero. This relation links binary activations, not necessarily
+    positive capacity additions.
+
+# Arguments
+- `m`: the JuMP model instance.
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  specifying the coupled elements.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
+  over which the relation is applied.
+"""
+function couple_investments(
+    m,
+    elements::Vector{<:Tuple{<:Any, Symbol}},
+    𝒯::Union{TwoLevel,TwoLevelTree},
+)
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, elements, 𝒯)
+
+    # Use the first investment as the reference activation
+    element_1, prefix_1 = first(elements)
+
+    # Add the constraints coupling all investment actions
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element, prefix) ∈ elements[2:end]],
+        get_var_invest_b(m, prefix_1)[element_1, t_inv] ==
+            get_var_invest_b(m, prefix)[element, t_inv],
+    )
+end
+
+"""
+    exclude_investments(
+        m,
+        elements::Vector{<:Tuple{<:Any, Symbol}},
+        𝒯::Union{TwoLevel, TwoLevelTree},
+    )
+
+Make all investments specified by `elements` mutually exclusive. For each strategic period,
+at most one of the binary investment decision variables may be active.
+
+!!! warning "Supported investment modes"
+    This relation requires binary `*_invest_b` variables for all elements and strategic periods
+    in `𝒯`. This implies that it can be utilized for [`BinaryInvestment`](@ref),
+    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
+
+# Arguments
+- `m`: the JuMP model instance.
+- `elements::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
+  specifying the elements to exclude.
+- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
+  over which the relation is applied.
+"""
+function exclude_investments(
+    m,
+    elements::Vector{<:Tuple{<:Any, Symbol}},
+    𝒯::Union{TwoLevel,TwoLevelTree},
+)
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Check that all elements have binary investment variables
+    _check_binary_invest(m, elements, 𝒯)
+
+    # Add the constraint that only one investment can happen in each strategic period
+    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
+        sum(get_var_invest_b(m, prefix)[element, t_inv] for (element, prefix) ∈ elements) ≤ 1,
+    )
+end
+
+"""
+    require_capacity(
         m,
         elements_dep::Vector{<:Tuple{<:Any, Symbol}},
         element_pre::Tuple,
@@ -187,7 +331,7 @@ dependent capacity.
 - `capacity_ratio`: the maximum dependent capacity supported by one unit of prerequisite
   capacity.
 """
-function requires_capacity(
+function require_capacity(
     m,
     elements_dep::Vector{<:Tuple{<:Any, Symbol}},
     element_pre::Tuple,
@@ -393,149 +537,5 @@ function retire_capacity(
     @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep, inv_data) ∈ elements_dep],
         get_var_current(m, prefix_dep, element_dep)[t_inv] ≤
             var_bin[t_inv] * max_installed(inv_data, t_inv),
-    )
-end
-
-"""
-    require_investment(
-        m,
-        elements_dep::Vector{<:Tuple{<:Any, Symbol}},
-        element_pre::Tuple{<:Any, Symbol},
-        𝒯::Union{TwoLevel, TwoLevelTree},
-    )
-
-Require investments in the prerequisite technology specified by `element_pre` whenever there
-should be investments in any dependent technology specified by `elements_dep` in the same
-strategic period.
-
-However, it is possible to have capacity additions in the prerequisite investment without
-additions in the dependent investment.
-
-The actual capacity additions are not affected, only if there are capacity additions.
-
-!!! warning "Supported investment modes"
-    This relation requires binary `*_invest_b` variables for both elements and all strategic
-    periods in `𝒯`. It can be utilized for [`BinaryInvestment`](@ref),
-    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
-    For [`BinaryInvestment`](@ref), the binary controls installed capacity above baseline.
-    For semicontinuous modes, it enables capacity additions, which can be zero when the
-    minimum addition is zero. This relation links binary activations, not necessarily
-    positive capacity additions.
-
-# Arguments
-- `m`: the JuMP model instance.
-- `elements_dep::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
-  representing the dependent elements.
-- `element_pre::Tuple{<:Any, Symbol}`: the prerequisite element and its capacity `prefix`.
-- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
-  over which the relation is applied.
-"""
-function require_investment(
-    m,
-    elements_dep::Vector{<:Tuple{<:Any, Symbol}},
-    element_pre::Tuple{<:Any, Symbol},
-    𝒯::Union{TwoLevel,TwoLevelTree},
-)
-    # Extract the strategic periods
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-
-    # Check that all elements have binary investment variables
-    _check_binary_invest(m, vcat(elements_dep, [element_pre]), 𝒯)
-
-    # Extract the variables
-    element_pre, prefix_pre = element_pre
-
-    # Add the constraint on the dependency of investment actions
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element_dep, prefix_dep) ∈ elements_dep],
-        get_var_invest_b(m, prefix_dep)[element_dep, t_inv] ≤
-            get_var_invest_b(m, prefix_pre)[element_pre, t_inv],
-    )
-end
-
-"""
-    couple_investment(
-        m,
-        elements::Vector{<:Tuple{<:Any, Symbol}},
-        𝒯::Union{TwoLevel, TwoLevelTree},
-    )
-
-Couple all investments specified by `elements`. For each strategic period, it is only
-possible to invest in all investments or in none of the elements
-
-The actual capacity additions are not affected, only if there are capacity additions.
-
-!!! warning "Supported investment modes"
-    This relation requires binary `*_invest_b` variables for both elements and all strategic
-    periods in `𝒯`. It can be utilized for [`BinaryInvestment`](@ref),
-    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
-    For [`BinaryInvestment`](@ref), the binary controls installed capacity above baseline.
-    For semicontinuous modes, it enables capacity additions, which can be zero when the
-    minimum addition is zero. This relation links binary activations, not necessarily
-    positive capacity additions.
-
-# Arguments
-- `m`: the JuMP model instance.
-- `elements::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
-  specifying the coupled elements.
-- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
-  over which the relation is applied.
-"""
-function couple_investment(
-    m,
-    elements::Vector{<:Tuple{<:Any, Symbol}},
-    𝒯::Union{TwoLevel,TwoLevelTree},
-)
-    # Extract the strategic periods
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-
-    # Check that all elements have binary investment variables
-    _check_binary_invest(m, elements, 𝒯)
-
-    # Use the first investment as the reference activation
-    element_1, prefix_1 = first(elements)
-
-    # Add the constraints coupling all investment actions
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ, (element, prefix) ∈ elements[2:end]],
-        get_var_invest_b(m, prefix_1)[element_1, t_inv] ==
-            get_var_invest_b(m, prefix)[element, t_inv],
-    )
-end
-
-"""
-    exclude_investment(
-        m,
-        elements::Vector{<:Tuple{<:Any, Symbol}},
-        𝒯::Union{TwoLevel, TwoLevelTree},
-    )
-
-Make all investments specified by `elements` mutually exclusive. For each strategic period,
-at most one of the binary investment decision variables may be active.
-
-!!! warning "Supported investment modes"
-    This relation requires binary `*_invest_b` variables for all elements and strategic periods
-    in `𝒯`. This implies that it can be utilized for [`BinaryInvestment`](@ref),
-    [`SemiContinuousInvestment`](@ref), and [`SemiContinuousOffsetInvestment`](@ref).
-
-# Arguments
-- `m`: the JuMP model instance.
-- `elements::Vector{<:Tuple{<:Any, Symbol}}`: a vector of `(element, prefix)` tuples
-  specifying the investments to exclude.
-- `𝒯::Union{TwoLevel, TwoLevelTree}`: the time structure containing the strategic periods
-  over which the relation is applied.
-"""
-function exclude_investment(
-    m,
-    elements::Vector{<:Tuple{<:Any, Symbol}},
-    𝒯::Union{TwoLevel,TwoLevelTree},
-)
-    # Extract the strategic periods
-    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
-
-    # Check that all elements have binary investment variables
-    _check_binary_invest(m, elements, 𝒯)
-
-    # Add the constraint that only one investment can happen in each strategic period
-    @constraint(m, [t_inv ∈ 𝒯ᴵⁿᵛ],
-        sum(get_var_invest_b(m, prefix)[element, t_inv] for (element, prefix) ∈ elements) ≤ 1,
     )
 end

@@ -105,7 +105,7 @@
     end
 end
 
-@testset "`max_investments` and `min_investments`" begin
+@testset "Relations between investment actions" begin
     # Investment data with positive costs and semi continuous investment decisions
     inv_data = NoStartInvData(
         FixedProfile(100),
@@ -260,6 +260,152 @@ end
         end
     end
 
+    # Investment data with positive costs and semi continuous investment decisions
+    # The semi continuous investment can lead to early capacity retirement
+    inv_data = NoStartInvData(
+        FixedProfile(100),
+        FixedProfile(60),
+        SemiContinuousInvestment(FixedProfile(5), FixedProfile(30)),
+    )
+    demand = StrategicProfile([30, 40, 50, 40])
+    fixed_opex = [
+        StrategicProfile([1, 1.1, 1.1, 1]),
+        StrategicProfile([1.05, 1, 1.1, 1.05]),
+        StrategicProfile([1.1, 1.1, 1, 1.1]),
+    ]
+
+    @testset "No constraints added" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
+
+        # Extraction of required data
+        n_1, n_2, n_3 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Variable reassignment
+        var_cur = value.(m[:cap_current])
+
+        # Test that without any constraints, it invests according to the demand in node 1 in
+        # period 1, node 2 in period 2, and node 3 in period 3 to satisfy the demand.
+        # Node 3 is removed as it is no longer needed in period 4
+        prof_cur_1 = StrategicProfile([30, 30, 30, 30])
+        prof_cur_2 = StrategicProfile([0, 10, 10, 10])
+        prof_cur_3 = StrategicProfile([0, 0, 10, 0])
+        @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_cur[n_3, t_inv] ≈ prof_cur_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
+    @testset "`require_investment`" begin
+        # Creation of the model
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
+
+        # Extraction of required data
+        n_1, n_2, n_3 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Addition of the investment relation and reoptimization
+        elements_dep = [(n_1, :cap), (n_2, :cap)]
+        element_pre = (n_3, :cap)
+        require_investment(m, elements_dep, element_pre, 𝒯)
+        optimize!(m)
+        var_add = value.(m[:cap_add])
+
+        # Test that with limits, it invests in node 3 in periods 1 and 2 as prerequisite but
+        # in period 3 due to the lower OPEX without investing in node 1 or node 2
+        prof_add_1 = StrategicProfile([25, 0, 0, 0])
+        prof_add_2 = StrategicProfile([0, 5, 0, 0])
+        prof_add_3 = StrategicProfile([5, 5, 10, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_3, t_inv] ≈ prof_add_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the activation is following the profile and is equal
+        prof_act_1 = StrategicProfile([1, 0, 0, 0])
+        prof_act_2 = StrategicProfile([0, 1, 0, 0])
+        prof_act_3 = StrategicProfile([1, 1, 1, 0])
+        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_3, t_inv]) ≈ prof_act_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
+    @testset "`couple_investments`" begin
+        # Creation of the model
+        fixed_opex = [
+            StrategicProfile([1, 1, 1.1, 1]),
+            StrategicProfile([1.1, 1.1, 1, 1.1]),
+        ]
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Addition of the investment relation and reoptimization
+        elements = [(n_1, :cap), (n_2, :cap)]
+        couple_investments(m, elements, 𝒯)
+        optimize!(m)
+        var_add = value.(m[:cap_add])
+
+        # Test that with limits, it invests in node 2 in all periods when it invests in node
+        # 1 given the minimum investment.
+        prof_add_1 = StrategicProfile([25, 5, 5, 0])
+        prof_add_2 = StrategicProfile([5, 5, 5, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+
+        # Test that the activation is following the profile and is equal
+        prof_act = StrategicProfile([1, 1, 1, 0])
+        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
+    @testset "`exclude_investments`" begin
+        # Creation of the model
+        inv_data = NoStartInvData(
+            FixedProfile(100),
+            FixedProfile(60),
+            SemiContinuousInvestment(FixedProfile(5), FixedProfile(25)),
+        )
+        fixed_opex = [
+            StrategicProfile([1, 1, 1.1, 1]),
+            StrategicProfile([1.1, 1.1, 1, 1.1]),
+        ]
+        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
+
+        # Extraction of required data
+        n_1, n_2 = para[:nodes]
+        𝒯 = para[:T]
+        𝒯ᴵⁿᵛ = strat_periods(𝒯)
+
+        # Addition of the investment relation and reoptimization
+        elements = [(n_1, :cap), (n_2, :cap)]
+        exclude_investments(m, elements, 𝒯)
+        optimize!(m)
+        var_add = value.(m[:cap_add])
+
+        # Test that with limits, it cannot satisfy the demand in period 1 due to the max
+        # capacity addition
+        prof_add_1 = StrategicProfile([25, 15, 0, 0])
+        prof_add_2 = StrategicProfile([0, 0, 10, 0])
+        prof_def = StrategicProfile([5, 0, 0, 0])
+        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:deficit][t]) ≈ prof_def[t] for t ∈ 𝒯)
+
+        # Test that the activation is following the profile and is exclusive
+        prof_act_1 = StrategicProfile([1, 1, 0, 0])
+        prof_act_2 = StrategicProfile([0, 0, 1, 0])
+        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
+        @test all(
+            sum(value.(m[:cap_invest_b][n, t_inv]) for n ∈ [n_1, n_2]) ≤ 1
+        for t_inv ∈ 𝒯ᴵⁿᵛ)
+    end
+
     @testset "Binary relations - no binary investment variables" begin
         # Continuous investments do not create binary investment variables
         inv_data = NoStartInvData(
@@ -274,6 +420,10 @@ end
         @test_throws ArgumentError max_investments(m, 1, investments, 𝒯)
         @test_throws ArgumentError min_investments(m, 1, investments, 𝒯)
 
+        @test_throws ArgumentError require_investment(m, [(n_1, :cap)], (n_2, :cap), 𝒯)
+        @test_throws ArgumentError exclude_investments(m, investments, 𝒯)
+        @test_throws ArgumentError couple_investments(m, investments, 𝒯)
+
         # No investment data also does not create binary variables
         m, para = simple_model(; num_invest = 2)
         n_1, n_2 = para[:nodes]
@@ -281,10 +431,15 @@ end
         investments = [(node, :cap) for node ∈ para[:nodes]]
         @test_throws ArgumentError max_investments(m, 1, investments, 𝒯)
         @test_throws ArgumentError min_investments(m, 1, investments, 𝒯)
+
+        @test_throws ArgumentError require_investment(m, [(n_1, :cap)], (n_2, :cap), 𝒯)
+        @test_throws ArgumentError exclude_investments(m, investments, 𝒯)
+        @test_throws ArgumentError couple_investments(m, investments, 𝒯)
     end
 end
 
-@testset "`requires_capacity`, `couple_capacity`, `precede_capacity`, and `retire_capacity`" begin
+
+@testset "Relations between installed capacities" begin
     # Investment data with positive costs and semi continuous investment decisions
     # The semi continuous investment can lead to early capacity retirement
     inv_data = NoStartInvData(
@@ -314,7 +469,7 @@ end
         @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
     end
 
-    @testset "`requires_capacity`" begin
+    @testset "`require_capacity`" begin
         @testset "no keyword argument used" begin
             # Creation of the model
             fixed_opex = [FixedProfile(1), FixedProfile(1.1), FixedProfile(1.2)]
@@ -328,7 +483,7 @@ end
             # Addition of the investment relation and reoptimization
             elements_dep = [(n_1, :cap), (n_2, :cap)]
             element_pre = (n_3, :cap)
-            requires_capacity(m, elements_dep, element_pre, 𝒯)
+            require_capacity(m, elements_dep, element_pre, 𝒯)
             optimize!(m)
             var_cur = value.(m[:cap_current])
 
@@ -356,7 +511,7 @@ end
             capacity_ratio = 2
             elements_dep = [(n_1, :cap)]
             element_pre = (n_2, :cap)
-            requires_capacity(m, elements_dep, element_pre, 𝒯; capacity_ratio)
+            require_capacity(m, elements_dep, element_pre, 𝒯; capacity_ratio)
             optimize!(m)
             var_cur = value.(m[:cap_current])
 
@@ -567,179 +722,5 @@ end
         elements_dep = [(n_1, :cap, inv_data), (n_2, :cap, inv_data)]
         element_pre = (n_3, :cap, inv_data)
         @test_throws ArgumentError retire_capacity(m, elements_dep, element_pre, 𝒯)
-    end
-end
-
-@testset "`require_investment`, `couple_investment`, and `exclude_investment`" begin
-    # Investment data with positive costs and semi continuous investment decisions
-    # The semi continuous investment can lead to early capacity retirement
-    inv_data = NoStartInvData(
-        FixedProfile(100),
-        FixedProfile(60),
-        SemiContinuousInvestment(FixedProfile(5), FixedProfile(30)),
-    )
-    demand = StrategicProfile([30, 40, 50, 40])
-    fixed_opex = [
-        StrategicProfile([1, 1.1, 1.1, 1]),
-        StrategicProfile([1.05, 1, 1.1, 1.05]),
-        StrategicProfile([1.1, 1.1, 1, 1.1]),
-    ]
-
-    @testset "No constraints added" begin
-        # Creation of the model
-        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
-
-        # Extraction of required data
-        n_1, n_2, n_3 = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-
-        # Variable reassignment
-        var_cur = value.(m[:cap_current])
-
-        # Test that without any constraints, it invests according to the demand in node 1 in
-        # period 1, node 2 in period 2, and node 3 in period 3 to satisfy the demand.
-        # Node 3 is removed as it is no longer needed in period 4
-        prof_cur_1 = StrategicProfile([30, 30, 30, 30])
-        prof_cur_2 = StrategicProfile([0, 10, 10, 10])
-        prof_cur_3 = StrategicProfile([0, 0, 10, 0])
-        @test all(var_cur[n_1, t_inv] ≈ prof_cur_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(var_cur[n_2, t_inv] ≈ prof_cur_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(var_cur[n_3, t_inv] ≈ prof_cur_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-    end
-
-    @testset "`require_investment`" begin
-        # Creation of the model
-        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 3)
-
-        # Extraction of required data
-        n_1, n_2, n_3 = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-
-        # Addition of the investment relation and reoptimization
-        elements_dep = [(n_1, :cap), (n_2, :cap)]
-        element_pre = (n_3, :cap)
-        require_investment(m, elements_dep, element_pre, 𝒯)
-        optimize!(m)
-        var_add = value.(m[:cap_add])
-
-        # Test that with limits, it invests in node 3 in periods 1 and 2 as prerequisite but
-        # in period 3 due to the lower OPEX without investing in node 1 or node 2
-        prof_add_1 = StrategicProfile([25, 0, 0, 0])
-        prof_add_2 = StrategicProfile([0, 5, 0, 0])
-        prof_add_3 = StrategicProfile([5, 5, 10, 0])
-        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(var_add[n_3, t_inv] ≈ prof_add_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-
-        # Test that the activation is following the profile and is equal
-        prof_act_1 = StrategicProfile([1, 0, 0, 0])
-        prof_act_2 = StrategicProfile([0, 1, 0, 0])
-        prof_act_3 = StrategicProfile([1, 1, 1, 0])
-        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(value.(m[:cap_invest_b][n_3, t_inv]) ≈ prof_act_3[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-    end
-
-    @testset "`couple_investment`" begin
-        # Creation of the model
-        fixed_opex = [
-            StrategicProfile([1, 1, 1.1, 1]),
-            StrategicProfile([1.1, 1.1, 1, 1.1]),
-        ]
-        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
-
-        # Extraction of required data
-        n_1, n_2 = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-
-        # Addition of the investment relation and reoptimization
-        elements = [(n_1, :cap), (n_2, :cap)]
-        couple_investment(m, elements, 𝒯)
-        optimize!(m)
-        var_add = value.(m[:cap_add])
-
-        # Test that with limits, it invests in node 2 in all periods when it invests in node
-        # 1 given the minimum investment.
-        prof_add_1 = StrategicProfile([25, 5, 5, 0])
-        prof_add_2 = StrategicProfile([5, 5, 5, 0])
-        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-
-        # Test that the activation is following the profile and is equal
-        prof_act = StrategicProfile([1, 1, 1, 0])
-        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-    end
-
-    @testset "`exclude_investment`" begin
-        # Creation of the model
-        inv_data = NoStartInvData(
-            FixedProfile(100),
-            FixedProfile(60),
-            SemiContinuousInvestment(FixedProfile(5), FixedProfile(25)),
-        )
-        fixed_opex = [
-            StrategicProfile([1, 1, 1.1, 1]),
-            StrategicProfile([1.1, 1.1, 1, 1.1]),
-        ]
-        m, para = simple_model(; demand, inv_data, fixed_opex, num_invest = 2)
-
-        # Extraction of required data
-        n_1, n_2 = para[:nodes]
-        𝒯 = para[:T]
-        𝒯ᴵⁿᵛ = strat_periods(𝒯)
-
-        # Addition of the investment relation and reoptimization
-        elements = [(n_1, :cap), (n_2, :cap)]
-        exclude_investment(m, elements, 𝒯)
-        optimize!(m)
-        var_add = value.(m[:cap_add])
-
-        # Test that with limits, it cannot satisfy the demand in period 1 due to the max
-        # capacity addition
-        prof_add_1 = StrategicProfile([25, 15, 0, 0])
-        prof_add_2 = StrategicProfile([0, 0, 10, 0])
-        prof_def = StrategicProfile([5, 0, 0, 0])
-        @test all(var_add[n_1, t_inv] ≈ prof_add_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(var_add[n_2, t_inv] ≈ prof_add_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(value.(m[:deficit][t]) ≈ prof_def[t] for t ∈ 𝒯)
-
-        # Test that the activation is following the profile and is exclusive
-        prof_act_1 = StrategicProfile([1, 1, 0, 0])
-        prof_act_2 = StrategicProfile([0, 0, 1, 0])
-        @test all(value.(m[:cap_invest_b][n_1, t_inv]) ≈ prof_act_1[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(value.(m[:cap_invest_b][n_2, t_inv]) ≈ prof_act_2[t_inv] for t_inv ∈ 𝒯ᴵⁿᵛ)
-        @test all(
-            sum(value.(m[:cap_invest_b][n, t_inv]) for n ∈ [n_1, n_2]) ≤ 1
-        for t_inv ∈ 𝒯ᴵⁿᵛ)
-    end
-
-    @testset "Binary relations - no binary investment variables" begin
-        # Continuous investments do not create binary investment variables
-        inv_data = NoStartInvData(
-            FixedProfile(100),
-            FixedProfile(60),
-            ContinuousInvestment(FixedProfile(0), FixedProfile(30)),
-        )
-        m, para = simple_model(;inv_data, num_invest = 2)
-        n_1, n_2 = para[:nodes]
-        𝒯 = para[:T]
-        investments = [(node, :cap) for node ∈ para[:nodes]]
-
-        @test_throws ArgumentError require_investment(m, [(n_1, :cap)], (n_2, :cap), 𝒯)
-        @test_throws ArgumentError exclude_investment(m, [(n_1, :cap), (n_2, :cap)], 𝒯)
-        @test_throws ArgumentError couple_investment(m, [(n_1, :cap), (n_2, :cap)], 𝒯)
-
-        # Models without investment data also lack binary investment variables
-        m, para = simple_model(; num_invest = 2)
-        n_1, n_2 = para[:nodes]
-        investments = [(node, :cap) for node ∈ para[:nodes]]
-
-        @test_throws ArgumentError require_investment(m, [(n_1, :cap)], (n_2, :cap), 𝒯)
-        @test_throws ArgumentError exclude_investment(m, [(n_1, :cap), (n_2, :cap)], 𝒯)
-        @test_throws ArgumentError couple_investment(m, [(n_1, :cap), (n_2, :cap)], 𝒯)
     end
 end

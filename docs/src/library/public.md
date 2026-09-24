@@ -324,11 +324,11 @@ These relationships can be added after the model is created.
 max_budget
 max_investments
 min_investments
-requires_capacity
+require_capacity
 couple_capacity
 precede_capacity
 retire_capacity
-exclude_investment
+exclude_investments
 require_investment
-couple_investment
+couple_investments
 ```
