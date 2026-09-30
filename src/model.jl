@@ -5,7 +5,7 @@
         inv_data::AbstractInvData,
         cap,
         prefix,
-        𝒯ᴵⁿᵛ::TS.AbstractStratPers,
+        𝒯::Union{TwoLevel, TwoLevelTree},
         disc_rate::Float64,
     )
 

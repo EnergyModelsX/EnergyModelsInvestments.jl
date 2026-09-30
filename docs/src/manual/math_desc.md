@@ -39,7 +39,7 @@ and limit the installed capacity to the maximum allowed capacity
 \texttt{cap\_current}[n, t_{inv}] \leq max\_installed(n, t_{inv})
 ```
 
-An auxiliary expression \texttt{start\_cap}[t_{inv}] is subsequently introduced to identify the specified initial capacity in each investment period, either deduced from the node directly or alternatively from the investment data as explained in the *[public library](@ref lib-pub-data-conc)*.
+An auxiliary expression ``\texttt{start\_cap}[t_{inv}]`` is subsequently introduced to identify the specified initial capacity in each investment period, either deduced from the node directly or alternatively from the investment data as explained in the *[public library](@ref lib-pub-data-conc)*.
 
 We have to implement two sets of constraints depending on the investment period.
 

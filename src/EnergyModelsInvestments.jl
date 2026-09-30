@@ -26,19 +26,15 @@ include(joinpath("structures", "legacy_constructors.jl"))
 # Core structure of the code
 include("model.jl")
 include("utils.jl")
+include("relations.jl")
 
 # Functions to be extended by users of EnergyModelsInvestments
 include("interface.jl")
 
 # Export of the types for investment modes
-export Investment,
-    BinaryInvestment,
-    DiscreteInvestment,
-    ContinuousInvestment,
-    SemiContiInvestment,
-    SemiContinuousInvestment,
-    SemiContinuousOffsetInvestment,
-    FixedInvestment
+export Investment, BinaryInvestment, DiscreteInvestment, ContinuousInvestment
+export SemiContiInvestment, SemiContinuousInvestment, SemiContinuousOffsetInvestment
+export FixedInvestment
 
 # Export of the different lifetime modes
 export LifetimeMode
@@ -56,5 +52,9 @@ export TransInvData
 # Utility functions
 export has_investment
 
+# Relations
+export max_budget, max_investments, min_investments
+export require_capacity, couple_capacity, precede_capacity, retire_capacity
+export require_investment, couple_investments, exclude_investments
 
 end # module

@@ -30,6 +30,7 @@ makedocs(
             "Philosophy" => "manual/philosophy.md",
             "Optimization variables" => "manual/optimization-variables.md",
             "Mathematical description" => "manual/math_desc.md",
+            "Relations" => "manual/relations.md",
             "Example" => "manual/simple-example.md",
             "Release notes" => "manual/NEWS.md",
         ],

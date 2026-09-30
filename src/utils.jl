@@ -3,7 +3,7 @@
     get_var_capex(m, prefix::Symbol, element)
 
 Extracts the CAPEX variable with a given `prefix` from the model or only the variable for
-    the specified `element`.
+the specified `element`.
 """
 get_var_capex(m, prefix::Symbol) = m[Symbol(prefix, :_capex)]
 get_var_capex(m, prefix::Symbol, element) = m[Symbol(prefix, :_capex)][element, :]
@@ -54,6 +54,11 @@ get_var_rem(m, prefix::Symbol, element) = m[Symbol(prefix, :_rem)][element, :]
 
 Extracts the binary investment variable with a given `prefix` from the model or only the
 variable for the specified `element`.
+
+!!! warning
+    As we utilize `SparseVariables` for introducing the variables, it is necessary to call
+    the output when specifying the `element` as `(element, t_inv)`. This implies, the element
+    must be included in the function call
 """
 get_var_invest_b(m, prefix::Symbol) = m[Symbol(prefix, :_invest_b)]
 get_var_invest_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_invest_b)][element, :]
@@ -64,6 +69,11 @@ get_var_invest_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_invest_b)][ele
 
 Extracts the binary retirement variable with a given `prefix` from the model or only the
 variable for the specified `element`.
+
+!!! warning
+    As we utilize `SparseVariables` for introducing the variables, it is necessary to call
+    the output when specifying the `element` as `(element, t_inv)`. This implies, the element
+    must be included in the function call
 """
 get_var_remove_b(m, prefix::Symbol) = m[Symbol(prefix, :_remove_b)]
 get_var_remove_b(m, prefix::Symbol, element) = m[Symbol(prefix, :_remove_b)][element, :]
@@ -280,5 +290,37 @@ function populate_lifetime_vectors!(life_dict::Dict, lifetime_mode::RollingLife,
                 end
             end
         end
+    end
+end
+
+"""
+    _check_binary_invest(m, elements::Vector{<:Tuple{<:Any, Symbol}}, 𝒯::Union{TwoLevel,TwoLevelTree})
+
+Throws an argument error if any of the elements represented by the `(element, prefix)`
+its tuple does not include binary investment variables.
+"""
+function _check_binary_invest(m, elements::Vector{<:Tuple{<:Any, Symbol}}, 𝒯::Union{TwoLevel,TwoLevelTree})
+    # Extract the strategic periods
+    𝒯ᴵⁿᵛ = strategic_periods(𝒯)
+
+    # Extract the investment variables
+    track_dict = Dict(t_inv => Any[] for t_inv in 𝒯ᴵⁿᵛ)
+
+    # Identify whether the element `element` has a binary investment variable for each
+    # strategic period.
+    for t_inv ∈ 𝒯ᴵⁿᵛ, (element, prefix) ∈ elements
+        var = get_var_invest_b(m, prefix)[element, t_inv]
+        if !(isa(var, JuMP.GenericVariableRef) && JuMP.is_binary(var))
+            push!(track_dict[t_inv], element)
+        end
+    end
+    if any([!isempty(track_dict[t_inv]) for t_inv ∈ 𝒯ᴵⁿᵛ])
+        msg = "Some of the capacities do not have binary investment variables:\n"
+        for t_inv ∈ 𝒯ᴵⁿᵛ
+            if !isempty(track_dict[t_inv])
+                msg *= " - $t_inv: Elements $(track_dict[t_inv])\n"
+            end
+        end
+        throw(ArgumentError(msg))
     end
 end
