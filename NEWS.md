@@ -1,6 +1,6 @@
 # Release notes
 
-## Unversioned
+## Version 0.9.3 (2026-09-30)
 
 ### Incorporation of relations
 
